@@ -37,5 +37,24 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'city',
         timestamps: false,
     });
+    City.associate = (models) => {
+        City.hasMany(models.Address, {
+            foreignKey: 'id_city',
+            sourceKey: 'id_city',
+            as: 'address',
+        });
+        City.belongsTo(models.Department, {
+            foreignKey: 'id_department',
+            as: 'departments',
+        });
+        City.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        City.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return City;
 }

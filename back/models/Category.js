@@ -29,4 +29,19 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'category',
         timestamps: false,
     });
+    Category.associate = (models) => {
+        Category.hasMany(models.Article, {
+            foreignKey: 'id_category',
+            as: 'articles',
+        });
+        Category.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Category.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
+    return Category;
 }

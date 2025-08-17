@@ -54,5 +54,23 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'postulation',
         timestamps: false, 
     });
+    Postulation.associate = (models) => {
+        Postulation.belognsTo(models.Customer,{
+            foreignKey: 'id_customer', 
+            as: 'customers',
+        });
+        Postulation.belognsTo(models.Petition, {
+            foreignKey: 'id_petition',
+            as: 'petitions',
+        });
+        Postulation.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Postulation.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return Postulation;
 }

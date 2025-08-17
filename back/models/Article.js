@@ -35,5 +35,19 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'article',
         timestamps: false,
     });
+    Article.associate = (models) => {
+        Article.belongsTo(models.id_category, {
+            foreignKey: 'id_cateogory',
+            as: 'categories',
+        });
+         Article.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Article.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return Article;
 }

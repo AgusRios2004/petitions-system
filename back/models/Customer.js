@@ -25,6 +25,19 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'n_customer',
         timestamps: false,
     });
-
+    Customer.associate = (models)  => {
+        Customer.belongsTo(models.User, {
+            foreignKey: 'user_id',
+            as: 'user',
+        });
+        Customer.hasMany(models.Petition, {
+            foreignKey: 'id_customer',
+            as: 'petitions',
+        });
+        Customer.hasMany(models.Postulation, {
+            foreignKey: 'id_postulation',
+            as: 'postulations',
+        });
+    }
     return Customer;
 }

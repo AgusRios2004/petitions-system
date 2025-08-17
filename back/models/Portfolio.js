@@ -37,5 +37,23 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'portfolio',
         timestamps: false,
     });
+    Portfolio.associate = (models) => {
+        Portfolio.hasMany(models.Portfolio, {
+            foreignKey: 'id_portfolio',
+            as: 'petitons',
+        });
+        Portfolio.belongsTo(models.Provider, {
+            foreignKey: 'id_provider',
+            as: 'providers',
+        });
+        Portfolio.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Portfolio.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return Portfolio;
 }

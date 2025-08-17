@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const Petitios = sequelize.define('Petition', {
+    const Petition = sequelize.define('Petition', {
         id_petition: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -48,6 +48,32 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         tableName: 'petition',
         timestamps: false,
-    })
-    return Petitios;
+    });
+    Petition.associate = (models) => {
+        Petition.hasMany(models.Attachment, {
+            foreignKey: 'id_petition',
+            as: 'attachments',
+        });
+        Petition.belongsTo(models.Customer, {
+            foreignKey: 'id_customer',
+            as: 'customers',
+        });
+        Petition.belongsTo(models.id_type_petition, {
+            foreignKey: 'id_type_petition',
+            as: 'typesPetitions',
+        });
+        Petition.hasMany(models.Postulation, {
+            foreignKey: 'id_postulation',
+            as: 'postulations',
+        });
+        Petition.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Petition.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
+    return Petition;
 }

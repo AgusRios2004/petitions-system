@@ -36,10 +36,29 @@ module.exports = (sequelize, DataTypes) => {
         date_update: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW
-        }
+        },
     }, {
         tableName: 'n_address',
         timestamps: false,
-    })
+    });
+    Address.associate = (models) => {
+        Address.belongsTo(models.City, {
+            foreignKey: 'id_city',
+            as: 'cities',
+        });
+        Address.hasMany(models.Provider, {
+            foreignKey: 'address_id',
+            targetKey: 'id_address',
+            as: 'address',
+        });
+        Address.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Address.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return Address;
 }

@@ -37,6 +37,20 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         tableName: 'province',
         timestamps: false,
-    })
+    });
+    Province.associate = (models) => {
+        Province.belongsTo(models.Country, {
+            foreignKey: 'id_country',
+            as: 'countries',
+        });
+        Province.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Province.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
     return Province;
 }

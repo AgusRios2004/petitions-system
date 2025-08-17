@@ -28,6 +28,20 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         tableName: 'type_petition',
         timestamps: false,
-    })
-    return TypePetition
+    });
+    TypePetition.associate = (models) => {
+        TypePetition.hasMany(models.Petition, {
+            foreignKey: 'id_type_petition',
+            as: 'petitions',
+        });
+        TypePetition.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        TypePetition.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
+    return TypePetition;
 }

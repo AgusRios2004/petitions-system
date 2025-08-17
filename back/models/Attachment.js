@@ -41,4 +41,22 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'attachment',
         timestamps: false,
     });
+    Attachment.associate = (models) => {
+        Attachment.belongsTo(models.Petition, {
+            foreignKey: 'id_petition',
+            as: 'petitions',
+        });
+        Attachment.belongsTo(models.Portfolio, {
+            foreingKey: 'id_portfolio',
+            as: 'portfolios',
+        });
+        Attachment.belongsTo(models.User, {
+            foreignKey: 'id_user_creaate',
+            as: 'createdBy',
+        });
+        Attachment.belongsTo(models.User, {
+            foreingKey: 'id_user_update',
+            as: 'updatedBy',
+        });
+    }
 }

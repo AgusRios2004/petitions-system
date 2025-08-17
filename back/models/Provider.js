@@ -28,6 +28,20 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         tableName: 'n_provider',
         timestamps: false,
-    })
+    });
+    Provider.associate = (models) => {
+        Provider.hasMany(models.Portfolio, {
+            foreignKey: 'id_provider',
+            as: 'portfolios',
+        });
+        Provider.belongsTo(models.User, {
+            foreignKey: 'user_id',
+            as: 'user',
+        });
+        Provider.belongsTo(models.Address, {
+            foreignKey: 'address_id',
+            as: 'address',
+        });
+    }
     return Provider;
 }
