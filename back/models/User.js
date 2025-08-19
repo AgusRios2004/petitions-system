@@ -56,10 +56,23 @@ module.exports = (sequelize, DataTypes) => {
         }
     }, {
         tableName: 'n_user',
-        timestamps: false, // ✅ bien escrito ahora
+        timestamps: false,
         createdAt: 'date_create',
         updatedAt: 'date_update',
     });
+
+    User.associate = (models) => {
+        User.hasMany(models.UserRole, {
+            foreignKey: 'id_user',
+            sourceKey: 'id_user',
+            as: 'userRoles',
+        });
+        User.hasMany(models.UserVerificationCode, {
+            foreingKey: 'user_id',
+            sourceKey: 'id_user',
+            as: 'userVerificationCodes',
+        });
+    }
 
     return User;
 };

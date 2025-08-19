@@ -42,6 +42,20 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'address_id',
             as: 'address',
         });
+        Provider.hasMany(models.ProviderCategory, {
+            foreignKey: 'provider_id',
+            sourceKey: 'id_provider',
+            as: 'providerCategories',
+        });
+        Provider.belongsTo(models.TypeProvider, {
+            foreignKey: 'id_type_provider',
+            as: 'typeProviders',
+        });
+        Provider.hasMany(models.GradeProvider, {
+            foreignKey: 'id_provider',
+            sourceKey: 'id_provider',
+            as: 'grades',
+        });
     }
     return Provider;
 }

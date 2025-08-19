@@ -29,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'category',
         timestamps: false,
     });
+    
     Category.associate = (models) => {
         Category.hasMany(models.Article, {
             foreignKey: 'id_category',
@@ -42,6 +43,22 @@ module.exports = (sequelize, DataTypes) => {
             foreingKey: 'id_user_update',
             as: 'updatedBy',
         });
+        Category.hasMany(models.ProviderCategory, {
+            foreignKey: 'category_id',
+            sourceKey: 'id_category',
+            as: 'providerCaregories',
+        });
+        Category.hasMany(models.Profession, {
+            foreignKey: 'id_category',
+            sourceKey: 'id_category',
+            as: 'professions',
+        });
+        Category.hasMany(models.Interest, {
+            foreignKey: 'id_category',
+            sourceKey: 'id_category',
+            as: 'interests',
+        });
     }
+
     return Category;
 }

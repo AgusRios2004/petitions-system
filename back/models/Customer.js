@@ -38,6 +38,21 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_postulation',
             as: 'postulations',
         });
+        Customer.hasMany(models.Gender, {
+            foreignKey: 'id_customer',
+            sourceKey: 'id_customer',
+            as: 'genders',
+        });
+        Customer.hasMany(models.GradeCustomer, {
+            foreignKey: 'id_customer',
+            sourceKey: 'id_customer',
+            as: 'gradeCustomers',
+        });
+        Customer.hasMany(models.Interest, {
+            foreignKey: 'id_customer',
+            sourceKey: 'id_customer',
+            as: 'interests',
+        });
     }
     return Customer;
 }

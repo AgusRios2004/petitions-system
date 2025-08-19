@@ -48,6 +48,11 @@ module.exports = (sequelize, DataTypes) => {
             foreingKey: 'id_user_update',
             as: 'updatedBy',
         });
+        Article.hasMany(models.Inventory, {
+            foreignKey: 'id_article',
+            sourceKey: 'id_article',
+            as: 'inventories',
+        });
     }
     return Article;
 }

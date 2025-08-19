@@ -68,8 +68,13 @@ module.exports = (sequelize, DataTypes) => {
             as: 'createdBy',
         });
         Postulation.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
+            foreignKey: 'id_user_update',
             as: 'updatedBy',
+        });
+        Postulation.hasMany(models.Inventory, {
+            foreignKey: 'id_inventory',
+            sourceKey: 'id_inventory',
+            as: 'inventories',
         });
     }
     return Postulation;
