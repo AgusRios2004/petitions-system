@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const bcrypt = require('bcrypt');
+
+export default (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         id_user: {
             type: DataTypes.INTEGER,
@@ -59,6 +61,16 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         createdAt: 'date_create',
         updatedAt: 'date_update',
+        hooks: {
+            beforeCreate: async (user) => {
+                user.password = await bcrypt.hash(user.password, 10);
+            },
+            beforeUpdate: async (user) => {
+                if(user.changed('password')){
+                    user.password = await bcrypt.hash(user.password, 10);
+                }
+            }
+        }
     });
 
     User.associate = (models) => {
