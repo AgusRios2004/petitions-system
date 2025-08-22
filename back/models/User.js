@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 
-export default (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         id_user: {
             type: DataTypes.INTEGER,
@@ -73,6 +73,10 @@ export default (sequelize, DataTypes) => {
         }
     });
 
+    User.prototype.comparePassword = async function(candidatePassword) {
+        return await bcrypt.compare(candidatePassword, this.password);
+    };
+    
     User.associate = (models) => {
         User.hasMany(models.UserRole, {
             foreignKey: 'id_user',
@@ -80,7 +84,7 @@ export default (sequelize, DataTypes) => {
             as: 'userRoles',
         });
         User.hasMany(models.UserVerificationCode, {
-            foreingKey: 'user_id',
+            foreignKey: 'user_id',
             sourceKey: 'id_user',
             as: 'userVerificationCodes',
         });

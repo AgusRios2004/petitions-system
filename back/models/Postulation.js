@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         current: {
-            type: DataTypes.VARCHAR(255),
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         id_state: {
@@ -55,11 +55,11 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false, 
     });
     Postulation.associate = (models) => {
-        Postulation.belognsTo(models.Customer,{
+        Postulation.belongsTo(models.Customer,{
             foreignKey: 'id_customer', 
             as: 'customers',
         });
-        Postulation.belognsTo(models.Petition, {
+        Postulation.belongsTo(models.Petition, {
             foreignKey: 'id_petition',
             as: 'petitions',
         });
@@ -73,7 +73,6 @@ module.exports = (sequelize, DataTypes) => {
         });
         Postulation.hasMany(models.Inventory, {
             foreignKey: 'id_inventory',
-            sourceKey: 'id_inventory',
             as: 'inventories',
         });
     }
