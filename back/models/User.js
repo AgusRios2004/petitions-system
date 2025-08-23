@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true
         },
+        profile_image: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         name:{
             type: DataTypes.STRING(50),
             allowNull: false

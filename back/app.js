@@ -6,12 +6,16 @@ require('dotenv').config();
 
 const { sequelize } = require('./models');
 const authRoutes = require('./routes/authRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const providerRoutes =  require('./routes/providerRoutes');
 
 const app = express();
 app.use(express.json());
 app.use(helmet());
 app.use(cors());
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), authRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/provider', providerRoutes);
 
 (async () => {
   try {
