@@ -38,4 +38,19 @@ exports.updateProvider = async(req, res) => {
     }
 }
 
+exports.registerProvider = async(req, res) => {
+    try {
+        const {name, lastname, email, password, idTypeProvider, idProfession, addressId, description} = req.body;
+
+        const result = await service.registerProvider(
+            {name, lastname, email, password}, //user data
+            {idTypeProvider, idProfession, addressId, description} //provider data
+        )
+        
+        return response.success(res, result, 'Registrado correctamente', 201);
+    } catch (e) {
+        return response.error(res, e.message, 500);
+    }
+}
+
 exports.deleteProvider = (req, res) => {};
