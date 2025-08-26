@@ -7,8 +7,7 @@ const signAccessToken = (payload) =>
 
 const signRefreshToken = (payload) => {
     const expiration = process.env.REFRESH_EXPIRES || '7d';
-    console.log('Refresh token expiration:', expiration);
-    return jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: expiration});
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: expiration});
 }
 exports.register = async (req, res) => {
     try {
@@ -66,32 +65,22 @@ exports.login = async (req, res) => {
 exports.refresh = async (req, res) => {
     try {
         const { refreshToken } = req.body;
-        console.log('RefreshToken recibido:', refreshToken ? 'Sí' : 'No');
-        
-        if(!refreshToken) return error(res, 'refreshToken requerido');
-
-        console.log('Intentando verificar token...');
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-        console.log('Token decodificado:', decoded);
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
         const user = await User.findByPk(decoded.sub);
-        console.log('Usuario encontrado:', user ? 'Sí' : 'No');
-        
-        if(!user || !user.is_active || !user.enabled) {
-            console.log('Usuario inválido:', { exists: !!user, active: user?.is_active, enabled: user?.enabled });
-            return error(res, 'Usuario no válido');
-        }
 
-        const accessToken = signAccessToken({
+        const tokenPayload = {
             sub: user.id_user,
             email: user.email,
             is_staff: user.is_staff,
             is_superuser: user.is_superuser,
-        });
-
+        };
+        
+        const accessToken = signAccessToken(tokenPayload);
+        
         return success(res, accessToken, 'Token refrescado');
+        
     } catch (e) {
-        console.log('Error en refresh:', e.message);
-        return error(res, 'refreshToken inválido o expirado');
+        return error(res, e.message, 403);
     }
 }
