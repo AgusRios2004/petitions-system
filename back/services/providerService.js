@@ -3,11 +3,15 @@ const userService = require('./userService');
 
 class ProviderService {
     async getProviders(){
-        return await Provider.findAll();
+        return await Provider.findAll({
+            include: ['user'],
+        });
     }
     
     async getProviderById(id){
-        return await Provider.findByPk(id);
+        return await Provider.findByPk(id), {
+            include: ['user'],
+        };
     }
 
     async createProvider(data){
