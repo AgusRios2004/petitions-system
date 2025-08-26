@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
     });
     Article.associate = (models) => {
-        Article.belongsTo(models.id_category, {
+        Article.belongsTo(models.Category, {
             foreignKey: 'id_cateogory',
             as: 'categories',
         });

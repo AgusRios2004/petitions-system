@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_customer',
             as: 'customers',
         });
-        Petition.belongsTo(models.id_type_petition, {
+        Petition.belongsTo(models.TypePetition, {
             foreignKey: 'id_type_petition',
             as: 'typesPetitions',
         });

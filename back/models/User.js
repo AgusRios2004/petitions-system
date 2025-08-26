@@ -1,9 +1,15 @@
+const bcrypt = require('bcrypt');
+
 module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         id_user: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
+        },
+        profile_image: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
         name:{
             type: DataTypes.STRING(50),
@@ -59,8 +65,22 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         createdAt: 'date_create',
         updatedAt: 'date_update',
+        hooks: {
+            beforeCreate: async (user) => {
+                user.password = await bcrypt.hash(user.password, 10);
+            },
+            beforeUpdate: async (user) => {
+                if(user.changed('password')){
+                    user.password = await bcrypt.hash(user.password, 10);
+                }
+            }
+        }
     });
 
+    User.prototype.comparePassword = async function(candidatePassword) {
+        return await bcrypt.compare(candidatePassword, this.password);
+    };
+    
     User.associate = (models) => {
         User.hasMany(models.UserRole, {
             foreignKey: 'id_user',
@@ -68,7 +88,7 @@ module.exports = (sequelize, DataTypes) => {
             as: 'userRoles',
         });
         User.hasMany(models.UserVerificationCode, {
-            foreingKey: 'user_id',
+            foreignKey: 'user_id',
             sourceKey: 'id_user',
             as: 'userVerificationCodes',
         });

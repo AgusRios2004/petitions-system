@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_department',
             as: 'cities',
         });
-        Department.Country(models.Country, {
+        Department.belongsTo(models.Country, {
             foreignKey: 'id_country',
             as: 'countries',
         });
@@ -52,14 +52,6 @@ module.exports = (sequelize, DataTypes) => {
         });
         Department.belongsTo(models.User, {
             foreignKey: 'id_user_update',
-            as: 'updatedBy',
-        });
-        Department.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
-            as: 'createdBy',
-        });
-        Department.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
             as: 'updatedBy',
         });
     }

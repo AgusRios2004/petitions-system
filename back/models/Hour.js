@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Hour.associate = (models) => {
-        Hour.belongsTo(models.Week, { foreignKey: 'id_week', as: 'week' });
+//        Hour.belongsTo(models.Week, { foreignKey: 'id_week', as: 'week' });
     };
 
     return Hour;

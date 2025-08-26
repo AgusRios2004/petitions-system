@@ -1,16 +1,28 @@
 const express = require('express');
-const app = express();
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-const sequelize = require('./config/database');
 
+const { sequelize } = require('./models');
+const authRoutes = require('./routes/authRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const providerRoutes =  require('./routes/providerRoutes');
+
+const app = express();
 app.use(express.json());
+app.use(helmet());
+app.use(cors());
+app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), authRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/provider', providerRoutes);
 
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('🟢 Conexión establecida con la base de datos');
-  } catch (error) {
-    console.error('🔴 Error al conectar con la base de datos:', error);
+    console.log('🟢 DB conectada');
+  } catch (e) {
+    console.error('🔴 Error DB:', e.message);
   }
 })();
 
