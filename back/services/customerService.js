@@ -3,11 +3,15 @@ const UserService = require('../services/userService');
 
 class CustomerService {
     async getCustomers(){
-        return await Customer.findAll();
+        return await Customer.findAll({
+            include: ['user'],
+        });
     }
 
     async getCustomerById(id){
-        return await Customer.findByPk(id);
+        return await Customer.findByPk(id, {
+            include: ['user'],
+        });
     }
 
     async createCustomer(data){
