@@ -60,18 +60,22 @@ module.exports = (sequelize, DataTypes) => {
         });
         Petition.belongsTo(models.TypePetition, {
             foreignKey: 'id_type_petition',
-            as: 'typesPetitions',
+            as: 'typePetitions',
         });
         Petition.hasMany(models.Postulation, {
             foreignKey: 'id_postulation',
             as: 'postulations',
         });
+        Petition.belongsTo(models.State, {
+            foreignKey: 'id_state',
+            as: 'states',
+        });
         Petition.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
         Petition.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
+            foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
     }
