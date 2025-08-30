@@ -119,7 +119,6 @@ exports.updatePetition = async (req, res) => {
     }
 };
 
-
 exports.deletePetition = async (req, res) => {
     try {
         const { id } = req.params;

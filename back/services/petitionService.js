@@ -56,10 +56,13 @@ class PetitionService {
         });
     }
 
-    async deletePetition(id, id_state) {
+    async deletePetition(id, data) {
         const petition = await Petition.findByPk(id);
         if (!petition) return null;
-        return await petition.update({ id_state }); // 💡 mejor así que pasando id_state "crudo"
+        return await petition.update({ 
+            id_state: data.id_state,
+            id_user_update: data.id_user_update,
+         });
     }
 }
 
