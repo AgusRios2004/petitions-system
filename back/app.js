@@ -9,6 +9,8 @@ const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const providerRoutes =  require('./routes/providerRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const petitionRoutes = require('./routes/petitionRoutes');
+const postulationRoutes = require('./routes/postulationRoutes');
 
 const app = express();
 app.use(express.json());
@@ -18,6 +20,8 @@ app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), authRout
 app.use('/api/customer', customerRoutes);
 app.use('/api/provider', providerRoutes);
 app.use('/api/category', categoryRoutes);
+app.use('/api/petition', petitionRoutes);
+app.use('/api/postulation', postulationRoutes);
 
 (async () => {
   try {

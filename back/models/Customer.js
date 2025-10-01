@@ -34,10 +34,7 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_customer',
             as: 'petitions',
         });
-        Customer.hasMany(models.Postulation, {
-            foreignKey: 'id_postulation',
-            as: 'postulations',
-        });
+
         Customer.hasMany(models.Gender, {
             foreignKey: 'id_customer',
             sourceKey: 'id_customer',
