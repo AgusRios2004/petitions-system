@@ -49,35 +49,43 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'petition',
         timestamps: false,
     });
+
     Petition.associate = (models) => {
         Petition.hasMany(models.Attachment, {
             foreignKey: 'id_petition',
             as: 'attachments',
         });
+        
         Petition.belongsTo(models.Customer, {
             foreignKey: 'id_customer',
             as: 'customers',
         });
+        
         Petition.belongsTo(models.TypePetition, {
             foreignKey: 'id_type_petition',
             as: 'typePetitions',
         });
+        
         Petition.hasMany(models.Postulation, {
-            foreignKey: 'id_postulation',
+            foreignKey: 'id_petition', 
             as: 'postulations',
         });
+        
         Petition.belongsTo(models.State, {
             foreignKey: 'id_state',
             as: 'states',
         });
+        
         Petition.belongsTo(models.User, {
             foreignKey: 'id_user_create',
             as: 'createdBy',
         });
+        
         Petition.belongsTo(models.User, {
             foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
-    }
+    };
+    
     return Petition;
-}
+};

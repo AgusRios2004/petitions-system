@@ -30,7 +30,8 @@ class ProviderService {
             name: userData.name,
             lastname: userData.lastname,
             email: userData.email,
-            password: userData.password
+            password: userData.password,
+            is_staff: userData.isStaff,
         });
         const provider = await Provider.create({
             user_id: user.id_user,

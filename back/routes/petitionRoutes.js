@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const ctrl = require('../controllers/petitionController');
-const { authRequired, onlyStaff } = require('../middlewares/auth');
+const { authRequired } = require('../middlewares/auth');
 
 router.get('/customer/:id_customer', ctrl.getPetitionsByCustomerId);
 router.get('/state/:id_state', ctrl.getPetitionsByState);
