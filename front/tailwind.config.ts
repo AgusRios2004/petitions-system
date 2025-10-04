@@ -15,6 +15,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }) {
+      addVariant('not-placeholder-shown', '&:not(:placeholder-shown)')
+    },
+  ],
 }
 export default config

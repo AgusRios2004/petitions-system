@@ -9,7 +9,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className = '', invalid = false, leftIcon, rightIcon, ...props }, ref) => {
-  const base = 'w-full rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900';
+  const base = 'w-full rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 text-gray-900 dark:text-gray-100';
   const surface = 'bg-white/70 dark:bg-gray-900/60 backdrop-blur border';
   const border = invalid
     ? 'border-red-400 focus:ring-red-500'
