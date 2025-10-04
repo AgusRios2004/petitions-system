@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import Link from 'next/link';
@@ -14,6 +14,41 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
 
   const [result, setResult] = useState<null | { ok: boolean; data?: unknown; message?: string }>(null);
+  const [profileResult, setProfileResult] = useState<null | { ok: boolean; data?: unknown; message?: string }>(null);
+
+  useEffect(() => {
+    if (result?.ok && result.data) {
+      const createProfile = async () => {
+        try {
+          const role = localStorage.getItem('pending_profile_role');
+          const userId = localStorage.getItem('pending_user_id');
+
+          if (!role || !userId) return;
+
+          const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+          const res = await fetch(`${base}/api/profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_user: userId, role }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            setProfileResult({ ok: true, data });
+            localStorage.removeItem('pending_profile_role');
+            localStorage.removeItem('pending_user_id');
+          } else {
+            setProfileResult({ ok: false, message: data?.message || 'Error creando el perfil' });
+          }
+        } catch (error: any) {
+          setProfileResult({ ok: false, message: error?.message || 'Error de red creando el perfil' });
+        }
+      };
+
+      createProfile();
+    }
+  }, [result]);
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +178,19 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <p>{result.message}</p>
+                )}
+              </div>
+            )}
+
+            {profileResult && (
+              <div className={`mt-4 rounded-lg border p-4 text-sm ${profileResult.ok ? 'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-300' : 'border-red-300 bg-red-50 text-red-800 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-300'}`}>
+                {profileResult.ok ? (
+                  <>
+                    <p className="font-medium">Creación de perfil exitosa</p>
+                    <pre className="mt-2 overflow-auto whitespace-pre-wrap break-words text-xs">{JSON.stringify(profileResult.data, null, 2)}</pre>
+                  </>
+                ) : (
+                  <p>{profileResult.message}</p>
                 )}
               </div>
             )}
