@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_create: {
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW
+            allowNull: false
         },
         date_update: {
             type: DataTypes.DATE,
@@ -62,9 +62,9 @@ module.exports = (sequelize, DataTypes) => {
         }
     }, {
         tableName: 'n_user',
-        timestamps: false,
-        createdAt: 'date_create',
-        updatedAt: 'date_update',
+        timestamps: true, // Habilitar timestamps
+        createdAt: 'date_create', // Mapear createdAt a date_create
+        updatedAt: 'date_update', // Mapear updatedAt a date_update
         hooks: {
             beforeCreate: async (user) => {
                 user.password = await bcrypt.hash(user.password, 10);

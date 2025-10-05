@@ -1,4 +1,4 @@
-const { Customer, Provider } = require('../models');
+const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
 
 exports.createProfile = async (req, res) => {
@@ -49,7 +49,12 @@ exports.getProfile = async (req, res) => {
             return error(res, 'Usuario no encontrado', 404);
         }
 
-        return success(res, user, 'Perfil obtenido correctamente');
+        // Convertir el usuario de Sequelize a un objeto plano
+        const userJSON = user.toJSON();
+        // Añadir la propiedad 'role' basada en is_staff
+        userJSON.role = user.is_staff ? 'provider' : 'customer';
+
+        return success(res, userJSON, 'Perfil obtenido correctamente');
     } catch (e) {
         console.error('Error: ', e);
         return error(res, 'Error obteniendo el perfil');
