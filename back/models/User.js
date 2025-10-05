@@ -92,6 +92,18 @@ module.exports = (sequelize, DataTypes) => {
             sourceKey: 'id_user',
             as: 'userVerificationCodes',
         });
+
+        User.hasOne(models.Customer, {
+            foreignKey: 'user_id',
+            sourceKey: 'id_user',
+            as: 'customer',
+        });
+
+        User.hasOne(models.Provider, {
+            foreignKey: 'user_id',
+            sourceKey: 'id_user',
+            as: 'provider',
+        });
     }
 
     return User;

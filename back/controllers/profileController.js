@@ -26,3 +26,32 @@ exports.createProfile = async (req, res) => {
         return error(res, 'Error creando el perfil');
     }
 };
+
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.user.sub; // Get user ID from token payload
+
+        const user = await User.findOne({
+            where: { id_user: userId },
+            include: [
+                {
+                    model: Customer,
+                    as: 'customer',
+                },
+                {
+                    model: Provider,
+                    as: 'provider',
+                }
+            ]
+        });
+
+        if (!user) {
+            return error(res, 'Usuario no encontrado', 404);
+        }
+
+        return success(res, user, 'Perfil obtenido correctamente');
+    } catch (e) {
+        console.error('Error: ', e);
+        return error(res, 'Error obteniendo el perfil');
+    }
+};
