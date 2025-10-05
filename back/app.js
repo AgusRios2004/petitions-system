@@ -10,6 +10,8 @@ const customerRoutes = require('./routes/customerRoutes');
 const providerRoutes =  require('./routes/providerRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const petitionRoutes = require('./routes/petitionRoutes');
+const postulationRoutes = require('./routes/postulationRoutes');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +22,8 @@ app.use('/api/customer', customerRoutes);
 app.use('/api/provider', providerRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api', profileRoutes);
+app.use('/api/petition', petitionRoutes);
+app.use('/api/postulation', postulationRoutes);
 
 (async () => {
   try {

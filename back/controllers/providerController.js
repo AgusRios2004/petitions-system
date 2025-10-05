@@ -40,10 +40,10 @@ exports.updateProvider = async(req, res) => {
 
 exports.registerProvider = async(req, res) => {
     try {
-        const {name, lastname, email, password, idTypeProvider, idProfession, addressId, description} = req.body;
+        const {name, lastname, email, password, idTypeProvider, idProfession, addressId, description, isStaff} = req.body;
 
         const result = await service.registerProvider(
-            {name, lastname, email, password}, //user data
+            {name, lastname, email, password, isStaff}, //user data
             {idTypeProvider, idProfession, addressId, description} //provider data
         )
         
