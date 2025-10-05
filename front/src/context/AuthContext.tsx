@@ -18,20 +18,20 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (name: string, lastname: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  register: (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider') => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
 
 // 1. Create the Context
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 // API instances
 const authApi = axios.create({
-  baseURL: 'http://localhost:3001/api/auth',
+  baseURL: 'http://localhost:3000/api/auth',
 });
 
 const profileApi = axios.create({
-  baseURL: 'http://localhost:3001/api/profile',
+  baseURL: 'http://localhost:3000/api/profile',
 });
 
 // 2. Create the Provider
@@ -84,9 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, lastname: string, email: string, password: string) => {
+  const register = async (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider') => {
     try {
-      await authApi.post('/register', { name, lastname, email, password });
+      await authApi.post('/register', { name, lastname, email, password, role });
       return { success: true };
     } catch (error: any) {
       console.error('Error en el registro:', error.response?.data || error.message);
