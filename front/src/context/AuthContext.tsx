@@ -2,11 +2,14 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
-// Define the shape of the User object
+// Define the shape of the User object to match the backend response
 interface User {
+  id_user: number;
   name: string;
   lastname: string;
   email: string;
+  customer: object | null; // Define more specific types if you can
+  provider: object | null; // Define more specific types if you can
   // Add any other user properties you expect from the API
 }
 
@@ -19,36 +22,61 @@ interface AuthContextType {
   logout: () => void;
 }
 
-// 1. Crear el Contexto with a default value of null
+// 1. Create the Context
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// 2. Crear el Proveedor del Contexto
+// API instances
+const authApi = axios.create({
+  baseURL: 'http://localhost:3001/api/auth',
+});
+
+const profileApi = axios.create({
+  baseURL: 'http://localhost:3001/api/profile',
+});
+
+// 2. Create the Provider
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const api = axios.create({
-    baseURL: 'http://localhost:3001/api/auth',
-  });
-
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // In a real app, you'd validate the token with the backend here
-      // and fetch user data.
-    }
-    setLoading(false);
+    const verifyToken = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // Set token for future requests
+          profileApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          const response = await profileApi.get('/me');
+          setUser(response.data.data); // Assuming the user object is in response.data.data based on your response middleware
+        } catch (error) {
+          console.error("Token verification failed", error);
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    verifyToken();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/login', { email, password });
+      const response = await authApi.post('/login', { email, password });
       const { accessToken, refreshToken, user } = response.data;
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      setUser(user);
       
+      // Set token for subsequent profile requests
+      profileApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      
+      // Fetch full profile data
+      const profileResponse = await profileApi.get('/me');
+      setUser(profileResponse.data.data);
+
       return { success: true };
     } catch (error: any) {
       console.error('Error en el login:', error.response?.data || error.message);
@@ -58,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (name: string, lastname: string, email: string, password: string) => {
     try {
-      await api.post('/register', { name, lastname, email, password });
+      await authApi.post('/register', { name, lastname, email, password });
       return { success: true };
     } catch (error: any) {
       console.error('Error en el registro:', error.response?.data || error.message);
@@ -70,6 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    delete profileApi.defaults.headers.common['Authorization'];
     window.location.href = '/login';
   };
 
@@ -84,11 +113,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 3. Crear un Hook para usar el Contexto
+// 3. Create a Hook to use the Context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
