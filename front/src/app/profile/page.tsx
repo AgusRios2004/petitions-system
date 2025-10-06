@@ -156,7 +156,7 @@ export default function ProfilePage() {
   // Muestra un estado de carga mientras se verifica la autenticación
   if (loading || !user) { // Comprobar 'loading' en lugar de 'isLoadingAuth'
     return (
-      <div className="flex items-center justify-center min-h-screen bg-ray-900 text-white">
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
         <p className="text-xl">Cargando perfil...</p>
       </div>
     );
@@ -164,7 +164,7 @@ export default function ProfilePage() {
 
   // Hacemos un casting del usuario para asegurar que tiene el rol.
   // Esto es una solución temporal. Lo ideal es que el backend devuelva el rol.
-  const profileUser = user as ProfileUser;
+  const profileUser = user as unknown as ProfileUser;
   if (!profileUser.role) {
     // Asignar un rol basado en si tiene un perfil de customer o provider
     profileUser.role = profileUser.provider ? 'provider' : 'customer';

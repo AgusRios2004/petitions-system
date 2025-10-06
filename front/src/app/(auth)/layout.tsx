@@ -2,8 +2,12 @@
 import React from 'react';
 import { Box } from '@mui/material';
 
-import GuestGuard from "@/components/auth/GuestGuard";
+import ProfileCompletionGuard from "@/components/auth/ProfileCompletionGuard";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <GuestGuard>{children}</GuestGuard>;
+  return (
+    <ProfileCompletionGuard>
+      {children}
+    </ProfileCompletionGuard>
+  );
 }
