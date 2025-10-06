@@ -51,6 +51,18 @@ exports.getProfile = async (req, res) => {
 
         // Convertir el usuario de Sequelize a un objeto plano
         const userJSON = user.toJSON();
+
+        // Determinar el estado de completitud del perfil
+        const isCustomerComplete = !!(user.customer && user.customer.dni && user.customer.phone && user.customer.address_id);
+        const isProviderComplete = !!(user.provider && user.provider.id_type_provider && user.provider.id_profession && user.provider.address_id);
+        const hasCompletedProfile = isCustomerComplete || isProviderComplete;
+
+        userJSON.profileStatus = {
+            isCustomerComplete,
+            isProviderComplete,
+            hasCompletedProfile,
+        };
+        
         // Añadir la propiedad 'role' basada en is_staff
         userJSON.role = user.is_staff ? 'provider' : 'customer';
 
