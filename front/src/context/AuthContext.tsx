@@ -10,6 +10,11 @@ interface User {
   email: string;
   customer: object | null; // Define more specific types if you can
   provider: object | null; // Define more specific types if you can
+  profileStatus: {
+    isCustomerComplete: boolean;
+    isProviderComplete: boolean;
+    hasCompletedProfile: boolean;
+  };
   // Add any other user properties you expect from the API
 }
 
@@ -48,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           profileApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
           const response = await profileApi.get('/me');
+          console.log('API Response for /me:', response.data);
           setUser(response.data.data); // Assuming the user object is in response.data.data based on your response middleware
         } catch (error) {
           console.error("Token verification failed", error);
