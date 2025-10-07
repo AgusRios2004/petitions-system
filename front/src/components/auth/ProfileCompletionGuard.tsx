@@ -28,7 +28,7 @@ export default function ProfileCompletionGuard({ children }: { children: React.R
           borderBottom: '1px solid #ffcc80', // Orange border
         }}>
           <strong>Advertencia:</strong> Tu perfil está incompleto. Por favor, 
-          <Link href="/profile" style={{ textDecoration: 'underline', marginLeft: '0.5rem', color: '#e65100' }}>
+          <Link href="/profile/complete" style={{ textDecoration: 'underline', marginLeft: '0.5rem', color: '#e65100' }}>
             completa tu información aquí
           </Link>
           .
