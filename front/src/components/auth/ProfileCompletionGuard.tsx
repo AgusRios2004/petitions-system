@@ -1,34 +1,40 @@
 "use client";
 import { useAuth } from '@/context/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function ProfileCompletionGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Wait for authentication to be resolved
-    if (loading) {
-      return;
-    }
+    // This runs only on the client, after initial render
+    setIsClient(true);
+  }, []);
 
-    // If the user is logged in, but the profile is not complete
-    if (user && user.profileStatus && !user.profileStatus.hasCompletedProfile) {
-      // And they are not already on the profile page (to avoid a redirect loop)
-      if (pathname !== '/profile') {
-        router.push('/profile');
-      }
-    }
-  }, [user, loading, router, pathname]);
+  const needsProfileCompletion = user && !user.profileStatus?.hasCompletedProfile;
 
-  // While loading, or if the user needs to be redirected, we can show a loader or nothing
-  if (loading || (user && user.profileStatus && !user.profileStatus.hasCompletedProfile && pathname !== '/profile')) {
-    // You can return a full-page loader here if you want
-    return <div>Loading...</div>; 
-  }
+  // We only render the warning on the client side to avoid hydration mismatch
+  const shouldShowWarning = isClient && !loading && needsProfileCompletion;
 
-  // Otherwise, show the actual page content
-  return <>{children}</>;
+  return (
+    <>
+      {shouldShowWarning && (
+        <div style={{
+          padding: '1rem',
+          backgroundColor: '#fff3e0', // Light Orange
+          color: '#e65100', // Dark Orange text
+          textAlign: 'center',
+          borderBottom: '1px solid #ffcc80', // Orange border
+        }}>
+          <strong>Advertencia:</strong> Tu perfil está incompleto. Por favor, 
+          <Link href="/profile" style={{ textDecoration: 'underline', marginLeft: '0.5rem', color: '#e65100' }}>
+            completa tu información aquí
+          </Link>
+          .
+        </div>
+      )}
+      {children}
+    </>
+  );
 }

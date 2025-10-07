@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function GuestGuard({ children }: { children: React.ReactNode }) {
+  // Development mode: Allow access to guest pages even if logged in.
+  return <>{children}</>;
+
+  /*
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -23,4 +27,5 @@ export default function GuestGuard({ children }: { children: React.ReactNode }) 
 
   // If the user is not logged in, show the guest page (login/register)
   return <>{children}</>;
+  */
 }
