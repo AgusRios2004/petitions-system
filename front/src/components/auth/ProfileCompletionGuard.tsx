@@ -17,9 +17,11 @@ export default function ProfileCompletionGuard({ children }: { children: React.R
   // We only render the warning on the client side to avoid hydration mismatch
   const shouldShowWarning = isClient && !loading && needsProfileCompletion;
 
+  const isAuthRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register'));
+
   return (
     <>
-      {shouldShowWarning && (
+      {shouldShowWarning && !isAuthRoute && (
         <div style={{
           padding: '1rem',
           backgroundColor: '#fff3e0', // Light Orange
