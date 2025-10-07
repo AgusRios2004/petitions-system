@@ -8,14 +8,11 @@ interface User {
   name: string;
   lastname: string;
   email: string;
-  customer: object | null; // Define more specific types if you can
-  provider: object | null; // Define more specific types if you can
   profileStatus: {
     isCustomerComplete: boolean;
     isProviderComplete: boolean;
     hasCompletedProfile: boolean;
   };
-  // Add any other user properties you expect from the API
 }
 
 // Define the shape of the context value
@@ -23,7 +20,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider') => Promise<{ success: boolean; message?: string }>;
+  register: (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider' | 'both') => Promise<{ success: boolean; message?: string }>;
+  markProfileComplete: () => void;
   logout: () => void;
 }
 
@@ -31,13 +29,8 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 // API instances
-const authApi = axios.create({
-  baseURL: 'http://localhost:3000/api/auth',
-});
-
-const profileApi = axios.create({
-  baseURL: 'http://localhost:3000/api/profile',
-});
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const authApi = axios.create({ baseURL: `${API_BASE}/api/auth` });
 
 // 2. Create the Provider
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -45,43 +38,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const verifyToken = async () => {
+    const initFromStorage = () => {
       const token = localStorage.getItem('accessToken');
-      if (token) {
+      const rawUser = localStorage.getItem('user');
+      if (token && rawUser) {
         try {
-          // Set token for future requests
-          profileApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          const response = await profileApi.get('/me');
-          console.log('API Response for /me:', response.data);
-          setUser(response.data.data); // Assuming the user object is in response.data.data based on your response middleware
-        } catch (error) {
-          console.error("Token verification failed", error);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          const parsed = JSON.parse(rawUser);
+          const pendingRole = localStorage.getItem('pending_profile_role');
+          const isCustomerComplete = pendingRole === 'provider' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
+          const isProviderComplete = pendingRole === 'customer' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
+          setUser({
+            id_user: parsed.id_user,
+            name: parsed.name,
+            lastname: parsed.lastname,
+            email: parsed.email,
+            profileStatus: {
+              isCustomerComplete,
+              isProviderComplete,
+              hasCompletedProfile: isCustomerComplete || isProviderComplete,
+            },
+          });
+        } catch {
           setUser(null);
         }
+      } else {
+        setUser(null);
       }
       setLoading(false);
     };
-
-    verifyToken();
+    initFromStorage();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       const response = await authApi.post('/login', { email, password });
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, refreshToken, user: basicUser } = response.data;
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      
-      // Set token for subsequent profile requests
-      profileApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      
-      // Fetch full profile data
-      const profileResponse = await profileApi.get('/me');
-      setUser(profileResponse.data.data);
+      localStorage.setItem('user', JSON.stringify(basicUser));
+
+      const pendingRole = localStorage.getItem('pending_profile_role');
+      const isCustomerComplete = pendingRole === 'provider' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
+      const isProviderComplete = pendingRole === 'customer' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
+
+      setUser({
+        id_user: basicUser.id_user,
+        name: basicUser.name,
+        lastname: basicUser.lastname,
+        email: basicUser.email,
+        profileStatus: {
+          isCustomerComplete,
+          isProviderComplete,
+          hasCompletedProfile: isCustomerComplete || isProviderComplete,
+        },
+      });
 
       return { success: true };
     } catch (error: any) {
@@ -90,9 +101,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider') => {
+  const register = async (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider' | 'both') => {
     try {
-      await authApi.post('/register', { name, lastname, email, password, role });
+      await authApi.post('/register', { name, lastname, email, password, enabled: 1 });
+      try {
+        localStorage.setItem('pending_profile_role', role);
+      } catch {}
       return { success: true };
     } catch (error: any) {
       console.error('Error en el registro:', error.response?.data || error.message);
@@ -104,8 +118,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    delete profileApi.defaults.headers.common['Authorization'];
+    localStorage.removeItem('user');
+    localStorage.removeItem('pending_profile_role');
     window.location.href = '/login';
+  };
+
+  const markProfileComplete = () => {
+    try {
+      localStorage.removeItem('pending_profile_role');
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        setUser({
+          id_user: parsed.id_user,
+          name: parsed.name,
+          lastname: parsed.lastname,
+          email: parsed.email,
+          profileStatus: {
+            isCustomerComplete: true,
+            isProviderComplete: true,
+            hasCompletedProfile: true,
+          },
+        });
+      }
+    } catch {}
   };
 
   const value: AuthContextType = {
@@ -113,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     login,
     register,
+    markProfileComplete,
     logout,
   };
 

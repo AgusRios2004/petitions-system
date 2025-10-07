@@ -107,7 +107,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Asigna el rol y muestra siempre el dashboard
+  // Crea un NUEVO objeto para el perfil, sin mutar el estado original de useAuth.
   const profileUser: UserProfile = {
     ...user,
     role: user.provider ? 'provider' : 'customer',

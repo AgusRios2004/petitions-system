@@ -23,15 +23,8 @@ interface AuthUser {
 
 // --- COMPONENTE PARA EL FORMULARIO DE COMPLETAR PERFIL ---
 const ProfileCompletionFlow = ({ user }: { user: AuthUser }) => {
-  const { isCustomerComplete, isProviderComplete, hasCompletedProfile } = user.profileStatus;
   const router = useRouter();
-
-  // Si por alguna razón el perfil ya está completo, redirigir al perfil principal
-  useEffect(() => {
-    if (hasCompletedProfile) {
-      router.push('/profile');
-    }
-  }, [hasCompletedProfile, router]);
+  const { isCustomerComplete, isProviderComplete, hasCompletedProfile } = user.profileStatus;
 
   const needsCustomer = user.customer && !isCustomerComplete;
   const needsProvider = user.provider && !isProviderComplete;
@@ -39,45 +32,64 @@ const ProfileCompletionFlow = ({ user }: { user: AuthUser }) => {
   const initialTab = needsCustomer ? 'customer' : 'provider';
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  if (needsCustomer && needsProvider) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-4">Completa tu Perfil</h1>
-        <p className="text-gray-400 mb-6">Para continuar, necesitas completar la información de tu perfil de cliente y de proveedor.</p>
-        <div className="border-b border-gray-700 mb-6">
-          <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('customer')}
-              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-lg ${
-                activeTab === 'customer'
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              Completar Perfil Cliente
-            </button>
-            <button
-              onClick={() => setActiveTab('provider')}
-              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-lg ${
-                activeTab === 'provider'
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              Completar Perfil Proveedor
-            </button>
-          </nav>
+  // Si el perfil ya está completo, redirige.
+  useEffect(() => {
+    if (hasCompletedProfile) {
+      router.push('/profile');
+    }
+  }, [hasCompletedProfile, router]);
+
+  // Si hay algo que completar, muestra los formularios.
+  if (needsCustomer || needsProvider) {
+    if (needsCustomer && needsProvider) {
+      // Caso para ambos perfiles
+      return (
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-4">Completa tu Perfil</h1>
+          <p className="text-gray-400 mb-6">Para continuar, necesitas completar la información de tu perfil de cliente y de proveedor.</p>
+          <div className="border-b border-gray-700 mb-6">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('customer')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-lg ${
+                  activeTab === 'customer'
+                    ? 'border-blue-500 text-white'
+                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                }`}>
+                Perfil Cliente
+              </button>
+              <button
+                onClick={() => setActiveTab('provider')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-lg ${
+                  activeTab === 'provider'
+                    ? 'border-blue-500 text-white'
+                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                }`}>
+                Perfil Proveedor
+              </button>
+            </nav>
+          </div>
+          {activeTab === 'customer' && <CustomerCompletionForm />}
+          {activeTab === 'provider' && <ProviderCompletionForm />}
         </div>
-        {activeTab === 'customer' && <CustomerCompletionForm />}
-        {activeTab === 'provider' && <ProviderCompletionForm />}
-      </div>
-    );
-  } else if (needsCustomer) {
-    return <CustomerCompletionForm />;
-  } else if (needsProvider) {
-    return <ProviderCompletionForm />;
-  } else {
-    // Esto se muestra mientras se redirige si el perfil ya está completo
-    return <p className="text-xl text-white">Verificando estado del perfil...</p>;
+      );
+    } else if (needsCustomer) {
+      return <CustomerCompletionForm />;
+    } else {
+      return <ProviderCompletionForm />;
+    }
   }
+
+  // Fallback: si no hay nada que completar, muestra un mensaje y enlace para volver.
+  return (
+    <div className="text-center">
+      <h2 className="text-2xl font-bold mb-4">Tu perfil ya está completo.</h2>
+      <p className="text-gray-400 mb-6">No hay más pasos requeridos por ahora.</p>
+      <Link href="/profile" className="text-blue-500 hover:underline">
+        Volver a mi perfil
+      </Link>
+    </div>
+  );
 };
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
