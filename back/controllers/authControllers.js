@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { User, Customer, Provider } = require('../models'); // Importar Customer y Provider
+const { User, Customer, Provider, Address, sequelize } = require('../models');
 const { error, success } = require('../middlewares/response');
 
 const signAccessToken = (payload) => 
@@ -12,50 +12,84 @@ const signRefreshToken = (payload) => {
 
 // --- FUNCIÓN DE REGISTRO MODIFICADA ---
 exports.register = async (req, res) => {
+    const transaction = await sequelize.transaction();
     try {
-        // 1. Recibir el nuevo campo 'role' desde el frontend
-        const { name, lastname, email, password, role } = req.body;
-        if(!name || !lastname || !email || !password || !role) {
-            return error(res, 'Faltan campos (name, lastname, email, password, role)');
+        const { name, lastname, email, password, role, dni, phone, professionId, typeProviderId, description, address } = req.body;
+        const { countryId, provinceId, cityId, street } = address;
+
+        if (!name || !lastname || !email || !password || !role || !countryId || !provinceId || !cityId || !street) {
+            await transaction.rollback();
+            return error(res, 'Faltan campos obligatorios para el registro y la dirección');
         }
 
-        if (role !== 'customer' && role !== 'provider') {
-            return error(res, 'El rol debe ser "customer" o "provider"');
-        }
-        
-        const exists = await User.findOne({where: {email}});
-        if(exists) return error(res, 'Email ya registrado');
-
-        // 2. Asignar is_staff basado en el rol
-        const is_staff = role === 'provider';
-
-        // 3. Crear el usuario con el campo is_staff
-        const user = await User.create({
-            name, 
-            lastname, 
-            email, 
-            password, 
-            is_staff, // Asignar el valor
-            is_active: true, 
-            enabled: true
-        });
-
-        // 4. Crear el perfil asociado (Customer o Provider)
         if (role === 'customer') {
-            await Customer.create({ id_user: user.id_user });
+            if (!dni || !phone) {
+                await transaction.rollback();
+                return error(res, 'Faltan campos obligatorios para el perfil de cliente (DNI, Teléfono)');
+            }
+        } else if (role === 'provider') {
+            if (!professionId || !typeProviderId || !description) {
+                await transaction.rollback();
+                return error(res, 'Faltan campos obligatorios para el perfil de proveedor (Profesión, Tipo de Proveedor, Descripción)');
+            }
         } else {
-            await Provider.create({ id_user: user.id_user });
+            await transaction.rollback();
+            return error(res, 'Rol no válido. Debe ser "customer" o "provider"');
         }
 
-        // 5. Devolver una respuesta exitosa
+        const exists = await User.findOne({ where: { email } });
+        if (exists) {
+            await transaction.rollback();
+            return error(res, 'Email ya registrado');
+        }
+
+        // 1. Crear la dirección
+        const newAddress = await Address.create({
+            id_country: countryId,
+            id_province: provinceId,
+            id_city: cityId,
+            street: street,
+        }, { transaction });
+
+        // 2. Crear el usuario
+        const is_staff = role === 'provider';
+        const user = await User.create({
+            name,
+            lastname,
+            email,
+            password,
+            is_staff,
+            is_active: true,
+            enabled: true,
+        }, { transaction });
+
+        // 3. Crear el perfil asociado (Customer o Provider)
+        if (role === 'customer') {
+            await Customer.create({
+                user_id: user.id_user,
+                dni: dni,
+                phone: phone,
+                address_id: newAddress.id_address,
+            }, { transaction });
+        } else if (role === 'provider') {
+            await Provider.create({
+                user_id: user.id_user,
+                id_type_provider: typeProviderId,
+                id_profession: professionId,
+                address_id: newAddress.id_address,
+                description: description,
+            }, { transaction });
+        }
+
+        await transaction.commit();
         return success(res, { userId: user.id_user, role: role }, 'Usuario y perfil creados correctamente');
 
     } catch (e) {
+        await transaction.rollback();
         console.error('Error en el registro: ', e);
-        // Si algo falla, el error ahora será más específico
         return error(res, 'Error registrando al usuario o creando su perfil');
-    };
-}
+    }
+};
 
 exports.login = async (req, res) => {
     try {
