@@ -41,14 +41,14 @@ module.exports = (sequelize, DataTypes) => {
     Province.associate = (models) => {
         Province.belongsTo(models.Country, {
             foreignKey: 'id_country',
-            as: 'countries',
+            as: 'country',
         });
         Province.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
         Province.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
+            foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
     }
