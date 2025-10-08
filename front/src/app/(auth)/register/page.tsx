@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import axios from 'axios';
 
-// Helper para crear una instancia de Axios
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
 });
@@ -19,36 +19,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
 
-  // --- FORM STATE ---
-  const [role, setRole] = useState<'customer' | 'provider'>('customer');
-  // User fields
-  const [name, setName] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  // Customer fields
-  const [dni, setDni] = useState('');
-  const [phone, setPhone] = useState('');
-  // Provider fields
-  const [professionId, setProfessionId] = useState('');
-  const [typeProviderId, setTypeProviderId] = useState('');
-  const [description, setDescription] = useState('');
-  // Address fields (shared)
-  const [countryId, setCountryId] = useState('');
-  const [provinceId, setProvinceId] = useState('');
-  const [departmentId, setDepartmentId] = useState(''); // New state for department
-  const [cityId, setCityId] = useState('');
-  const [street, setStreet] = useState('');
 
-  // --- DROPDOWN DATA STATE ---
-  const [professions, setProfessions] = useState<any[]>([]);
-  const [typeProviders, setTypeProviders] = useState<any[]>([]);
-  const [countries, setCountries] = useState<any[]>([]);
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]); // New state for departments
-  const [cities, setCities] = useState<any[]>([]);
-
-  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -145,7 +116,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     const userData = { name, lastname, email, password, role };
-    const addressData = { countryId, provinceId, departmentId, cityId, street };
+    const addressData = { street, number, floor, apartment, postal_code: postalCode, id_city: cityId };
     const customerData = { dni, phone };
     const providerData = { professionId, typeProviderId, description };
 
@@ -157,7 +128,7 @@ export default function RegisterPage() {
     }
 
     try {
-      // La función `register` del contexto necesitará una actualización para aceptar este payload
+
       const result = await register(payload);
 
       if (result.success) {
@@ -171,8 +142,6 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
-
-  console.log(countries)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-950 py-12">
@@ -196,19 +165,19 @@ export default function RegisterPage() {
 
           {/* --- USER FIELDS --- */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div><label htmlFor="name">Nombre</label><Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-            <div><label htmlFor="lastname">Apellido</label><Input id="lastname" type="text" value={lastname} onChange={(e) => setLastname(e.target.value)} required /></div>
+            <div><label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label><Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+            <div><label htmlFor="lastname" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label><Input id="lastname" type="text" value={lastname} onChange={(e) => setLastname(e.target.value)} required /></div>
           </div>
-          <div><label htmlFor="email">Email</label><Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-          <div><label htmlFor="password">Contraseña</label><Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+          <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label><Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+          <div><label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label><Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
 
           {/* --- DYNAMIC FIELDS --- */}
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             {role === 'customer' && (
               <div className="space-y-5">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Datos de Cliente</h3>
-                <div><label htmlFor="dni">DNI</label><Input id="dni" type="text" value={dni} onChange={(e) => setDni(e.target.value)} required /></div>
-                <div><label htmlFor="phone">Teléfono</label><Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></div>
+                <div><label htmlFor="dni" className="block text-sm font-medium text-gray-700 dark:text-gray-300">DNI</label><Input id="dni" type="text" value={dni} onChange={(e) => setDni(e.target.value)} required /></div>
+                <div><label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label><Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></div>
               </div>
             )}
 
@@ -216,20 +185,20 @@ export default function RegisterPage() {
               <div className="space-y-5">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Datos de Proveedor</h3>
                 <div>
-                  <label htmlFor="typeProviderId">Tipo de Proveedor</label>
+                  <label htmlFor="typeProviderId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Proveedor</label>
                   <select id="typeProviderId" value={typeProviderId} onChange={(e) => setTypeProviderId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                     <option value="">Selecciona un tipo...</option>
                     {typeProviders.map(tp => <option key={tp.id_type_provider} value={tp.id_type_provider}>{tp.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="professionId">Profesión</label>
+                  <label htmlFor="professionId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Profesión</label>
                   <select id="professionId" value={professionId} onChange={(e) => setProfessionId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                     <option value="">Selecciona una profesión...</option>
                     {professions.map(p => <option key={p.id_profession} value={p.id_profession}>{p.name}</option>)}
                   </select>
                 </div>
-                <div><label htmlFor="description">Descripción</label><textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2" /></div>
+                <div><label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label><textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 block text-sm font-medium text-gray-700 dark:text-gray-300" /></div>
               </div>
             )}
           </div>
@@ -239,34 +208,38 @@ export default function RegisterPage() {
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Dirección</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
               <div>
-                <label htmlFor="countryId">País</label>
+                <label htmlFor="countryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">País</label>
                 <select id="countryId" value={countryId} onChange={(e) => setCountryId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                   <option value="">Selecciona un país...</option>
                   {countries.map(c => <option key={c.id_country} value={c.id_country}>{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="provinceId">Provincia</label>
+                <label htmlFor="provinceId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provincia</label>
                 <select id="provinceId" value={provinceId} onChange={(e) => setProvinceId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!countryId}>
                   <option value="">Selecciona una provincia...</option>
                   {provinces.map(p => <option key={p.id_province} value={p.id_province}>{p.name}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="departmentId">Departamento</label>
+                <label htmlFor="departmentId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Departamento</label>
                 <select id="departmentId" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!provinceId}>
                   <option value="">Selecciona un departamento...</option>
                   {departments.map(d => <option key={d.id_department} value={d.id_department}>{d.name}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="cityId">Ciudad</label>
+                <label htmlFor="cityId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ciudad</label>
                 <select id="cityId" value={cityId} onChange={(e) => setCityId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!departmentId}>
                   <option value="">Selecciona una ciudad...</option>
                   {cities.map(c => <option key={c.id_city} value={c.id_city}>{c.name}</option>)}
                 </select>
               </div>
-              <div><label htmlFor="street">Calle y Número</label><Input id="street" type="text" value={street} onChange={(e) => setStreet(e.target.value)} required /></div>
+              <div className="sm:col-span-2"><label htmlFor="street" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Calle</label><Input id="street" type="text" value={street} onChange={(e) => setStreet(e.target.value)} required /></div>
+              <div><label htmlFor="number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Número</label><Input id="number" type="text" value={number} onChange={(e) => setNumber(e.target.value)} /></div>
+              <div><label htmlFor="floor" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Piso (Opcional)</label><Input id="floor" type="text" value={floor} onChange={(e) => setFloor(e.target.value)} /></div>
+              <div><label htmlFor="apartment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Depto. (Opcional)</label><Input id="apartment" type="text" value={apartment} onChange={(e) => setApartment(e.target.value)} /></div>
+              <div><label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Código Postal</label><Input id="postalCode" type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} /></div>
             </div>
           </div>
 

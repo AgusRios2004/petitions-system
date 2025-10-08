@@ -12,15 +12,16 @@ interface UserProfile {
   customer: object | null;
   provider: object | null;
   profile_picture_url?: string | null;
-  role?: 'customer' | 'provider';
+  role: 'customer' | 'provider' | 'admin' | 'unknown';
+  is_staff?: boolean | number;
   profileStatus?: {
-    isCustomerComplete: boolean;
-    isProviderComplete: boolean;
-    hasCompletedProfile: boolean;
+    isCustomerComplete?: boolean;
+    isProviderComplete?: boolean;
+    hasCompletedProfile?: boolean;
   };
 }
 
-// --- SUBCOMPONENTES ---
+
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
   const [activeTab, setActiveTab] = useState('perfil-publico');
   const tabs = [
@@ -89,13 +90,16 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
   );
 };
 
-// --- PRINCIPAL ---
+
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => { setIsClient(true); }, []);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   useEffect(() => {
     if (isClient && !loading && !user) {
@@ -106,55 +110,46 @@ export default function ProfilePage() {
   if (!isClient || loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <p className="text-xl">Cargando perfil...</p>
-      </div>
-    );
-  }
-
-  const profileUser = {
-    ...(user as any),
-    role: (user as any)?.provider ? 'provider' : 'customer',
-    profileStatus: (user as any)?.profileStatus || { hasCompletedProfile: true },
-  } as UserProfile;
-
-  // Si no completó el perfil
-  if (!profileUser.profileStatus?.hasCompletedProfile) {
-    return (
-      <div className="container mx-auto mt-10 text-center">
-        <h1 className="text-3xl font-bold">Completa tu perfil</h1>
-        <p className="mt-4">
-          Hola {profileUser.name}, por favor completa tu perfil para continuar.
-        </p>
-        <div className="mt-8 flex justify-center space-x-4">
-          <button 
-            onClick={() => router.push('/profile/complete')} 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">
-            Completar Perfil
-          </button>
+        <div>
+          <p className="text-xl mb-4">Cargando perfil...</p>
+            {/* Mostrar el usuario en pantalla */}
+            <pre className="bg-gray-800 p-4 rounded text-sm overflow-x-auto">
+            {JSON.stringify(user, null, 2)}
+            </pre>
         </div>
       </div>
     );
   }
 
-  // Dashboard
   return (
     <main className="min-h-screen bg-gray-900 text-white p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white">
-            Bienvenido, {profileUser.name}
+            Bienvenido, {user.name}
           </h1>
           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
-            {profileUser.profile_picture_url ? (
-              <img src={profileUser.profile_picture_url} alt="Foto de perfil" className="w-full h-full object-cover" />
+            {user.profile_picture_url ? (
+              <img
+                src={user.profile_picture_url}
+                alt="Foto de perfil"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <span className="text-gray-400 text-sm">Foto</span>
             )}
           </div>
         </header>
-        {profileUser.role === 'provider' 
-          ? <ProviderProfile user={profileUser} /> 
-          : <CustomerProfile user={profileUser} />}
+
+        {user.role === 'provider' ? (
+          <ProviderProfile user={user as UserProfile} />
+        ) : user.role === 'customer' ? (
+          <CustomerProfile user={user as UserProfile} />
+        ) : (
+          <p className="text-center text-gray-400 mt-10">
+            Rol desconocido o sin asignar.
+          </p>
+        )}
       </div>
     </main>
   );

@@ -11,6 +11,8 @@ interface User {
   profile_picture_url?: string | null;
   customer?: any | null;
   provider?: any | null;
+  role: 'provider' | 'customer' | 'admin' | 'unknown';
+  is_staff?: boolean | number;
 }
 
 interface AuthContextType {
@@ -45,6 +47,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (rawUser) {
         try {
           const parsed = JSON.parse(rawUser);
+          const role =
+            (parsed.is_staff === true || parsed.is_staff === 1)
+              ? 'provider'
+              : 'customer';
+
           setUser({
             id_user: parsed.id_user,
             name: parsed.name,
@@ -53,6 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             profile_picture_url: parsed.profile_picture_url ?? null,
             customer: parsed.customer ?? null,
             provider: parsed.provider ?? null,
+            role,
+            is_staff: parsed.is_staff ?? false,
           });
         } catch (err) {
           console.warn('No se pudo parsear user desde localStorage', err);
@@ -86,6 +95,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       authApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
+      const role =
+        (basicUser.is_staff === true || basicUser.is_staff === 1)
+          ? 'provider'
+          : 'customer';
+
       const u: User = {
         id_user: basicUser.id_user,
         name: basicUser.name,
@@ -94,6 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile_picture_url: basicUser.profile_picture_url ?? null,
         customer: basicUser.customer ?? null,
         provider: basicUser.provider ?? null,
+        is_staff: basicUser.is_staff ?? false,
+        role,
       };
 
       setUser(u);
