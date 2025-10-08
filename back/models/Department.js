@@ -17,14 +17,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        id_user_create: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        id_user_update: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
         date_create: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -34,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: DataTypes.NOW,
         },
     }, {
-        tableName: 'department',
+        tableName: 'n_department',
         timestamps: false,
     }); 
     Department.associate = (models) => {
@@ -45,14 +37,6 @@ module.exports = (sequelize, DataTypes) => {
         Department.belongsTo(models.Country, {
             foreignKey: 'id_country',
             as: 'country',
-        });
-        Department.belongsTo(models.User, {
-            foreignKey: 'id_user_create',
-            as: 'createdBy',
-        });
-        Department.belongsTo(models.User, {
-            foreignKey: 'id_user_update',
-            as: 'updatedBy',
         });
     }
     return Department;
