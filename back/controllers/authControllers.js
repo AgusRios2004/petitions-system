@@ -15,9 +15,9 @@ exports.register = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
         const { name, lastname, email, password, role, dni, phone, professionId, typeProviderId, description, address } = req.body;
-        const { countryId, provinceId, cityId, street } = address;
+        const { street, number, floor, apartment, postal_code, id_city } = address;
 
-        if (!name || !lastname || !email || !password || !role || !countryId || !provinceId || !cityId || !street) {
+        if (!name || !lastname || !email || !password || !role || !id_city || !postal_code || !number ||!street) {
             await transaction.rollback();
             return error(res, 'Faltan campos obligatorios para el registro y la dirección');
         }
@@ -45,10 +45,12 @@ exports.register = async (req, res) => {
 
         // 1. Crear la dirección
         const newAddress = await Address.create({
-            id_country: countryId,
-            id_province: provinceId,
-            id_city: cityId,
             street: street,
+            id_city: id_city,
+            number: number,
+            floor: floor,
+            apartment: apartment,
+            postal_code: postal_code,
         }, { transaction });
 
         // 2. Crear el usuario
