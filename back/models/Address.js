@@ -54,14 +54,6 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'address_id',
             as: 'customerAddress',
         });
-        Address.belongsTo(models.User, {
-            foreignKey: 'id_user_create',
-            as: 'createdBy',
-        });
-        Address.belongsTo(models.User, {
-            foreignKey: 'id_user_update',
-            as: 'updatedBy',
-        });
     }
     return Address;
 }

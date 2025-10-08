@@ -18,6 +18,7 @@ const countryRoutes = require('./routes/countryRoutes');
 const provinceRoutes = require('./routes/provinceRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
+const addressRoutes = require('./routes/addressRoutes');
 
 const app = express();
 app.use(express.json());
@@ -36,6 +37,7 @@ app.use('/api/countries', countryRoutes);
 app.use('/api/provinces', provinceRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/addresses', addressRoutes);
 
 (async () => {
   try {
