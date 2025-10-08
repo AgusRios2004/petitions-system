@@ -36,6 +36,7 @@ export default function RegisterPage() {
   // Address fields (shared)
   const [countryId, setCountryId] = useState('');
   const [provinceId, setProvinceId] = useState('');
+  const [departmentId, setDepartmentId] = useState(''); // New state for department
   const [cityId, setCityId] = useState('');
   const [street, setStreet] = useState('');
 
@@ -44,24 +45,24 @@ export default function RegisterPage() {
   const [typeProviders, setTypeProviders] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [provinces, setProvinces] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]); // New state for departments
   const [cities, setCities] = useState<any[]>([]);
 
   // --- DATA FETCHING ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profRes, typeProvRes, countryRes, provRes, cityRes] = await Promise.all([
+        const [profRes, typeProvRes, countryRes] = await Promise.all([
           api.get('/professions'),
           api.get('/type-providers'),
           api.get('/countries'),
-          api.get('/provinces'),
-          api.get('/cities'),
         ]);
         setProfessions(profRes.data.data || []);
         setTypeProviders(typeProvRes.data.data || []);
         setCountries(countryRes.data.data || []);
-        setProvinces(provRes.data.data || []);
-        setCities(cityRes.data.data || []);
+        setProvinces([]); // Initialize as empty, will be fetched dynamically
+        setDepartments([]); // Initialize as empty, will be fetched dynamically
+        setCities([]); // Initialize as empty, will be fetched dynamically
       } catch (err) {
         console.error("Failed to fetch dropdown data", err);
         setError("No se pudieron cargar los datos para el formulario. Inténtalo de nuevo más tarde.");
@@ -70,13 +71,81 @@ export default function RegisterPage() {
     fetchData();
   }, []);
 
+  // Fetch provinces when countryId changes
+  useEffect(() => {
+    if (countryId) {
+      const fetchProvinces = async () => {
+        try {
+          const res = await api.get(`/provinces/${countryId}/countries`);
+          setProvinces(res.data.data || []);
+          setProvinceId(''); // Reset province selection
+          setDepartmentId(''); // Reset department selection
+          setCities([]); // Clear cities
+          setDepartments([]); // Clear departments
+        } catch (err) {
+          console.error("Failed to fetch provinces", err);
+          setProvinces([]);
+        }
+      };
+      fetchProvinces();
+    } else {
+      setProvinces([]);
+      setProvinceId('');
+      setDepartmentId('');
+      setCities([]);
+      setDepartments([]);
+    }
+  }, [countryId]);
+
+  // Fetch departments when provinceId changes
+  useEffect(() => {
+    if (provinceId) {
+      const fetchDepartments = async () => {
+        try {
+          const res = await api.get(`/departments/${provinceId}/provinces`);
+          setDepartments(res.data.data || []);
+          setDepartmentId(''); // Reset department selection
+          setCities([]); // Clear cities
+        } catch (err) {
+          console.error("Failed to fetch departments", err);
+          setDepartments([]);
+        }
+      };
+      fetchDepartments();
+    } else {
+      setDepartments([]);
+      setDepartmentId('');
+      setCities([]);
+    }
+  }, [provinceId]);
+
+  // Fetch cities when departmentId changes
+  useEffect(() => {
+    if (departmentId) {
+      const fetchCities = async () => {
+        try {
+          const res = await api.get(`/cities/${departmentId}/departments`);
+          setCities(res.data.data || []);
+          setCityId(''); // Reset city selection
+        } catch (err) {
+          console.error("Failed to fetch cities", err);
+          setCities([]);
+        }
+      };
+      fetchCities();
+    } else {
+      setCities([]);
+      setCityId('');
+    }
+  }, [departmentId]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     const userData = { name, lastname, email, password, role };
-    const addressData = { countryId, provinceId, cityId, street };
+    const addressData = { countryId, provinceId, departmentId, cityId, street };
     const customerData = { dni, phone };
     const providerData = { professionId, typeProviderId, description };
 
@@ -102,6 +171,8 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
+  console.log(countries)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-950 py-12">
@@ -146,14 +217,14 @@ export default function RegisterPage() {
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Datos de Proveedor</h3>
                 <div>
                   <label htmlFor="typeProviderId">Tipo de Proveedor</label>
-                  <select id="typeProviderId" value={typeProviderId} onChange={(e) => setTypeProviderId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2">
+                  <select id="typeProviderId" value={typeProviderId} onChange={(e) => setTypeProviderId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                     <option value="">Selecciona un tipo...</option>
                     {typeProviders.map(tp => <option key={tp.id_type_provider} value={tp.id_type_provider}>{tp.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label htmlFor="professionId">Profesión</label>
-                  <select id="professionId" value={professionId} onChange={(e) => setProfessionId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2">
+                  <select id="professionId" value={professionId} onChange={(e) => setProfessionId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                     <option value="">Selecciona una profesión...</option>
                     {professions.map(p => <option key={p.id_profession} value={p.id_profession}>{p.name}</option>)}
                   </select>
@@ -169,21 +240,28 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
               <div>
                 <label htmlFor="countryId">País</label>
-                <select id="countryId" value={countryId} onChange={(e) => setCountryId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2">
+                <select id="countryId" value={countryId} onChange={(e) => setCountryId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white">
                   <option value="">Selecciona un país...</option>
                   {countries.map(c => <option key={c.id_country} value={c.id_country}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label htmlFor="provinceId">Provincia</label>
-                <select id="provinceId" value={provinceId} onChange={(e) => setProvinceId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2">
+                <select id="provinceId" value={provinceId} onChange={(e) => setProvinceId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!countryId}>
                   <option value="">Selecciona una provincia...</option>
                   {provinces.map(p => <option key={p.id_province} value={p.id_province}>{p.name}</option>)}
                 </select>
               </div>
               <div>
+                <label htmlFor="departmentId">Departamento</label>
+                <select id="departmentId" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!provinceId}>
+                  <option value="">Selecciona un departamento...</option>
+                  {departments.map(d => <option key={d.id_department} value={d.id_department}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
                 <label htmlFor="cityId">Ciudad</label>
-                <select id="cityId" value={cityId} onChange={(e) => setCityId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2">
+                <select id="cityId" value={cityId} onChange={(e) => setCityId(e.target.value)} required className="w-full mt-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 text-white" disabled={!departmentId}>
                   <option value="">Selecciona una ciudad...</option>
                   {cities.map(c => <option key={c.id_city} value={c.id_city}>{c.name}</option>)}
                 </select>
