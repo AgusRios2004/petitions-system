@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     Profession.associate = (models) => {
         Profession.belongsTo(models.Category, {
             foreignKey: 'id_category',
-            as: 'categories',
+            as: 'category',
         });
         Profession.belongsTo(models.User, {
             foreignKey: 'id_user_create',

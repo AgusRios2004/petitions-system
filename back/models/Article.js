@@ -37,15 +37,15 @@ module.exports = (sequelize, DataTypes) => {
     });
     Article.associate = (models) => {
         Article.belongsTo(models.Category, {
-            foreignKey: 'id_cateogory',
-            as: 'categories',
+            foreignKey: 'id_category',
+            as: 'category',
         });
          Article.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
         Article.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
+            foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
         Article.hasMany(models.Inventory, {

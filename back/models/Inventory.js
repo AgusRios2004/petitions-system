@@ -47,32 +47,31 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Inventory.associate = (models) => {
-        Inventory.belongsTo(models.Article, { 
-            foreignKey: 'id_article', 
-            as: 'articles' 
-        });
-        
-        Inventory.belongsTo(models.Postulation, { 
-            foreignKey: 'id_postulation', 
-            targetKey: 'idpostulation',
-            as: 'postulations' 
-        });
-        
-        Inventory.belongsTo(models.User, { 
-            foreignKey: 'id_user_update', 
-            as: 'userUpdate' 
-        });
-        
-        Inventory.belongsTo(models.User, { 
-            foreignKey: 'id_user_create', 
-            as: 'userCreate' 
-        });
-        
-        Inventory.hasMany(models.InventoryHasInterestHistory, {
-            foreignKey: 'id_inventory', 
-            as:'inventoryInterestHistoires'
-        });
-    };
+                Inventory.belongsTo(models.Article, {
+                    foreignKey: 'id_article',
+                    as: 'article'
+                });
+                
+                Inventory.belongsTo(models.Postulation, {
+                    foreignKey: 'id_postulation',
+                    targetKey: 'idpostulation',
+                    as: 'postulation'
+                });
+                
+                Inventory.belongsTo(models.User, {
+                    foreignKey: 'id_user_update',
+                    as: 'userUpdate'
+                });
+                
+                Inventory.belongsTo(models.User, {
+                    foreignKey: 'id_user_create',
+                    as: 'userCreate'
+                });
+                
+                Inventory.hasMany(models.InventoryHasInterestHistory, {
+                    foreignKey: 'id_inventory',
+                    as:'inventoryInterestHistories'
+                });    };
 
     return Inventory;
 };
