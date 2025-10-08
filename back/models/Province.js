@@ -13,19 +13,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        mendoza: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true,
-        },
-        id_user_create: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        id_user_update: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
         date_create: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -35,21 +22,13 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: DataTypes.NOW,
         },
     }, {
-        tableName: 'province',
+        tableName: 'n_province',
         timestamps: false,
     });
     Province.associate = (models) => {
         Province.belongsTo(models.Country, {
             foreignKey: 'id_country',
-            as: 'countries',
-        });
-        Province.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
-            as: 'createdBy',
-        });
-        Province.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
-            as: 'updatedBy',
+            as: 'country',
         });
     }
     return Province;

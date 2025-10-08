@@ -1,4 +1,4 @@
-const { Customer, Provider } = require('../models');
+const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
 
 exports.createProfile = async (req, res) => {
@@ -24,5 +24,51 @@ exports.createProfile = async (req, res) => {
     } catch (e) {
         console.error('Error: ', e);
         return error(res, 'Error creando el perfil');
+    }
+};
+
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.user.sub; // Get user ID from token payload
+
+        const user = await User.findOne({
+            where: { id_user: userId },
+            include: [
+                {
+                    model: Customer,
+                    as: 'customer',
+                },
+                {
+                    model: Provider,
+                    as: 'provider',
+                }
+            ]
+        });
+
+        if (!user) {
+            return error(res, 'Usuario no encontrado', 404);
+        }
+
+        // Convertir el usuario de Sequelize a un objeto plano
+        const userJSON = user.toJSON();
+
+        // Determinar el estado de completitud del perfil
+        const isCustomerComplete = !!(user.customer && user.customer.dni && user.customer.phone && user.customer.address_id);
+        const isProviderComplete = !!(user.provider && user.provider.id_type_provider && user.provider.id_profession && user.provider.address_id);
+        const hasCompletedProfile = isCustomerComplete || isProviderComplete;
+
+        userJSON.profileStatus = {
+            isCustomerComplete,
+            isProviderComplete,
+            hasCompletedProfile,
+        };
+        
+        // Añadir la propiedad 'role' basada en is_staff
+        userJSON.role = user.is_staff ? 'provider' : 'customer';
+
+        return success(res, userJSON, 'Perfil obtenido correctamente');
+    } catch (e) {
+        console.error('Error: ', e);
+        return error(res, 'Error obteniendo el perfil');
     }
 };

@@ -12,6 +12,13 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const petitionRoutes = require('./routes/petitionRoutes');
 const postulationRoutes = require('./routes/postulationRoutes');
+const professionRoutes = require('./routes/professionRoutes');
+const typeProviderRoutes = require('./routes/typeProviderRoutes');
+const countryRoutes = require('./routes/countryRoutes');
+const provinceRoutes = require('./routes/provinceRoutes');
+const cityRoutes = require('./routes/cityRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
+const addressRoutes = require('./routes/addressRoutes');
 
 const app = express();
 app.use(express.json());
@@ -24,6 +31,13 @@ app.use('/api/category', categoryRoutes);
 app.use('/api', profileRoutes);
 app.use('/api/petition', petitionRoutes);
 app.use('/api/postulation', postulationRoutes);
+app.use('/api/professions', professionRoutes);
+app.use('/api/type-providers', typeProviderRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/provinces', provinceRoutes);
+app.use('/api/cities', cityRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/addresses', addressRoutes);
 
 (async () => {
   try {

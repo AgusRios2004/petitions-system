@@ -17,14 +17,14 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'n_provider_category',
         timestamps: false,
     });
-    ProviderCategory.aasociate = (models) => {
+    ProviderCategory.associate = (models) => {
         ProviderCategory.belongsTo(models.Provider, {
             foreignKey: 'provider_id',
-            as: 'providers',
+            as: 'provider',
         });
         ProviderCategory.belongsTo(models.Category, {
             foreignKey: 'category_id',
-            as: 'categories',
+            as: 'category',
         });
     }
     return ProviderCategory;

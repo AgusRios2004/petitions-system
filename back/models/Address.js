@@ -44,20 +44,15 @@ module.exports = (sequelize, DataTypes) => {
     Address.associate = (models) => {
         Address.belongsTo(models.City, {
             foreignKey: 'id_city',
-            as: 'cities',
+            as: 'city',
         });
-        Address.hasMany(models.Provider, {
+        Address.hasOne(models.Provider, {
             foreignKey: 'address_id',
-            targetKey: 'id_address',
-            as: 'address',
+            as: 'providerAddress',
         });
-        Address.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
-            as: 'createdBy',
-        });
-        Address.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
-            as: 'updatedBy',
+        Address.hasOne(models.Customer, {
+            foreignKey: 'address_id',
+            as: 'customerAddress',
         });
     }
     return Address;

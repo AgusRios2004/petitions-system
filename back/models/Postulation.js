@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
     Postulation.associate = (models) => {
         Postulation.belongsTo(models.Petition, {
             foreignKey: 'id_petition',
-            as: 'petitions',
+            as: 'petition',
         });
 
         Postulation.belongsTo(models.User, {

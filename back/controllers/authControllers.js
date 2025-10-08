@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { User } = require('../models');
+const { User, Customer, Provider, Address, sequelize } = require('../models');
 const { error, success } = require('../middlewares/response');
 
 const signAccessToken = (payload) => 
@@ -9,29 +9,100 @@ const signRefreshToken = (payload) => {
     const expiration = process.env.REFRESH_EXPIRES || '7d';
     return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: expiration});
 }
-exports.register = async (req, res) => {
-    try {
-        const { name, lastname, email, password } = req.body;
-        if(!name || !lastname || !email || !password) return error(res, 'Faltan campos');
-        
-        const exists = await User.findOne({where: {email}});
-        if(exists) return error(res, 'Email ya registrado');
 
-        const user = await User.create({name, lastname, email, password, is_active: true, enabled: true});
-        return success(res, user, 'Usuario creado correctamente');
+
+exports.register = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    try {
+        const { name, lastname, email, password, role, dni, phone, professionId, typeProviderId, description, address } = req.body;
+        const { street, number, floor, apartment, postal_code, id_city } = address;
+
+        if (!name || !lastname || !email || !password || !role || !id_city || !postal_code || !number ||!street) {
+            await transaction.rollback();
+            return error(res, 'Faltan campos obligatorios para el registro y la dirección');
+        }
+
+        if (role === 'customer') {
+            if (!dni || !phone) {
+                await transaction.rollback();
+                return error(res, 'Faltan campos obligatorios para el perfil de cliente (DNI, Teléfono)');
+            }
+        } else if (role === 'provider') {
+            if (!professionId || !typeProviderId || !description) {
+                await transaction.rollback();
+                return error(res, 'Faltan campos obligatorios para el perfil de proveedor (Profesión, Tipo de Proveedor, Descripción)');
+            }
+        } else {
+            await transaction.rollback();
+            return error(res, 'Rol no válido. Debe ser "customer" o "provider"');
+        }
+
+        const exists = await User.findOne({ where: { email } });
+        if (exists) {
+            await transaction.rollback();
+            return error(res, 'Email ya registrado');
+        }
+
+        // 1. Crear la dirección
+        const newAddress = await Address.create({
+            street: street,
+            id_city: id_city,
+            number: number,
+            floor: floor,
+            apartment: apartment,
+            postal_code: postal_code,
+        }, { transaction });
+
+        // 2. Crear el usuario
+        const is_staff = role === 'provider';
+        const user = await User.create({
+            name,
+            lastname,
+            email,
+            password,
+            is_staff,
+            is_active: true,
+            enabled: true,
+        }, { transaction });
+
+        // 3. Crear el perfil asociado (Customer o Provider)
+        if (role === 'customer') {
+            await Customer.create({
+                user_id: user.id_user,
+                dni: dni,
+                phone: phone,
+                address_id: newAddress.id_address,
+            }, { transaction });
+        } else if (role === 'provider') {
+            await Provider.create({
+                user_id: user.id_user,
+                id_type_provider: typeProviderId,
+                id_profession: professionId,
+                address_id: newAddress.id_address,
+                description: description,
+            }, { transaction });
+        }
+
+        await transaction.commit();
+        return success(res, { userId: user.id_user, role: role }, 'Usuario y perfil creados correctamente');
+
     } catch (e) {
-        console.error('Error: ', e);
-        return error(res, 'Error registrando al usuario');
-    };
-}
+        await transaction.rollback();
+        console.error('Error en el registro: ', e);
+        return error(res, 'Error registrando al usuario o creando su perfil');
+    }
+};
 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if(!email || !password) return error(res, 'Email y contraseña requeridos');
 
-        const user = await User.findOne({where: {email}});
-        if(!user) return error(res, `Credenciales inválidas. Email: ${email}. Contraseña: ${password}.`);
+        const user = await User.findOne({
+            where: {email},
+            include: [{ model: Customer, as: 'customer' }, { model: Provider, as: 'provider' }]
+        });
+        if(!user) return error(res, `Credenciales inválidas.`);
 
         if (!user.is_active || !user.enabled) return error(res, 'Usuario deshabilitado');
 
@@ -51,10 +122,21 @@ exports.login = async (req, res) => {
         const accessToken = signAccessToken(payload);
         const refreshToken = signRefreshToken(payload);
 
+
+        const userResponse = {
+            id_user: user.id_user,
+            name: user.name,
+            lastname: user.lastname,
+            email: user.email,
+            is_staff: user.is_staff,
+            customer: user.customer || null,
+            provider: user.provider || null,
+        };
+
         return res.json({
             accessToken,
             refreshToken,
-            user: { id_user: user.id_user, name: user.name, lastname: user.lastname, email: user.email }
+            user: userResponse
         });
     } catch (e) {
         console.error('Error: ', e);

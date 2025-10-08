@@ -48,11 +48,6 @@ module.exports = (sequelize, DataTypes) => {
             sourceKey: 'id_category',
             as: 'providerCaregories',
         });
-        Category.hasMany(models.Profession, {
-            foreignKey: 'id_category',
-            sourceKey: 'id_category',
-            as: 'professions',
-        });
         Category.hasMany(models.Interest, {
             foreignKey: 'id_category',
             sourceKey: 'id_category',

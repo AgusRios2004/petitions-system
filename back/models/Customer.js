@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
         },
         dni: {
             type: DataTypes.STRING(20),
-            allowNull: false,
+            allowNull: true,
         },
         phone: {
             type: DataTypes.STRING(20),
-            allowNull: false,
+            allowNull: true,
         },
         address_id:{
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
     }, {
         tableName: 'n_customer',

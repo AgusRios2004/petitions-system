@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Country.associate = (models) => {
         Country.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
         Country.belongsTo(models.User, {
@@ -44,12 +44,12 @@ module.exports = (sequelize, DataTypes) => {
             as: 'updatedBy',
         });
         Country.hasMany(models.Department, {
-            foreignKey: 'id_department',
+            foreignKey: 'id_country',
             as: 'departments',
         });
         Country.hasMany(models.Province, {
             foreignKey: 'id_country',
-            as: 'countries',
+            as: 'provinces',
         });
     }
     return Country;
