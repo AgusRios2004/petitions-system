@@ -10,7 +10,7 @@ const signRefreshToken = (payload) => {
     return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: expiration});
 }
 
-// --- FUNCIÓN DE REGISTRO MODIFICADA ---
+
 exports.register = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
@@ -98,7 +98,11 @@ exports.login = async (req, res) => {
         const { email, password } = req.body;
         if(!email || !password) return error(res, 'Email y contraseña requeridos');
 
-        const user = await User.findOne({where: {email}});        if(!user) return error(res, `Credenciales inválidas.`);
+        const user = await User.findOne({
+            where: {email},
+            include: [{ model: Customer, as: 'customer' }, { model: Provider, as: 'provider' }]
+        });
+        if(!user) return error(res, `Credenciales inválidas.`);
 
         if (!user.is_active || !user.enabled) return error(res, 'Usuario deshabilitado');
 
@@ -118,10 +122,21 @@ exports.login = async (req, res) => {
         const accessToken = signAccessToken(payload);
         const refreshToken = signRefreshToken(payload);
 
+
+        const userResponse = {
+            id_user: user.id_user,
+            name: user.name,
+            lastname: user.lastname,
+            email: user.email,
+            is_staff: user.is_staff,
+            customer: user.customer || null,
+            provider: user.provider || null,
+        };
+
         return res.json({
             accessToken,
             refreshToken,
-            user: { id_user: user.id_user, name: user.name, lastname: user.lastname, email: user.email }
+            user: userResponse
         });
     } catch (e) {
         console.error('Error: ', e);
