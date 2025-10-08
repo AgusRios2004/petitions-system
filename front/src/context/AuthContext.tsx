@@ -1,98 +1,103 @@
-"use client";
+'use client';
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
-// Define the shape of the User object to match the backend response
+// --- TIPOS ---
 interface User {
   id_user: number;
   name: string;
   lastname: string;
   email: string;
-  profileStatus: {
-    isCustomerComplete: boolean;
-    isProviderComplete: boolean;
-    hasCompletedProfile: boolean;
-  };
+  profile_picture_url?: string | null;
+  customer?: any | null;
+  provider?: any | null;
 }
 
-// Define the shape of the context value
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider' | 'both') => Promise<{ success: boolean; message?: string }>;
-  markProfileComplete: () => void;
+  register: (payload: any) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
 
-// 1. Create the Context
+// --- CONTEXTO ---
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-// API instances
+// --- API ---
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const authApi = axios.create({ baseURL: `${API_BASE}/api/auth` });
 
-// 2. Create the Provider
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Inicializa desde localStorage (token + user)
   useEffect(() => {
     const initFromStorage = () => {
-      const token = localStorage.getItem('accessToken');
-      const rawUser = localStorage.getItem('user');
-      if (token && rawUser) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+      if (token) {
+        authApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+
+      if (rawUser) {
         try {
           const parsed = JSON.parse(rawUser);
-          const pendingRole = localStorage.getItem('pending_profile_role');
-          const isCustomerComplete = pendingRole === 'provider' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
-          const isProviderComplete = pendingRole === 'customer' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
           setUser({
             id_user: parsed.id_user,
             name: parsed.name,
             lastname: parsed.lastname,
             email: parsed.email,
-            profileStatus: {
-              isCustomerComplete,
-              isProviderComplete,
-              hasCompletedProfile: isCustomerComplete || isProviderComplete,
-            },
+            profile_picture_url: parsed.profile_picture_url ?? null,
+            customer: parsed.customer ?? null,
+            provider: parsed.provider ?? null,
           });
-        } catch {
+        } catch (err) {
+          console.warn('No se pudo parsear user desde localStorage', err);
           setUser(null);
         }
       } else {
         setUser(null);
       }
+
       setLoading(false);
     };
+
     initFromStorage();
   }, []);
 
+  const saveUserToStorage = (u: User) => {
+    try {
+      localStorage.setItem('user', JSON.stringify(u));
+    } catch (err) {
+      console.warn('Error guardando user en localStorage', err);
+    }
+  };
+
+  // --- AUTH ACTIONS ---
   const login = async (email: string, password: string) => {
     try {
       const response = await authApi.post('/login', { email, password });
       const { accessToken, refreshToken, user: basicUser } = response.data;
 
       localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(basicUser));
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      authApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-      const pendingRole = localStorage.getItem('pending_profile_role');
-      const isCustomerComplete = pendingRole === 'provider' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
-      const isProviderComplete = pendingRole === 'customer' ? true : pendingRole === 'both' ? false : pendingRole ? false : true;
-
-      setUser({
+      const u: User = {
         id_user: basicUser.id_user,
         name: basicUser.name,
         lastname: basicUser.lastname,
         email: basicUser.email,
-        profileStatus: {
-          isCustomerComplete,
-          isProviderComplete,
-          hasCompletedProfile: isCustomerComplete || isProviderComplete,
-        },
-      });
+        profile_picture_url: basicUser.profile_picture_url ?? null,
+        customer: basicUser.customer ?? null,
+        provider: basicUser.provider ?? null,
+      };
+
+      setUser(u);
+      saveUserToStorage(u);
 
       return { success: true };
     } catch (error: any) {
@@ -101,12 +106,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, lastname: string, email: string, password: string, role: 'customer' | 'provider' | 'both') => {
+  const register = async (payload: any) => {
     try {
-      await authApi.post('/register', { name, lastname, email, password, enabled: 1 });
-      try {
-        localStorage.setItem('pending_profile_role', role);
-      } catch {}
+      await authApi.post('/register', payload);
       return { success: true };
     } catch (error: any) {
       console.error('Error en el registro:', error.response?.data || error.message);
@@ -120,28 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('pending_profile_role');
+    delete authApi.defaults.headers.common['Authorization'];
     window.location.href = '/login';
-  };
-
-  const markProfileComplete = () => {
-    try {
-      localStorage.removeItem('pending_profile_role');
-      const rawUser = localStorage.getItem('user');
-      if (rawUser) {
-        const parsed = JSON.parse(rawUser);
-        setUser({
-          id_user: parsed.id_user,
-          name: parsed.name,
-          lastname: parsed.lastname,
-          email: parsed.email,
-          profileStatus: {
-            isCustomerComplete: true,
-            isProviderComplete: true,
-            hasCompletedProfile: true,
-          },
-        });
-      }
-    } catch {}
   };
 
   const value: AuthContextType = {
@@ -149,18 +131,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     login,
     register,
-    markProfileComplete,
     logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 3. Create a Hook to use the Context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used dentro de AuthProvider');
   }
   return context;
 };
