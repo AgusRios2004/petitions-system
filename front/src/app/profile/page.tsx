@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 
 interface UserProfile {
   id_user: number;
@@ -84,6 +85,17 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         </nav>
       </div>
       <div className="p-6 bg-gray-800 rounded-lg min-h-[300px]">
+        {activeTab === 'peticiones' && (
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Mis Peticiones Activas</h2>
+            <Link href="/petition">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                + Crear Nueva Petición
+              </button>
+            </Link>
+          </div>
+        )}
+        {/* Aquí iría el contenido dinámico de cada pestaña */}
         <p>Contenido de la pestaña: {activeTab}</p>
       </div>
     </div>
