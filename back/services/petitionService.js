@@ -10,7 +10,7 @@ class PetitionService {
     async getPetitions(filter = {}) {
         return await Petition.findAll({
             where: filter,
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -21,7 +21,7 @@ class PetitionService {
      */
     async getPetitionById(id) {
         return await Petition.findByPk(id, {
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -34,7 +34,7 @@ class PetitionService {
     async getPetitionsByCustomerId(id_customer, filter = {}) {
         return await Petition.findAll({
             where: { id_customer, ...filter },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -46,7 +46,7 @@ class PetitionService {
     async getPetitionsByState(id_state) {
         return await Petition.findAll({
             where: { id_state },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -58,7 +58,7 @@ class PetitionService {
     async getPetitionsByType(id_type_petition) {
         return await Petition.findAll({
             where: { id_type_petition },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -71,7 +71,7 @@ class PetitionService {
     async getPetitionsByStateAndType(id_state, id_type_petition) {
         return await Petition.findAll({
             where: { id_state, id_type_petition },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -95,7 +95,7 @@ class PetitionService {
         if (!petition) return null;
         await petition.update(petitionData);
         return await Petition.findByPk(id, {
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
