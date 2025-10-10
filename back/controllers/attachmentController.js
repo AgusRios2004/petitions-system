@@ -12,7 +12,7 @@ exports.createAttachment = async (req, res) => {
         return error(res, 'No se ha subido ningún archivo.', 400);
     }
 
-    const { id_petition, id_portfolio } = req.body;
+    const { id_petition, id_portfolio, name } = req.body;
 
     // 2. Validar que pertenezca a una petición O un portafolio
     if ((!id_petition && !id_portfolio) || (id_petition && id_portfolio)) {
@@ -25,10 +25,8 @@ exports.createAttachment = async (req, res) => {
         const attachmentData = {
             id_petition: id_petition || null,
             id_portfolio: id_portfolio || null,
-            name: req.file.originalname, // Nombre original del archivo
+            name: name || req.file.originalname, // Usar el título del body o el nombre original como fallback
             path: req.file.path, // Path donde multer lo guardó
-            // mimetype: req.file.mimetype, // Descomentar si agregas el campo al modelo
-            // size: req.file.size, // Descomentar si agregas el campo al modelo
             id_user_create: req.user.sub, // Asumiendo que el id del usuario viene en el token
         };
 
