@@ -1,21 +1,16 @@
 "use client";
 
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from '../theme/theme';
-import { AuthProvider } from '../context/AuthContext';
-import ProfileCompletionGuard from '../components/auth/ProfileCompletionGuard';
-import React from 'react';
+import { ThemeRegistry } from "@/theme/ThemeRegistry";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeRegistry>
       <AuthProvider>
-        <ProfileCompletionGuard>
-          <CssBaseline />
-          {children}
-        </ProfileCompletionGuard>
+        <Toaster position="top-right" reverseOrder={false} />
+        {children}
       </AuthProvider>
-    </ThemeProvider>
+    </ThemeRegistry>
   );
 }
