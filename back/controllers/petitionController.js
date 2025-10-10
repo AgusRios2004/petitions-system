@@ -82,11 +82,12 @@ exports.createPetition = async (req, res) => {
             description,
             date_since,
             date_until,
-            id_state,
+            id_state: 3,
             id_profession, // Puede ser null
             id_type_provider, // Puede ser null
             id_user_create: req.user.sub,
             id_user_update: req.user.sub,
+            is_deleted: false,
         });
 
         return success(res, petition, 'Petición creada correctamente', 201);
