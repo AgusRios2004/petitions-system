@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import { AuthProvider } from '@/context/AuthContext';
-import ProfileCompletionGuard from '@/components/auth/ProfileCompletionGuard';
 import LogoutButton from '@/components/auth/LogoutButton';
 
 const geistSans = Geist({
@@ -27,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <ThemeRegistry>
-            <ProfileCompletionGuard>
               <div className="min-h-screen">
                 <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
                   <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
@@ -37,7 +35,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </header>
                 {children}
               </div>
-            </ProfileCompletionGuard>
           </ThemeRegistry>
         </AuthProvider>
       </body>
