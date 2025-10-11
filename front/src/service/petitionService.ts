@@ -1,15 +1,16 @@
-import { api } from "@/WebApiResponse/api";
+import apiClient from "./apiClient";
 
 /**
- * Creates a new petition by sending form data, including attachments, to the backend.
- * @param formData - The FormData object containing the petition data and files.
- * @returns The response from the API.
+ * Creates a new petition by sending the petition data as a JSON payload.
+ * @param payload - An object containing the petition data (description, ids, dates, etc.).
+ * @returns The response from the API, containing the newly created petition.
  */
-export const createPetition = async (formData: FormData) => {
-  const response = await api.post("/petitions", formData, {
+export const createPetition = async (payload: any) => {
+  const response = await apiClient.post("/api/petition", payload, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "application/json",
     },
   });
+  console.log('API Response:', response.data);
   return response.data;
 };
