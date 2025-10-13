@@ -12,13 +12,8 @@ export const uploadAttachment = async (petitionId: number, file: File, name: str
   formData.append('attachmentFile', file);
   formData.append('name', name); // Añadir el título personalizado al FormData
 
-  const response = await apiClient.post("/api/attachments", formData, {
-    headers: {
-      // When using FormData, the browser automatically sets the
-      // 'Content-Type' to 'multipart/form-data' with the correct boundary.
-      // We don't need to set it manually.
-    },
-  });
+  const response = await apiClient.post("/api/attachments", formData);
 
+  console.log('API Response:', response.data);
   return response.data;
 };

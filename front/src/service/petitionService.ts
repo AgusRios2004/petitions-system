@@ -6,11 +6,7 @@ import apiClient from "./apiClient";
  * @returns The response from the API, containing the newly created petition.
  */
 export const createPetition = async (payload: any) => {
-  const response = await apiClient.post("/api/petition", payload, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await apiClient.post("/api/petition", payload);
   console.log('API Response:', response.data);
   return response.data;
 };
