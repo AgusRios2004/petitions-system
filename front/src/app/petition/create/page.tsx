@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 // Servicios y contexto
 import { createPetition } from '@/service/petitionService';
+import { uploadAttachment } from '@/service/attachmentService';
 import { getProfessions } from '@/service/professionsService';
 import { getTypePetitions } from '@/service/typePetitionsService';
 import { getTypeProviders } from '@/service/typeProviderService';
@@ -18,25 +19,21 @@ import { useAuth } from '@/context/AuthContext';
 import { Profession, TypePetition, TypeProvider } from '@/WebApiResponse/api';
 import { Button } from '@/components/ui/Button';
 
-// ✅ Esquema de validación - trabajamos con strings y transformamos después
+// Esquema de validación para el formulario principal
 const petitionSchema = z
   .object({
     description: z
       .string({ message: 'La descripción es obligatoria.' })
       .min(20, { message: 'La descripción debe tener al menos 20 caracteres.' })
       .max(1000, { message: 'La descripción no puede superar los 1000 caracteres.' }),
-
     id_type_petition: z
       .string({ message: 'Debes seleccionar un tipo de petición.' })
       .min(1, { message: 'Debes seleccionar un tipo de petición.' }),
-
     id_type_provider: z.string().optional(),
     id_profession: z.string().optional(),
-
     date_since: z
       .string({ message: 'La fecha de inicio es obligatoria.' })
       .min(1, { message: 'La fecha de inicio es obligatoria.' }),
-
     date_until: z
       .string({ message: 'La fecha de fin es obligatoria.' })
       .min(1, { message: 'La fecha de fin es obligatoria.' }),
@@ -59,9 +56,14 @@ export default function CreatePetitionPage() {
   const router = useRouter();
   const { user } = useAuth();
 
+  // Estados para los selects del formulario
   const [typePetitions, setTypePetitions] = useState<TypePetition[]>([]);
   const [typeProviders, setTypeProviders] = useState<TypeProvider[]>([]);
   const [professions, setProfessions] = useState<Profession[]>([]);
+
+  // Estados para el adjunto
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentName, setAttachmentName] = useState('');
 
   const {
     register,
@@ -80,7 +82,7 @@ export default function CreatePetitionPage() {
     },
   });
 
-  // Carga de datos inicial
+  // Carga de datos para los selects
   useEffect(() => {
     async function fetchData() {
       try {
@@ -89,16 +91,9 @@ export default function CreatePetitionPage() {
           getTypeProviders(),
           getProfessions(),
         ]);
-
-        setTypePetitions(
-          Array.isArray(petitionsRes?.data) ? petitionsRes.data : Array.isArray(petitionsRes) ? petitionsRes : []
-        );
-        setTypeProviders(
-          Array.isArray(providersRes?.data) ? providersRes.data : Array.isArray(providersRes) ? providersRes : []
-        );
-        setProfessions(
-          Array.isArray(professionsRes?.data) ? professionsRes.data : Array.isArray(professionsRes) ? professionsRes : []
-        );
+        setTypePetitions(Array.isArray(petitionsRes?.data) ? petitionsRes.data : []);
+        setTypeProviders(Array.isArray(providersRes?.data) ? providersRes.data : []);
+        setProfessions(Array.isArray(professionsRes?.data) ? professionsRes.data : []);
       } catch (error) {
         toast.error('Error al cargar los datos para el formulario.');
         console.error('Fetch data error:', error);
@@ -107,16 +102,27 @@ export default function CreatePetitionPage() {
     fetchData();
   }, []);
 
-  // ✅ Submit del formulario - transformamos strings a números aquí
-  const onSubmit: SubmitHandler<PetitionFormValues> = async (data) => {
-    console.log('Raw form data:', data);
+  // Handlers para el adjunto
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setAttachmentFile(event.target.files[0]);
+    } else {
+      setAttachmentFile(null);
+    }
+  };
 
+  // Lógica de envío del formulario
+  const onSubmit: SubmitHandler<PetitionFormValues> = async (data) => {
     if (!user?.customer?.id_customer) {
       toast.error('No se pudo identificar al cliente. Inicie sesión nuevamente.');
       return;
     }
 
-    // Helper para convertir string a número o undefined
+    if (attachmentFile && !attachmentName.trim()) {
+      toast.error('Si subes un archivo, debes darle un título al adjunto.');
+      return;
+    }
+
     const toNumber = (value: string | undefined): number | undefined => {
       if (!value || value === '' || value === '0') return undefined;
       const num = Number(value);
@@ -124,7 +130,6 @@ export default function CreatePetitionPage() {
     };
 
     const id_type_petition = toNumber(data.id_type_petition);
-    
     if (!id_type_petition) {
       toast.error('Debes seleccionar un tipo de petición válido.');
       return;
@@ -141,35 +146,41 @@ export default function CreatePetitionPage() {
       id_profession: toNumber(data.id_profession),
     };
 
-    console.log('Data to send:', dataToSend);
-
     try {
-      await toast.promise(createPetition(dataToSend), {
+      const newPetition = await toast.promise(createPetition(dataToSend), {
         loading: 'Creando petición...',
         success: '¡Petición creada con éxito!',
-        error: (err) => {
-          const msg = err.response?.data?.message || 'Error al crear la petición.';
-          console.error('Error:', msg, err);
-          return msg;
-        },
+        error: (err) => err.response?.data?.message || 'Error al crear la petición.',
       });
 
+      // Si hay un archivo, subirlo después de crear la petición
+      if (attachmentFile && newPetition?.data?.id_petition) {
+        await toast.promise(
+          uploadAttachment(newPetition.data.id_petition, attachmentFile, attachmentName),
+          {
+            loading: 'Subiendo adjunto...',
+            success: '¡Adjunto subido con éxito!',
+            error: (err) => err.response?.data?.message || 'Error al subir el adjunto.',
+          }
+        );
+      }
+
       reset();
+      setAttachmentFile(null);
+      setAttachmentName('');
       router.push('/profile');
     } catch (err) {
-      console.error('Error en el submit:', err);
+      console.error('Error en el proceso de creación:', err);
+      // El toast ya muestra el error específico, no es necesario otro toast aquí.
     }
   };
-
-  console.log(typePetitions, typeProviders, professions);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <h1 className="text-3xl font-bold mb-6">Crear Nueva Petición</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 shadow-md rounded-lg">
-
-        {/* Descripción */}
+        {/* ... campos existentes ... */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Descripción
@@ -184,7 +195,6 @@ export default function CreatePetitionPage() {
           {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
         </div>
 
-        {/* Selects */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label htmlFor="id_type_petition" className="block text-sm font-medium text-gray-700 mb-1">
@@ -246,7 +256,6 @@ export default function CreatePetitionPage() {
           </div>
         </div>
 
-        {/* Fechas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="date_since" className="block text-sm font-medium text-gray-700 mb-1">
@@ -275,9 +284,40 @@ export default function CreatePetitionPage() {
           </div>
         </div>
 
-        {/* Botón */}
+        {/* Sección para Adjuntos */}
+        <div className="space-y-4 rounded-lg border border-gray-200 p-4">
+            <h3 className="text-lg font-medium text-gray-900">Adjuntar Archivo (Opcional)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label htmlFor="attachmentName" className="block text-sm font-medium text-gray-700 mb-1">
+                        Título del Adjunto
+                    </label>
+                    <input
+                        id="attachmentName"
+                        type="text"
+                        value={attachmentName}
+                        onChange={(e) => setAttachmentName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="Ej: Planos de la casa"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-700 mb-1">
+                        Seleccionar Archivo
+                    </label>
+                    <input
+                        id="attachmentFile"
+                        type="file"
+                        onChange={handleFileChange}
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                </div>
+            </div>
+        </div>
+
+
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creando Petición...' : 'Crear Petición'}
+          {isSubmitting ? 'Procesando...' : 'Crear Petición'}
         </Button>
       </form>
     </div>
