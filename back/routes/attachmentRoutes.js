@@ -8,7 +8,9 @@ const path = require('path');
 // Aquí definimos dónde y cómo se guardarán los archivos.
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'back/uploads/'); // La carpeta que creaste
+    // Se construye una ruta robusta para evitar problemas de directorios relativos
+    const uploadPath = path.join(__dirname, '..', 'uploads');
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     // Para evitar nombres de archivo duplicados, agregamos un timestamp

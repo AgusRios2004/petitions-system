@@ -12,19 +12,27 @@ exports.createAttachment = async (req, res) => {
         return error(res, 'No se ha subido ningún archivo.', 400);
     }
 
-    const { id_petition, id_portfolio, name } = req.body;
+    const { name } = req.body;
 
-    // 2. Validar que pertenezca a una petición O un portafolio
-    if ((!id_petition && !id_portfolio) || (id_petition && id_portfolio)) {
+    // --- Validación Estricta de IDs ---
+    // Se parsean los IDs para asegurar que sean números válidos.
+    const petitionId = req.body.id_petition ? parseInt(req.body.id_petition, 10) : null;
+    const portfolioId = req.body.id_portfolio ? parseInt(req.body.id_portfolio, 10) : null;
+
+    const isPetitionIdValid = petitionId && !isNaN(petitionId) && petitionId > 0;
+    const isPortfolioIdValid = portfolioId && !isNaN(portfolioId) && portfolioId > 0;
+
+    // 2. Validar que pertenezca a una petición O un portafolio, y que los IDs sean válidos.
+    if ((!isPetitionIdValid && !isPortfolioIdValid) || (isPetitionIdValid && isPortfolioIdValid)) {
         // Si la validación falla, eliminamos el archivo que se subió para no dejar basura
         fs.unlinkSync(req.file.path);
-        return error(res, 'El adjunto debe estar asociado a una petición o a un portafolio, pero no a ambos.', 400);
+        return error(res, 'El adjunto debe estar asociado a un ID de petición o de portafolio que sea válido y numérico, pero no a ambos.', 400);
     }
 
     try {
         const attachmentData = {
-            id_petition: id_petition || null,
-            id_portfolio: id_portfolio || null,
+            id_petition: isPetitionIdValid ? petitionId : null,
+            id_portfolio: isPortfolioIdValid ? portfolioId : null,
             name: name || req.file.originalname, // Usar el título del body o el nombre original como fallback
             path: req.file.path, // Path donde multer lo guardó
             id_user_create: req.user.sub, // Asumiendo que el id del usuario viene en el token
