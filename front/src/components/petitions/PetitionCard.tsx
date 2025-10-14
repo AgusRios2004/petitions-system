@@ -4,13 +4,13 @@ import { getStatusColor } from '@/helpers/statusHelper';
 
 // Definimos una interfaz completa para la petición
 interface Petition {
-  id: number;
+  id_petition: number;
   description: string;
   date_create: string;
   date_since: string;
   date_until: string;
   states: {
-    name: string;
+    state: string;
   };
   typePetitions: {
     name: string;
@@ -34,9 +34,9 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
             {petition.typePetitions?.name || 'Sin Categoría'}
           </span>
           <span
-            className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(petition.states?.name)}`}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(petition.states?.state)}`}
           >
-            {petition.states?.name || 'Sin Estado'}
+            {petition.states?.state || 'Sin Estado'}
           </span>
         </div>
         <h3 className="text-lg font-bold text-white mb-4 [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical] [overflow:hidden]">
@@ -48,7 +48,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
       </div>
       <div className="flex justify-between items-center mt-4">
         <span className="text-sm text-gray-500 dark:text-gray-400">Creada: {creationDate}</span>
-        <Link href={`/petition/${petition.id}`}>
+        <Link href={`/petition/${petition.id_petition}`}>
           <Button fullWidth={false} size="sm">Ver Detalles</Button>
         </Link>
       </div>

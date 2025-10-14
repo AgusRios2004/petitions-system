@@ -20,3 +20,8 @@ export const getPetitions = async (params: any) => {
   const response = await apiClient.get("/api/petition", { params });
   return response.data;
 };
+
+export const getPetitionById = async (id_petition: number) => {
+  const response = await apiClient.get(`/api/petition/${id_petition}`);
+  return response.data;
+}
