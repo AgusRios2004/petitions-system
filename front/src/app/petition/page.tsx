@@ -1,63 +1,41 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getProfessions } from "@/service/professionsService";
 import { getTypePetitions } from "@/service/typePetitionsService";
 import { getTypeProviders } from "@/service/typeProviderService";
-import { Profession, TypePetition, TypeProvider } from "@/WebApiResponse/api";
 
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
 
 export default function PetitionPage() {
-    const [professions, setProfessions] = useState<Profession[]>([]);
-    const [typePetitions, setTypePetitions] = useState<TypePetition[]>([]);
-    const [typeProviders, setTypeProviders] = useState<TypeProvider[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // Usando useQuery para cada llamada a la API
+    const { data: professions, isLoading: isLoadingProfessions, isError: isErrorProfessions, error: errorProfessions } = useQuery({
+        queryKey: ['professions'],
+        queryFn: getProfessions,
+    });
 
-    useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            setError(null);
+    const { data: typePetitions, isLoading: isLoadingTypePetitions, isError: isErrorTypePetitions, error: errorTypePetitions } = useQuery({
+        queryKey: ['typePetitions'],
+        queryFn: getTypePetitions,
+    });
 
-            const [professionsResponse, typePetitionsResponse, typeProvidersResponse] = await Promise.all([
-                getProfessions(),
-                getTypePetitions(),
-                getTypeProviders()
-            ]);
+    const { data: typeProviders, isLoading: isLoadingTypeProviders, isError: isErrorTypeProviders, error: errorTypeProviders } = useQuery({
+        queryKey: ['typeProviders'],
+        queryFn: getTypeProviders,
+    });
 
-            if (professionsResponse.error) {
-                setError(professionsResponse.error);
-                setLoading(false);
-                return;
-            }
-            if (typePetitionsResponse.error) {
-                setError(typePetitionsResponse.error);
-                setLoading(false);
-                return;
-            }
-            if (typeProvidersResponse.error) {
-                setError(typeProvidersResponse.error);
-                setLoading(false);
-                return;
-            }
+    // Determinar el estado general de carga y error
+    const isLoading = isLoadingProfessions || isLoadingTypePetitions || isLoadingTypeProviders;
+    const isError = isErrorProfessions || isErrorTypePetitions || isErrorTypeProviders;
+    const error = errorProfessions || errorTypePetitions || errorTypeProviders;
 
-            setProfessions(professionsResponse.data || []);
-            setTypePetitions(typePetitionsResponse.data || []);
-            setTypeProviders(typeProvidersResponse.data || []);
-            setLoading(false);
-        }
-
-        fetchData();
-    }, []);
-
-    if (loading) {
+    if (isLoading) {
         return <div className="p-8">Cargando datos...</div>;
     }
 
-    if (error) {
-        return <div className="p-8 text-red-500">Error al cargar los datos: {error}</div>;
+    if (isError) {
+        return <div className="p-8 text-red-500">Error al cargar los datos: {error?.message || 'Error desconocido'}</div>;
     }
 
     return (

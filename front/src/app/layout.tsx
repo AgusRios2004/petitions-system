@@ -5,6 +5,7 @@ import ThemeRegistry from '@/theme/ThemeRegistry';
 import { AuthProvider } from '@/context/AuthContext';
 import LogoutButton from '@/components/auth/LogoutButton';
 import { Toaster } from 'react-hot-toast';
+import QueryProvider from './QueryProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,20 +26,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <Toaster />
-          <ThemeRegistry>
-              <div className="min-h-screen">
-                <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-                  <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
-                    <div className="font-semibold">Final Project</div>
-                    <LogoutButton />
-                  </div>
-                </header>
-                {children}
-              </div>
-          </ThemeRegistry>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <Toaster />
+            <ThemeRegistry>
+                <div className="min-h-screen">
+                  <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
+                      <div className="font-semibold">Final Project</div>
+                      <LogoutButton />
+                    </div>
+                  </header>
+                  {children}
+                </div>
+            </ThemeRegistry>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 
 // Servicios y contexto
 import { createPetition } from '@/service/petitionService';
@@ -56,14 +57,24 @@ export default function CreatePetitionPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Estados para los selects del formulario
-  const [typePetitions, setTypePetitions] = useState<TypePetition[]>([]);
-  const [typeProviders, setTypeProviders] = useState<TypeProvider[]>([]);
-  const [professions, setProfessions] = useState<Profession[]>([]);
+  // Carga de datos usando useQuery
+  const { data: typePetitions, isLoading: isLoadingTypePetitions } = useQuery({
+    queryKey: ['typePetitions'],
+    queryFn: getTypePetitions,
+  });
 
-  // Estados para el adjunto
-  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [attachmentName, setAttachmentName] = useState('');
+  const { data: typeProviders, isLoading: isLoadingTypeProviders } = useQuery({
+    queryKey: ['typeProviders'],
+    queryFn: getTypeProviders,
+  });
+
+  const { data: professions, isLoading: isLoadingProfessions } = useQuery({
+    queryKey: ['professions'],
+    queryFn: getProfessions,
+  });
+
+  // Determinar si alguno de los datos está cargando
+  const isAnyDataLoading = isLoadingTypePetitions || isLoadingTypeProviders || isLoadingProfessions;
 
   const {
     register,
@@ -82,25 +93,9 @@ export default function CreatePetitionPage() {
     },
   });
 
-  // Carga de datos para los selects
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [petitionsRes, providersRes, professionsRes] = await Promise.all([
-          getTypePetitions(),
-          getTypeProviders(),
-          getProfessions(),
-        ]);
-        setTypePetitions(Array.isArray(petitionsRes?.data) ? petitionsRes.data : []);
-        setTypeProviders(Array.isArray(providersRes?.data) ? providersRes.data : []);
-        setProfessions(Array.isArray(professionsRes?.data) ? professionsRes.data : []);
-      } catch (error) {
-        toast.error('Error al cargar los datos para el formulario.');
-        console.error('Fetch data error:', error);
-      }
-    }
-    fetchData();
-  }, []);
+  // Estados para el adjunto
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentName, setAttachmentName] = useState('');
 
   // Handlers para el adjunto
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +175,8 @@ export default function CreatePetitionPage() {
       <h1 className="text-3xl font-bold mb-6">Crear Nueva Petición</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 shadow-md rounded-lg">
-        {/* ... campos existentes ... */}
+
+        {/* Descripción */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Descripción
@@ -195,6 +191,7 @@ export default function CreatePetitionPage() {
           {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
         </div>
 
+        {/* Selects */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label htmlFor="id_type_petition" className="block text-sm font-medium text-gray-700 mb-1">
@@ -204,9 +201,10 @@ export default function CreatePetitionPage() {
               id="id_type_petition"
               {...register('id_type_petition')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              disabled={isAnyDataLoading} // Deshabilitar mientras carga
             >
               <option value="">Selecciona un tipo...</option>
-              {typePetitions.map((tp) => (
+              {typePetitions?.data?.map((tp) => (
                 <option key={tp.id_type_petition} value={tp.id_type_petition}>
                   {tp.name}
                 </option>
@@ -223,9 +221,10 @@ export default function CreatePetitionPage() {
               id="id_type_provider"
               {...register('id_type_provider')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              disabled={isAnyDataLoading} // Deshabilitar mientras carga
             >
               <option value="">Selecciona si aplica...</option>
-              {typeProviders.map((tp) => (
+              {typeProviders?.data?.map((tp) => (
                 <option key={tp.id_type_provider} value={tp.id_type_provider}>
                   {tp.name}
                 </option>
@@ -244,9 +243,10 @@ export default function CreatePetitionPage() {
               id="id_profession"
               {...register('id_profession')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              disabled={isAnyDataLoading} // Deshabilitar mientras carga
             >
               <option value="">Selecciona si aplica...</option>
-              {professions.map((p) => (
+              {professions?.data?.map((p) => (
                 <option key={p.id_profession} value={p.id_profession}>
                   {p.name}
                 </option>
@@ -256,6 +256,7 @@ export default function CreatePetitionPage() {
           </div>
         </div>
 
+        {/* Fechas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="date_since" className="block text-sm font-medium text-gray-700 mb-1">
@@ -266,6 +267,7 @@ export default function CreatePetitionPage() {
               type="date"
               {...register('date_since')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              disabled={isAnyDataLoading} // Deshabilitar mientras carga
             />
             {errors.date_since && <p className="mt-1 text-sm text-red-600">{errors.date_since.message}</p>}
           </div>
@@ -279,6 +281,7 @@ export default function CreatePetitionPage() {
               type="date"
               {...register('date_until')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              disabled={isAnyDataLoading} // Deshabilitar mientras carga
             />
             {errors.date_until && <p className="mt-1 text-sm text-red-600">{errors.date_until.message}</p>}
           </div>
@@ -299,6 +302,7 @@ export default function CreatePetitionPage() {
                         onChange={(e) => setAttachmentName(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         placeholder="Ej: Planos de la casa"
+                        disabled={isAnyDataLoading} // Deshabilitar mientras carga
                     />
                 </div>
                 <div>
@@ -310,14 +314,15 @@ export default function CreatePetitionPage() {
                         type="file"
                         onChange={handleFileChange}
                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        disabled={isAnyDataLoading} // Deshabilitar mientras carga
                     />
                 </div>
             </div>
         </div>
 
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Procesando...' : 'Crear Petición'}
+        <Button type="submit" disabled={isSubmitting || isAnyDataLoading}>
+          {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Crear Petición'}
         </Button>
       </form>
     </div>
