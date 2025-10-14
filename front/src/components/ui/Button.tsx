@@ -13,7 +13,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus:ring-blue-500',
+    'bg-blue-500 text-white shadow-lg hover:bg-blue-600 active:bg-blue-700 focus:ring-blue-500 transform transition-transform duration-200 hover:-translate-y-0.5',
   secondary:
     'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 active:bg-gray-100 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-800 focus:ring-gray-400',
   ghost:

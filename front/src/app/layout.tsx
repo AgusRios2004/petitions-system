@@ -4,6 +4,7 @@ import "./globals.css";
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import { AuthProvider } from '@/context/AuthContext';
 import LogoutButton from '@/components/auth/LogoutButton';
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
+          <Toaster />
           <ThemeRegistry>
               <div className="min-h-screen">
                 <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
