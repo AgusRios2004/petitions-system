@@ -3,17 +3,38 @@ const { error, success } = require('../middlewares/response');
 
 exports.getPetitions = async (req, res) => {
     try {
-        const { id_state, id_type_petition, id_customer, id_profession, id_type_provider } = req.query;
+        const { 
+            id_state, id_type_petition, id_customer, id_profession, 
+            id_type_provider, description, page, limit, sortBy, order 
+        } = req.query;
 
+        // Build filter object
         const filter = {};
         if (id_state) filter.id_state = id_state;
         if (id_type_petition) filter.id_type_petition = id_type_petition;
         if (id_customer) filter.id_customer = id_customer;
         if (id_profession) filter.id_profession = id_profession;
         if (id_type_provider) filter.id_type_provider = id_type_provider;
+        if (description) filter.description = description;
 
-        const petitions = await service.getPetitions(filter);
-        return success(res, petitions);
+        // Build options object for pagination and sorting
+        const options = {
+            page: parseInt(page, 10) || 1,
+            limit: parseInt(limit, 10) || 10,
+            sortBy: sortBy || 'date_create',
+            order: order || 'DESC'
+        };
+
+        const { count, rows } = await service.getPetitions(filter, options);
+
+        const response = {
+            totalItems: count,
+            totalPages: Math.ceil(count / options.limit),
+            currentPage: options.page,
+            petitions: rows
+        };
+
+        return success(res, response);
     } catch (e) {
         console.error('Error: ', e);
         return error(res, e.message, 500);
