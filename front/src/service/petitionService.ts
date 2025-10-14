@@ -10,3 +10,13 @@ export const createPetition = async (payload: any) => {
   console.log('API Response:', response.data);
   return response.data;
 };
+
+/**
+ * Gets a paginated and filtered list of petitions.
+ * @param params - An object containing query parameters like page, limit, id_state, id_customer, description, etc.
+ * @returns The paginated response from the API.
+ */
+export const getPetitions = async (params: any) => {
+  const response = await apiClient.get("/api/petition", { params });
+  return response.data;
+};
