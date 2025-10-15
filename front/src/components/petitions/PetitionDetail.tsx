@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/components/ui/Button'; // Import the Button component
 
 interface Petition {
   id_petition: number;
@@ -55,8 +56,10 @@ interface Petition {
 
 interface PetitionDetailProps {
   petition: Petition;
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
 }
-const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition }) => {
+const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
   console.log('PetitionDetail Props:', petition);
   return (
     <div className="container mx-auto p-4">
@@ -103,6 +106,20 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition }) => {
             <span className="font-medium text-gray-500">Teléfono: </span>
             <span className="text-gray-800">{petition.customers?.phone}</span>
           </div>
+          <div>
+            <span className="font-medium text-gray-500">Fecha de Creación: </span>
+            <span className="text-gray-800">{new Date(petition.date_create).toLocaleDateString()}</span>
+          </div>
+          <div>
+            <span className="font-medium text-gray-500">Última Actualización: </span>
+            <span className="text-gray-800">{new Date(petition.date_update).toLocaleDateString()}</span>
+          </div>
+          {petition.states?.description && (
+            <div>
+              <span className="font-medium text-gray-500">Descripción del Estado: </span>
+              <span className="text-gray-800">{petition.states.description}</span>
+            </div>
+          )}
         </div>
 
         {/* Adjuntos */}
@@ -125,6 +142,26 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition }) => {
             </ul>
           </div>
         )}
+
+        {/* Botones de Acción */}
+        <div className="mt-6 flex justify-end space-x-4">
+          <Button
+            onClick={() => onEdit(petition.id_petition)}
+            variant="primary"
+            className="bg-yellow-500 hover:bg-yellow-600"
+            fullWidth={false}
+          >
+            Editar
+          </Button>
+          <Button
+            onClick={() => onDelete(petition.id_petition)}
+            variant="primary"
+            className="bg-red-500 hover:bg-red-600"
+            fullWidth={false}
+          >
+            Eliminar
+          </Button>
+        </div>
       </div>
     </div>
   );

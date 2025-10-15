@@ -24,4 +24,14 @@ export const getPetitions = async (params: any) => {
 export const getPetitionById = async (id_petition: number) => {
   const response = await apiClient.get(`/api/petition/${id_petition}`);
   return response.data;
-}
+};
+
+export const updatePetition = async (id_petition: number, payload: any) => {
+  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  return response.data;
+};
+
+export const deletePetition = async (id_petition: number, payload: any) => {
+  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  return response.data;
+};
