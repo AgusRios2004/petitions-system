@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
 
-// Definimos una interfaz completa para la petición
 interface Petition {
   id_petition: number;
   description: string;
@@ -19,9 +18,10 @@ interface Petition {
 
 interface PetitionCardProps {
   petition: Petition;
+  onDelete: () => void;
 }
 
-const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
+const PetitionCard: React.FC<PetitionCardProps> = ({ petition, onDelete }) => {
   const creationDate = new Date(petition.date_create).toLocaleDateString();
   const sinceDate = new Date(petition.date_since).toLocaleDateString();
   const untilDate = new Date(petition.date_until).toLocaleDateString();
@@ -48,9 +48,12 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
       </div>
       <div className="flex justify-between items-center mt-4">
         <span className="text-sm text-gray-500 dark:text-gray-400">Creada: {creationDate}</span>
-        <Link href={`/petition/${petition.id_petition}`}>
-          <Button fullWidth={false} size="sm">Ver Detalles</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/petition/${petition.id_petition}`}>
+            <Button fullWidth={false} size="sm" variant="primary">Ver Detalles</Button>
+          </Link>
+          <Button onClick={onDelete} fullWidth={false} size="sm" variant="secondary">Eliminar</Button>
+        </div>
       </div>
     </div>
   );

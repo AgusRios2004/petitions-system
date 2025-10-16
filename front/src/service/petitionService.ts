@@ -31,7 +31,7 @@ export const updatePetition = async (id_petition: number, payload: any) => {
   return response.data;
 };
 
-export const deletePetition = async (id_petition: number, payload: any) => {
+export const updatePetitionState = async (id_petition: number, payload: { id_state: number }) => {
   const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
   return response.data;
 };
