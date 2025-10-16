@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 
 // Componentes de UI y Servicios
-import { getPetitions } from '@/service/petitionService';
+import { getPetitions, updatePetitionState } from '@/service/petitionService';
 import { Button } from '@/components/ui/Button';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import Tabs from '@/components/ui/Tabs';
@@ -68,36 +68,43 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
   const [activeTab, setActiveTab] = useState('peticiones');
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const customerTabs = [
     { id: 'peticiones', label: 'Mis Peticiones' },
     { id: 'informacion', label: 'Información Personal' },
     { id: 'historial', label: 'Historial y Calificaciones' },
   ];
 
-  // Lógica de peticiones movida aquí
   const [filters, setFilters] = useState({
     page: 1,
-    limit: 6, // Ajustado a 6 para que quepan 2 filas de 3
-    id_state: 3, // Por defecto, "Abiertas"
+    limit: 6,
+    id_state: 3,
   });
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['petitions', user?.customer?.id_customer, filters],
     queryFn: () => {
-      if (!user?.customer?.id_customer) return Promise.resolve(null);
-      
-      const params = { 
-        id_customer: user.customer.id_customer, 
-        ...filters 
-      };
-
-      console.log('Enviando estos parámetros a la API:', params);
-
+      if (!user?.customer?.id_customer) return null;
+      const params = { id_customer: user.customer.id_customer, ...filters };
       return getPetitions(params);
     },
-    select: (response) => response.data, // Aquí extraemos el contenido de 'data'
+    select: (response) => response?.data,
     enabled: !!user?.customer?.id_customer,
   });
+
+  const handleCancelPetition = async (id: number) => {
+    if (window.confirm('¿Estás seguro de que quieres cancelar esta petición?')) {
+      try {
+        await updatePetitionState(id, { id_state: 6 }); // Usamos el id_state 6 para cancelar
+        await queryClient.invalidateQueries({ queryKey: ['petitions'] });
+      } catch (err) {
+        console.error('Error cancelling petition:', err);
+        alert('No se pudo cancelar la petición.');
+      }
+    }
+  };
 
   const handleStatusTabChange = (newStatus: number) => {
     setFilters(prev => ({ ...prev, id_state: newStatus, page: 1 }));
@@ -111,7 +118,6 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     if (isLoading) return <p className="text-center text-gray-400">Cargando peticiones...</p>;
     if (isError) return <p className="text-center text-red-500">Error al cargar peticiones: {error?.message}</p>;
 
-    console.log('Datos de peticiones recibidos:', data);
     return (
       <>
         <div className="flex justify-between items-center mb-4">
@@ -128,7 +134,11 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         {data && data.petitions && data.petitions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {data.petitions.map((petition: any) => (
-              <PetitionCard key={petition.id_petition} petition={petition} />
+              <PetitionCard 
+                key={petition.id_petition} 
+                petition={petition} 
+                onDelete={() => handleCancelPetition(petition.id_petition)}
+              />
             ))}
           </div>
         ) : (
