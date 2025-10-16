@@ -94,18 +94,6 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     enabled: !!user?.customer?.id_customer,
   });
 
-  const handleCancelPetition = async (id: number) => {
-    if (window.confirm('¿Estás seguro de que quieres cancelar esta petición?')) {
-      try {
-        await updatePetitionState(id, { id_state: 6 }); // Usamos el id_state 6 para cancelar
-        await queryClient.invalidateQueries({ queryKey: ['petitions'] });
-      } catch (err) {
-        console.error('Error cancelling petition:', err);
-        alert('No se pudo cancelar la petición.');
-      }
-    }
-  };
-
   const handleStatusTabChange = (newStatus: number) => {
     setFilters(prev => ({ ...prev, id_state: newStatus, page: 1 }));
   };
@@ -137,7 +125,6 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
               <PetitionCard 
                 key={petition.id_petition} 
                 petition={petition} 
-                onDelete={() => handleCancelPetition(petition.id_petition)}
               />
             ))}
           </div>
