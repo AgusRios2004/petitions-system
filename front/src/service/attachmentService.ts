@@ -17,3 +17,8 @@ export const uploadAttachment = async (petitionId: number, file: File, name: str
   console.log('API Response:', response.data);
   return response.data;
 };
+
+export const deleteAttachment = async (attachmentId: number) => {
+  const response = await apiClient.delete(`/api/attachments/${attachmentId}`);
+  return response.data;
+};

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button'; // Import the Button component
+import Link from 'next/link';
 
 interface Petition {
   id_petition: number;
@@ -123,25 +124,32 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
         </div>
 
         {/* Adjuntos */}
-        {petition.attachments && petition.attachments.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-md font-semibold text-gray-700 mb-2">Adjuntos</h3>
-            <ul className="list-disc pl-6 text-gray-600">
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-gray-300">Adjuntos</h3>
+            <Link href={`/petition/${petition.id_petition}/add-attachment`}>
+              <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
+            </Link>
+          </div>
+          {petition.attachments && petition.attachments.length > 0 ? (
+            <ul className="list-disc list-inside pl-2 text-gray-400">
               {petition.attachments.map((file) => (
                 <li key={file.id_attachment}>
                   <a
-                    href={file.path}
+                    href={`http://localhost:3000/${file.path}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-400 hover:underline"
                   >
                     {file.name}
                   </a>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            <p className="text-gray-500">No hay adjuntos en esta petición.</p>
+          )}
+        </div>
 
         {/* Botones de Acción */}
         <div className="mt-6 flex justify-end space-x-4">
