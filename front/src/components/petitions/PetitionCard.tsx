@@ -18,10 +18,9 @@ interface Petition {
 
 interface PetitionCardProps {
   petition: Petition;
-  onDelete: () => void;
 }
 
-const PetitionCard: React.FC<PetitionCardProps> = ({ petition, onDelete }) => {
+const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
   const creationDate = new Date(petition.date_create).toLocaleDateString();
   const sinceDate = new Date(petition.date_since).toLocaleDateString();
   const untilDate = new Date(petition.date_until).toLocaleDateString();
@@ -52,7 +51,6 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition, onDelete }) => {
           <Link href={`/petition/${petition.id_petition}`}>
             <Button fullWidth={false} size="sm" variant="primary">Ver Detalles</Button>
           </Link>
-          <Button onClick={onDelete} fullWidth={false} size="sm" variant="secondary">Eliminar</Button>
         </div>
       </div>
     </div>

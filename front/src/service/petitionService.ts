@@ -27,11 +27,17 @@ export const getPetitionById = async (id_petition: number) => {
 };
 
 export const updatePetition = async (id_petition: number, payload: any) => {
+  console.log('Updating petition with payload:', payload, id_petition);
   const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
   return response.data;
 };
 
 export const updatePetitionState = async (id_petition: number, payload: { id_state: number }) => {
   const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  return response.data;
+};
+
+export const deletePetition = async (id_petition: number) => {
+  const response = await apiClient.delete(`/api/petition/${id_petition}`);
   return response.data;
 };
