@@ -1,6 +1,7 @@
 import React from 'react';
-import { Button } from '@/components/ui/Button'; // Import the Button component
+import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 interface Petition {
   id_petition: number;
@@ -60,12 +61,16 @@ interface PetitionDetailProps {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
 }
+
 const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
+  const { user } = useAuth();
   console.log('PetitionDetail Props:', petition);
+
+  const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
+
   return (
     <div className="container mx-auto p-4">
       <div className="bg-white shadow-md rounded-lg p-6">
-        {/* Título y Estado */}
         <div className="flex justify-between items-start mb-4">
           <h1 className="text-2xl font-bold text-gray-800">
             {petition.profession?.name || 'Sin título'}
@@ -75,13 +80,11 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           </span>
         </div>
 
-        {/* Descripción */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Descripción</h2>
           <p className="text-gray-600 whitespace-pre-wrap">{petition.description}</p>
         </div>
 
-        {/* Información general */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-500">Tipo de Petición: </span>
@@ -123,7 +126,6 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        {/* Adjuntos */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-300">Adjuntos</h3>
@@ -151,24 +153,34 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        {/* Botones de Acción */}
         <div className="mt-6 flex justify-end space-x-4">
-          <Button
-            onClick={() => onEdit(petition.id_petition)}
-            variant="primary"
-            className="bg-yellow-500 hover:bg-yellow-600"
-            fullWidth={false}
-          >
-            Editar
-          </Button>
-          <Button
-            onClick={() => onDelete(petition.id_petition)}
-            variant="primary"
-            className="bg-red-500 hover:bg-red-600"
-            fullWidth={false}
-          >
-            Eliminar
-          </Button>
+          {isOwner && (
+            <>
+              <Button
+                variant="primary"
+                className="bg-green-500 hover:bg-green-600"
+                fullWidth={false}
+              >
+                Ver Postulaciones
+              </Button>
+              <Button
+                onClick={() => onEdit(petition.id_petition)}
+                variant="primary"
+                className="bg-yellow-500 hover:bg-yellow-600"
+                fullWidth={false}
+              >
+                Editar
+              </Button>
+              <Button
+                onClick={() => onDelete(petition.id_petition)}
+                variant="primary"
+                className="bg-red-500 hover:bg-red-600"
+                fullWidth={false}
+              >
+                Eliminar
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
