@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
     const Postulation = sequelize.define('Postulation', {
-        idpostulation: {
+        id_postulation: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
@@ -67,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
 
         Postulation.hasMany(models.Inventory, {
             foreignKey: 'id_postulation',
-            sourceKey: 'idpostulation',  // La PK real
+            sourceKey: 'id_postulation',  // La PK real
             as: 'inventories',
         });
     };

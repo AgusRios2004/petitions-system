@@ -45,7 +45,7 @@ class PostulationService {
                     id_article: article.id_article,
                     quantity: article.quantity,
                     cost: article.cost,
-                    id_postulation: newPostulation.idpostulation,
+                    id_postulation: newPostulation.id_postulation,
                     id_user_create: data.id_user_create,
                     date_create: new Date(),                    
                 }));
@@ -66,20 +66,9 @@ class PostulationService {
         return await postulation.update({ 
             proposal: data.proposal,
             cost: data.cost,
-            current: data.current,
             id_state: data.id_state,
             id_user_update: data.id_user_update,
          });
-    }
-
-    async deletePostulation(id, data) {
-        const postulation = await Postulation.findByPk(id);
-        if(!postulation) return null;
-        await postulation.update({
-            id_state: data.id_state,
-            id_user_update: data.id_user_update,
-        });
-        return await postulation.findByPk(id);
     }
 
     async changePostulationState(id, data) {

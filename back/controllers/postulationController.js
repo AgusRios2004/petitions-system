@@ -46,16 +46,6 @@ exports.updatePostulation = async (req, res) => {
     }
 }
 
-exports.deletePostulation = async (req, res) => {
-    try {
-        const postulation = await service.deletePostulation(req.params.id, req.body);
-        if (!postulation) return error(res, 'Postulación no encontrada', 404);
-        return success(res, postulation);
-    } catch (e) {
-        return error(res, e.message, 500);
-    }
-}
-
 exports.changePostulationState = async (req, res) => {
     try {
         const postulation = await service.changePostulationState(req.params.id, req.body);
