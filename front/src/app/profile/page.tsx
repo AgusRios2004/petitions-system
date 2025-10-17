@@ -6,14 +6,12 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 
-// Componentes de UI y Servicios
 import { getPetitions, updatePetitionState } from '@/service/petitionService';
 import { Button } from '@/components/ui/Button';
 import PetitionCard from '@/components/petitions/PetitionCard';
 import Tabs from '@/components/ui/Tabs';
 import Pagination from '@/components/ui/Pagination';
 
-// --- TIPOS ---
 interface UserProfile {
   id_user: number;
   name: string;
@@ -30,7 +28,6 @@ import { STATUS_TABS as petitionStatusTabs } from '@/helpers/statusHelper';
 
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
-  // ... (sin cambios)
   const [activeTab, setActiveTab] = useState('perfil-publico');
   const tabs = [
     { id: 'perfil-publico', label: 'Mi Perfil Público' },
@@ -115,7 +112,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
             onTabClick={handleStatusTabChange}
           />
           <Link href="/petition/create">
-            <Button fullWidth={false}>+ Crear Petición</Button>
+            <Button fullWidth={false}>Crear Petición</Button>
           </Link>
         </div>
 

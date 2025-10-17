@@ -1,5 +1,3 @@
-// helpers/statusHelper.ts
-
 export const STATUS_TABS = [
   { label: 'Pendientes', value: 3 },
   { label: 'Aceptadas', value: 1 },
