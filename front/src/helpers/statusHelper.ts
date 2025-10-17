@@ -1,0 +1,31 @@
+export const STATUS_TABS = [
+  { label: 'Pendientes', value: 3 },
+  { label: 'Aceptadas', value: 1 },
+  { label: 'Rechazadas', value: 2 },
+  { label: 'Finalizadas', value: 7 },
+];
+
+// 🎨 Define colores consistentes para cada estado del sistema
+export const getStatusColor = (statusName: string) => {
+  if (!statusName) {
+    return 'bg-gray-400/10 text-gray-500 ring-1 ring-inset ring-gray-400/20';
+  }
+
+  switch (statusName.toLowerCase()) {
+    case 'abierta':
+      // Un azul más vibrante pero controlado
+      return 'bg-sky-400/10 text-sky-400 ring-1 ring-inset ring-sky-400/20';
+    case 'en progreso':
+      // Naranja/Ámbar para 'en progreso' suele ser muy claro
+      return 'bg-amber-400/10 text-amber-400 ring-1 ring-inset ring-amber-400/20';
+    case 'finalizada':
+      // Un verde brillante y positivo
+      return 'bg-emerald-400/10 text-emerald-400 ring-1 ring-inset ring-emerald-400/20';
+    case 'cancelada':
+      // Un rojo suave para no ser demasiado alarmante
+      return 'bg-rose-400/10 text-rose-400 ring-1 ring-inset ring-rose-400/20';
+    default:
+      // Un gris neutro para cualquier otro estado
+      return 'bg-gray-400/10 text-gray-400 ring-1 ring-inset ring-gray-400/20';
+  }
+};

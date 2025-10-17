@@ -5,16 +5,28 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true,
         },
-        id_customer:{
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
         id_type_petition: {
             type: DataTypes.INTEGER,
             allowNull: false,
-        }, 
+        },
+        id_customer: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         description: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        id_profession: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        id_type_provider: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        id_state: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         date_since: {
@@ -23,10 +35,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_until: {
             type: DataTypes.DATE,
-            allowNull: false,
-        },
-        id_state:{
-            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_user_create: {
@@ -44,9 +52,13 @@ module.exports = (sequelize, DataTypes) => {
         date_update: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
-        },      
+        },
+        is_deleted: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
     }, {
-        tableName: 'petition',
+        tableName: 'n_petition',
         timestamps: false,
     });
 
@@ -74,6 +86,16 @@ module.exports = (sequelize, DataTypes) => {
         Petition.belongsTo(models.State, {
             foreignKey: 'id_state',
             as: 'states',
+        });
+
+        Petition.belongsTo(models.Profession, {
+            foreignKey: 'id_profession',
+            as: 'profession',
+        });
+
+        Petition.belongsTo(models.TypeProvider, {
+            foreignKey: 'id_type_provider',
+            as: 'typeProvider',
         });
         
         Petition.belongsTo(models.User, {

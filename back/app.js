@@ -19,6 +19,10 @@ const provinceRoutes = require('./routes/provinceRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const addressRoutes = require('./routes/addressRoutes');
+const stateRoutes = require('./routes/stateRoutes');
+const typePetitionRoutes = require('./routes/typePetitionRoutes');
+const attachmentRoutes = require('./routes/attachmentRoutes');
+const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 app.use(express.json());
@@ -38,6 +42,12 @@ app.use('/api/provinces', provinceRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/addresses', addressRoutes);
+app.use('/api/states', stateRoutes);
+app.use('/api/type-petitions', typePetitionRoutes);
+app.use('/api/attachments', attachmentRoutes);
+
+// Middleware de manejo de errores (debe ser el último)
+app.use(errorHandler);
 
 (async () => {
   try {

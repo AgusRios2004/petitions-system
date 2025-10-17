@@ -1,17 +1,35 @@
 const { Petition } = require('../models');
+const { Op } = require('sequelize');
 
 class PetitionService {
     
     /**
-     * Method to get all petitions or filter by specific criteria
-     * @param {*} filter 
-     * @returns all petitions that match the filter
+     * Method to get all petitions with filtering, pagination, and sorting
+     * @param {object} filter - The filter criteria.
+     * @param {object} options - The pagination and sorting options.
+     * @param {number} options.page - The current page.
+     * @param {number} options.limit - The number of items per page.
+     * @param {string} options.sortBy - The field to sort by.
+     * @param {string} options.order - The sorting order ('ASC' or 'DESC').
+     * @returns {Promise<object>} - An object with the petitions and the total count.
      */
-    async getPetitions(filter = {}) {
-        return await Petition.findAll({
-            where: filter,
-            include: ['attachments', 'customers', 'typePetitions', 'states']
-        });
+    async getPetitions(filter = {}, options = {}) {
+        const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
+        const offset = (page - 1) * limit;
+
+        const where = { ...filter };
+
+        if (where.description) {
+            where.description = { [Op.like]: `%${where.description}%` };
+        }
+
+        return await Petition.findAndCountAll({
+            where,
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider'],
+            limit,
+            offset,
+            order: [[sortBy, order]]
+        })
     }
 
     /**
@@ -21,7 +39,7 @@ class PetitionService {
      */
     async getPetitionById(id) {
         return await Petition.findByPk(id, {
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -34,7 +52,7 @@ class PetitionService {
     async getPetitionsByCustomerId(id_customer, filter = {}) {
         return await Petition.findAll({
             where: { id_customer, ...filter },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -46,7 +64,7 @@ class PetitionService {
     async getPetitionsByState(id_state) {
         return await Petition.findAll({
             where: { id_state },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -58,7 +76,7 @@ class PetitionService {
     async getPetitionsByType(id_type_petition) {
         return await Petition.findAll({
             where: { id_type_petition },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -71,7 +89,7 @@ class PetitionService {
     async getPetitionsByStateAndType(id_state, id_type_petition) {
         return await Petition.findAll({
             where: { id_state, id_type_petition },
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
@@ -95,7 +113,7 @@ class PetitionService {
         if (!petition) return null;
         await petition.update(petitionData);
         return await Petition.findByPk(id, {
-            include: ['attachments', 'customers', 'typePetitions', 'states']
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
         });
     }
 
