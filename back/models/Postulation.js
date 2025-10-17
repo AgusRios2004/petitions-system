@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
     const Postulation = sequelize.define('Postulation', {
-        // SOLO DEBE EXISTIR ESTE CAMPO COMO PRIMARY KEY
         idpostulation: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -21,10 +20,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         cost: {
             type: DataTypes.DECIMAL(10, 2),
-            allowNull: false,
-        },
-        current: {
-            type: DataTypes.STRING(255),
             allowNull: false,
         },
         id_state: {
