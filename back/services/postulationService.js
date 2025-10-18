@@ -31,7 +31,6 @@ class PostulationService {
             whereClause.id_petition = filter.id_petition;
         }
         if (filter.id_provider) {
-            // This is a nested where clause to filter by provider id
             const providerWhere = { '$createdBy.provider.id_provider$': filter.id_provider };
             Object.assign(whereClause, providerWhere);
         }
@@ -42,10 +41,10 @@ class PostulationService {
         });
     }
 
-    async getPostulationByPetitionId(id_petitiion) {
+    async getPostulationByPetitionId(id_petition) {
         return await Postulation.findAll({
             include: ['petition', 'inventories', 'createdBy', 'updatedBy'],
-            where: { id_petition: id_petitiion },
+            where: { id_petition: id_petition },
         });
     }
 
@@ -64,32 +63,78 @@ class PostulationService {
         });
     }
 
-    async createPostulation(data) {
+    async createPostulation(data, userId) {
+        const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
         try {
-            const newPostulation = await Postulation.create({
-                id_petition: data.id_petition,
-                proposal: data.proposal,
-                cost: data.cost,
-                id_state: data.id_state,
-                id_user_create: data.id_user_create,
+            // 1. VALIDACIÓN: Usamos el 'userId' del token (seguro) para encontrar al proveedor.
+            const provider = await Provider.findOne({ where: { user_id: userId } }, { transaction: t });
+            if (!provider) {
+                const error = new Error('Proveedor no encontrado para el usuario dado');
+                error.statusCode = 403;
+                throw error;
+            }
+
+            // 2. VALIDACIÓN: Usamos el 'id_petition' del body para encontrar la petición.
+            const petition = await Petition.findByPk(id_petition, { transaction: t });
+            if (!petition) {
+                const error = new Error('Petición no encontrada');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            // 3. VALIDACIÓN: Chequeamos el estado de la petición. (Asumiendo 1 = 'Abierta')
+            if (petition.id_state !== 3) {
+                const error = new Error('No se pueden crear postulaciones para una petición que no está en estado "Abierta"');
+                error.statusCode = 400;
+                throw error;
+            }
+            
+            // 4. VALIDACIÓN: Verificamos si ya existe una postulación.
+            const existingPostulation = await Postulation.findOne({
+                where: {
+                    id_petition: id_petition, // Usamos la variable validada
+                    id_provider: provider.id_provider, // Usamos el ID del proveedor validado
+                }
             }, { transaction: t });
-            if (data.articles && data.articles.length > 0) {
-                const inventoryData = data.articles.map(article => ({
+
+            if (existingPostulation) {
+                const error = new Error('Ya existe una postulación para esta petición por parte de este proveedor');
+                error.statusCode = 409;
+                throw error;
+            }
+            
+            // 5. CREACIÓN: Usamos las variables seguras y validadas, NO el objeto 'data' directamente.
+            const newPostulation = await Postulation.create({
+                id_petition: id_petition,
+                id_provider: provider.id_provider,
+                proposal: proposal,
+                cost: cost,
+                id_state: 3,
+                id_user_create: userId,
+                winner: false
+            }, { transaction: t });
+
+            // Lógica de inventario (ya estaba bien, solo ajustamos id_user_create)
+            if (articles && articles.length > 0) {
+                const inventoryData = articles.map(article => ({
                     id_article: article.id_article,
                     quantity: article.quantity,
                     cost: article.cost,
                     id_postulation: newPostulation.id_postulation,
-                    id_user_create: data.id_user_create,
+                    id_user_create: userId,
                     date_create: new Date(),                    
                 }));
                 await Inventory.bulkCreate(inventoryData, { transaction: t });
             }
+
             await t.commit();
-            return await this.getPostulationById(newPostulation.idpostulation);
+            return await this.getPostulationById(newPostulation.id_postulation);
         } catch (e) {
             await t.rollback();
-            console.error("Error en el servicio", e);
+            console.error("Error en el servicio de creación de postulación:", e);
+            // Asignamos el statusCode si no viene uno en el error
+            if (!e.statusCode) e.statusCode = 500;
             throw e;
         }
     }

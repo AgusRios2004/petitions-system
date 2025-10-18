@@ -30,7 +30,7 @@ exports.getPostulationById = async (req, res) => {
 
 exports.createPostulation = async (req, res) => {
     try {
-        const postulation = await service.createPostulation(req.body);
+        const postulation = await service.createPostulation(req.body, req.user.sub);
         return success(res, postulation, 201);
     } catch (e) {
         return error(res, e.message, 500);
