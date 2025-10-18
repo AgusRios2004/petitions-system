@@ -26,11 +26,15 @@ interface Postulation {
 
 interface PostulationListProps {
   postulations: Postulation[];
+  role: 'provider' | 'customer';
 }
 
-const PostulationList: React.FC<PostulationListProps> = ({ postulations }) => {
+const PostulationList: React.FC<PostulationListProps> = ({ postulations, role }) => {
   if (postulations.length === 0) {
-    return <p className="text-gray-500">No hay postulaciones para esta petición.</p>;
+    const message = role === 'provider' 
+      ? "No hay postulaciones realizadas."
+      : "No hay postulaciones para esta petición.";
+    return <p className="text-gray-500">{message}</p>;
   }
 
   return (

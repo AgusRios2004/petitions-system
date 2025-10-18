@@ -62,11 +62,16 @@ interface PetitionDetailProps {
   onDelete: (id: number) => void;
 }
 
+import PetitionPostulations from '@/components/postulations/PetitionPostulations';
+
 const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
   const { user } = useAuth();
+  const [showPostulations, setShowPostulations] = React.useState(false);
   console.log('PetitionDetail Props:', petition);
 
   const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
+
+  const togglePostulations = () => setShowPostulations(!showPostulations);
 
   return (
     <div className="container mx-auto p-4">
@@ -157,11 +162,12 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           {isOwner && (
             <>
               <Button
+                onClick={togglePostulations}
                 variant="primary"
                 className="bg-green-500 hover:bg-green-600"
                 fullWidth={false}
               >
-                Ver Postulaciones
+                {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
               </Button>
               <Button
                 onClick={() => onEdit(petition.id_petition)}
@@ -183,6 +189,11 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
       </div>
+      {showPostulations && (
+        <div className="mt-4">
+          <PetitionPostulations petitionId={petition.id_petition} />
+        </div>
+      )}
     </div>
   );
 };
