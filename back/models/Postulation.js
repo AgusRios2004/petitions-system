@@ -5,6 +5,10 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true,
         },
+        id_provider: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         id_petition: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -74,6 +78,11 @@ module.exports = (sequelize, DataTypes) => {
         Postulation.belongsTo(models.State, {
             foreignKey: 'id_state',
             as: 'states',
+        });
+
+        Postulation.belongsTo(models.Provider, {
+            foreignKey: 'id_provider',
+            as: 'provider',
         });
     };
 

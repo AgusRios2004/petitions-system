@@ -56,6 +56,11 @@ module.exports = (sequelize, DataTypes) => {
             sourceKey: 'id_provider',
             as: 'grades',
         });
+
+        Provider.hasMany(models.Postulation, {
+            foreignKey: 'id_provider',
+            as: 'postulations',
+        });
     }
     return Provider;
 }
