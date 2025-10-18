@@ -17,27 +17,27 @@ export const createPetition = async (payload: any) => {
  * @returns The paginated response from the API.
  */
 export const getPetitions = async (params: any) => {
-  const response = await apiClient.get("/api/petition", { params });
+  const response = await apiClient.get("/petition", { params });
   return response.data;
 };
 
 export const getPetitionById = async (id_petition: number) => {
-  const response = await apiClient.get(`/api/petition/${id_petition}`);
+  const response = await apiClient.get(`/petition/${id_petition}`);
   return response.data;
 };
 
 export const updatePetition = async (id_petition: number, payload: any) => {
   console.log('Updating petition with payload:', payload, id_petition);
-  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  const response = await apiClient.put(`/petition/${id_petition}`, payload);
   return response.data;
 };
 
 export const updatePetitionState = async (id_petition: number, payload: { id_state: number }) => {
-  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  const response = await apiClient.put(`/petition/${id_petition}`, payload);
   return response.data;
 };
 
 export const deletePetition = async (id_petition: number) => {
-  const response = await apiClient.delete(`/api/petition/${id_petition}`);
+  const response = await apiClient.delete(`/petition/${id_petition}`);
   return response.data;
 };
