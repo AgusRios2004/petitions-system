@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-
-import { getPetitions, updatePetitionState } from '@/service/petitionService';
-import { Button } from '@/components/ui/Button';
-import PetitionCard from '@/components/petitions/PetitionCard';
-import Tabs from '@/components/ui/Tabs';
-import Pagination from '@/components/ui/Pagination';
 
 interface UserProfile {
   id_user: number;
@@ -18,13 +10,13 @@ interface UserProfile {
   lastname: string;
   email: string;
   customer: { id_customer: number; } | null;
-  provider: object | null;
+  provider: { id_provider: number; } | null;
   profile_picture_url?: string | null;
   role: 'customer' | 'provider' | 'admin' | 'unknown';
   is_staff?: boolean | number;
 }
 
-import { STATUS_TABS as petitionStatusTabs } from '@/helpers/statusHelper';
+import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
@@ -56,92 +48,27 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
         </nav>
       </div>
       <div className="p-6 bg-gray-800 rounded-lg min-h-[300px]">
-        <p>Contenido de la pestaña: {activeTab}</p>
+        {activeTab === 'postulaciones' && user.provider ? (
+          <ProviderPostulations id_provider={user.provider.id_provider} />
+        ) : (
+          <p>Contenido de la pestaña: {activeTab}</p>
+        )}
       </div>
     </div>
   );
 };
 
+import CustomerPetitions from '@/components/petitions/CustomerPetitions';
+
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
   const [activeTab, setActiveTab] = useState('peticiones');
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
   const customerTabs = [
     { id: 'peticiones', label: 'Mis Peticiones' },
     { id: 'informacion', label: 'Información Personal' },
     { id: 'historial', label: 'Historial y Calificaciones' },
   ];
-
-  const [filters, setFilters] = useState({
-    page: 1,
-    limit: 6,
-    id_state: 3,
-  });
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['petitions', user?.customer?.id_customer, filters],
-    queryFn: () => {
-      if (!user?.customer?.id_customer) return null;
-      const params = { id_customer: user.customer.id_customer, ...filters };
-      return getPetitions(params);
-    },
-    select: (response) => response?.data,
-    enabled: !!user?.customer?.id_customer,
-  });
-
-  const handleStatusTabChange = (newStatus: number) => {
-    setFilters(prev => ({ ...prev, id_state: newStatus, page: 1 }));
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
-  };
-
-  const renderPetitionsContent = () => {
-    if (isLoading) return <p className="text-center text-gray-400">Cargando peticiones...</p>;
-    if (isError) return <p className="text-center text-red-500">Error al cargar peticiones: {error?.message}</p>;
-
-    return (
-      <>
-        <div className="flex justify-between items-center mb-4">
-          <Tabs 
-            tabs={petitionStatusTabs}
-            activeTab={filters.id_state}
-            onTabClick={handleStatusTabChange}
-          />
-          <Link href="/petition/create">
-            <Button fullWidth={false}>Crear Petición</Button>
-          </Link>
-        </div>
-
-        {data && data.petitions && data.petitions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {data.petitions.map((petition: any) => (
-              <PetitionCard 
-                key={petition.id_petition} 
-                petition={petition} 
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <h3 className="text-xl font-semibold text-white">No tienes peticiones en este estado</h3>
-            <p className="text-gray-400 mt-2">¡Prueba a cambiar de pestaña o crea una nueva petición!</p>
-          </div>
-        )}
-
-        {data && data.totalPages > 1 && (
-          <Pagination 
-            currentPage={data.currentPage}
-            totalPages={data.totalPages}
-            onPageChange={handlePageChange}
-          />
-        )}
-      </>
-    );
-  };
 
   return (
     <div>
@@ -162,9 +89,13 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         </nav>
       </div>
       <div className="p-6 bg-gray-800 rounded-lg min-h-[400px]">
-        {activeTab === 'peticiones' && renderPetitionsContent()}
-        {activeTab === 'informacion' && <p>Contenido de Información Personal...</p>}
-        {activeTab === 'historial' && <p>Contenido de Historial y Calificaciones...</p>}
+        {activeTab === 'peticiones' && user.customer ? (
+          <CustomerPetitions customerId={user.customer.id_customer} />
+        ) : activeTab === 'informacion' ? (
+          <p>Contenido de Información Personal...</p>
+        ) : activeTab === 'historial' ? (
+          <p>Contenido de Historial y Calificaciones...</p>
+        ) : null}
       </div>
     </div>
   );
