@@ -1,7 +1,7 @@
 import apiClient from './apiClient';
 
 export const postulationService = {
-    getAllPostulations: async (filters?: { id_state?: number; id_customer?: number; id_petition?: number; }) => {
+    getAllPostulations: async (filters?: { id_state?: number; id_customer?: number; id_petition?: number; id_provider?: number; }) => {
         try {
             const response = await apiClient.get('/postulation', { params: filters });
             return response.data;

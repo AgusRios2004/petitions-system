@@ -1,10 +1,44 @@
-const { Postulation, Inventory, sequelize } = require('../models');
+const { Postulation, Inventory, sequelize, User, Provider, Petition, State } = require('../models');
+
 class PostulationService {
     
     async getAllPostulations(filter = {}) {
+        const whereClause = {};
+        const includeClause = [
+            { model: Petition, as: 'petition' },
+            { model: Inventory, as: 'inventories', include: ['article'] },
+            { 
+                model: User, 
+                as: 'createdBy', 
+                include: [
+                    { 
+                        model: Provider, 
+                        as: 'provider',
+                    }
+                ] 
+            },
+            { model: User, as: 'updatedBy' },
+            { model: State, as: 'states' }
+        ];
+
+        if (filter.id_state) {
+            whereClause.id_state = filter.id_state;
+        }
+        if (filter.id_customer) {
+            whereClause.id_customer = filter.id_customer;
+        }
+        if (filter.id_petition) {
+            whereClause.id_petition = filter.id_petition;
+        }
+        if (filter.id_provider) {
+            // This is a nested where clause to filter by provider id
+            const providerWhere = { '$createdBy.provider.id_provider$': filter.id_provider };
+            Object.assign(whereClause, providerWhere);
+        }
+
         return await Postulation.findAll({
-            include: ['petition', 'inventories', 'createdBy', 'updatedBy'],
-            where: filter,
+            include: includeClause,
+            where: whereClause,
         });
     }
 

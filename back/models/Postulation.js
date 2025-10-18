@@ -70,6 +70,11 @@ module.exports = (sequelize, DataTypes) => {
             sourceKey: 'id_postulation',  // La PK real
             as: 'inventories',
         });
+
+        Postulation.belongsTo(models.State, {
+            foreignKey: 'id_state',
+            as: 'states',
+        });
     };
 
     return Postulation;
