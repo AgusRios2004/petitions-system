@@ -17,6 +17,7 @@ interface UserProfile {
 }
 
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
+import ProviderOportunities from '@/components/petitions/ProviderOportunities';
 
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
@@ -50,6 +51,8 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
       <div className="p-6 bg-gray-800 rounded-lg min-h-[300px]">
         {activeTab === 'postulaciones' && user.provider ? (
           <ProviderPostulations id_provider={user.provider.id_provider} />
+        ) : activeTab === 'oportunidades' ? (
+          <ProviderOportunities />
         ) : (
           <p>Contenido de la pestaña: {activeTab}</p>
         )}
