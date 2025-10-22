@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import axios from 'axios';
+import { Country, Province, Department, City, Profession, TypeProvider } from '@/types/common';
 
 
 const api = axios.create({
@@ -18,7 +19,38 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
+  const [professions, setProfessions] = useState<Profession[]>([]);
+  const [typeProviders, setTypeProviders] = useState<TypeProvider[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
 
+  const [name, setName] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('customer'); // Default role
+
+  // Customer specific
+  const [dni, setDni] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Provider specific
+  const [professionId, setProfessionId] = useState('');
+  const [typeProviderId, setTypeProviderId] = useState('');
+  const [description, setDescription] = useState('');
+
+  // Address specific
+  const [countryId, setCountryId] = useState('');
+  const [provinceId, setProvinceId] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const [cityId, setCityId] = useState('');
+  const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
+  const [floor, setFloor] = useState('');
+  const [apartment, setApartment] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {

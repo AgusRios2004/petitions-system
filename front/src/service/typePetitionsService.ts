@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { ApiResponse, TypePetition } from "@/WebApiResponse/api";
+import { ApiResponse, TypePetition } from "@/types/common";
 
 export async function getTypePetitions(): Promise<ApiResponse<TypePetition[]>> {
     try {

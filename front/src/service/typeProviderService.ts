@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { ApiResponse, TypeProvider } from "@/WebApiResponse/api";
+import { ApiResponse, TypeProvider } from "@/types/common";
 
 export async function getTypeProviders(): Promise<ApiResponse<TypeProvider[]>> {
     try {

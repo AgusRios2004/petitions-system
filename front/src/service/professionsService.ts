@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { ApiResponse, Profession } from "@/WebApiResponse/api";
+import { ApiResponse, Profession } from "@/types/common";
 
 export async function getProfessions(): Promise<ApiResponse<Profession[]>> {
     try {
