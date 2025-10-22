@@ -37,3 +37,35 @@ export interface City {
     id_city: number;
     name: string;
 };
+
+export interface IArticle {
+    id_article: number;
+    name: string | null;
+    id_category: number;
+    id_user_create: number;
+    id_user_update?: number | null;
+    date_create: string; 
+    date_update: string;
+    // Associations
+    category?: any; 
+    createdBy?: any; 
+    updatedBy?: any; 
+    inventories?: IInventory[];
+  }
+  
+export interface IInventory {
+    id_inventory: number;
+    id_article: number;
+    cost: number;
+    id_postulation?: number | null;
+    id_user_update?: number | null;
+    id_user_create?: number | null;
+    date_update?: string | null;
+    date_create?: string | null;
+    quantity: number;
+    // Associations
+    article?: IArticle;
+    postulation?: any; 
+    userUpdate?: any; 
+    userCreate?: any; 
+}
