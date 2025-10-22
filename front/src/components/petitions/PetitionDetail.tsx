@@ -134,9 +134,16 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-300">Adjuntos</h3>
-            <Link href={`/petition/${petition.id_petition}/add-attachment`}>
-              <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
-            </Link>
+            {isOwner && !user?.provider && (
+              <Link href={`/petition/${petition.id_petition}/add-attachment`}>
+                <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
+              </Link>
+            )}
+            {!isOwner && user?.provider && (
+              <Link href={`/postulation/create/${petition.id_petition}`}>
+                <Button size="sm" variant="primary">Postularse</Button>
+              </Link>
+            )}
           </div>
           {petition.attachments && petition.attachments.length > 0 ? (
             <ul className="list-disc list-inside pl-2 text-gray-400">
