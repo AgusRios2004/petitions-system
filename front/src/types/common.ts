@@ -69,3 +69,8 @@ export interface IInventory {
     userUpdate?: any; 
     userCreate?: any; 
 }
+
+export interface ICategory {
+    id_category: number,
+    name: string,
+}
