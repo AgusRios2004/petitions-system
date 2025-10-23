@@ -74,3 +74,27 @@ export interface ICategory {
     id_category: number,
     name: string,
 }
+
+export interface IPostulation {
+  id_postulation: number;
+  proposal: string;
+  cost: number;
+  winner: boolean;
+  date_create: string;
+  createdBy: {
+    id_user: number;
+    name: string;
+    lastname: string,
+    provider: {
+      id_provider: number;
+
+    };
+  };
+  states: {
+    state: string;
+  };
+  petition: {
+    id_petition: number;
+    description: string;
+  };
+}

@@ -1,51 +1,31 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
-
-interface Postulation {
-  id_postulation: number;
-  proposal: string;
-  cost: number;
-  winner: boolean;
-  date_create: string;
-  providers: {
-    id_provider: number;
-    users: {
-      name: string;
-      lastname: string;
-    };
-  };
-  states: {
-    state: string;
-  };
-  petition: {
-    id_petition: number;
-    description: string;
-  };
-}
+import { IPostulation } from '@/types/common';
 
 interface PostulationCardProps {
-  postulation: Postulation;  
+  postulation: IPostulation;  
 }
 
 const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
+  console.log(postulation)
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+    <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-lg font-semibold text-gray-800">
-            {postulation.providers.users.name} {postulation.providers.users.lastname}
+          <p className="text-lg font-semibold text-white">
+            {postulation.createdBy.name} {postulation.createdBy.lastname}
           </p>
-          <p className="text-sm text-gray-500 mt-2">{postulation.petition.description.substring(0, 50)}...</p>
-          <p className="text-sm text-gray-600 mt-1">Propuesta: {postulation.proposal}</p>
-          <p className="text-sm font-bold text-gray-800 mt-1">Costo: ${postulation.cost}</p>
+          <p className="text-sm text-gray-300 mt-2">{postulation.petition.description.substring(0, 50)}...</p>
+          <p className="text-sm text-gray-200 mt-1">Propuesta: {postulation.proposal}</p>
+          <p className="text-sm font-bold text-white mt-1">Costo: ${postulation.cost}</p>
         </div>
         <div className="text-right">
-          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${postulation.states.state === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${postulation.states.state === 'Activo' ? 'bg-green-700 text-green-100' : 'bg-yellow-700 text-yellow-100'}`}>
             {postulation.states.state}
           </span>
           {postulation.winner && (
-            <span className="mt-2 inline-block text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+            <span className="mt-2 inline-block text-sm font-semibold px-3 py-1 rounded-full bg-blue-700 text-blue-100">
               Ganador
             </span>
           )}
@@ -56,7 +36,7 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
           <Button variant='secondary' fullWidth={false} >Ver detalles</Button>
         </Link>
       </div>
-      <div className="text-right text-xs text-gray-500 mt-4">
+      <div className="text-right text-xs text-gray-400 mt-4">
         Postulado el: {new Date(postulation.date_create).toLocaleDateString()}
       </div>
     </div>
