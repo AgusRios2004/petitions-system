@@ -36,11 +36,11 @@ module.exports = (sequelize, DataTypes) => {
             as: 'articles',
         });
         Category.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
         Category.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
+            foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
         Category.hasMany(models.ProviderCategory, {
