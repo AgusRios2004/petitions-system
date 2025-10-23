@@ -140,11 +140,11 @@ export default function CreatePostulationPage() {
 
           {/* Artículos */}
           <div>
-            <Label className="font-semibold">Artículos</Label>
+            <Label className="font-semibold">Categorías</Label>
             <div className="flex gap-2 mb-2 mt-1">
               <select
                 onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
-                className="p-2 border rounded w-full bg-white text-gray-900"
+                className="p-2 border rounded w-full bg-white text-gray-900 max-h-30 overflow-y-auto"
               >
                 <option value="0">Todas las categorías</option>
                 {categories.map((c) => (
@@ -165,7 +165,7 @@ export default function CreatePostulationPage() {
                     className="p-2 border rounded w-full bg-white text-gray-900"
                   >
                     <option value="0" disabled>Seleccione un artículo</option>
-                    {filteredArticles.map((a) => (
+                    {[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)!])].filter(Boolean).map((a) => (
                       <option key={a.id_article} value={a.id_article}>
                         {a.name}
                       </option>
@@ -210,13 +210,27 @@ export default function CreatePostulationPage() {
             </Button>
           </div>
 
-          <Button
-            type="submit"
-            disabled={postulationMutation.isPending}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {postulationMutation.isPending ? 'Enviando...' : 'Enviar Postulación'}
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                if (window.confirm('¿Estás seguro de que quieres volver? Los cambios no guardados se perderán.')) {
+                  router.back();
+                }
+              }}
+              className="w-full"
+            >
+              Volver
+            </Button>
+            <Button
+              type="submit"
+              disabled={postulationMutation.isPending}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {postulationMutation.isPending ? 'Enviando...' : 'Enviar Postulación'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
