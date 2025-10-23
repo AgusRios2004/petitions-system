@@ -16,7 +16,7 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
           <p className="text-lg font-semibold text-white">
             {postulation.createdBy.name} {postulation.createdBy.lastname}
           </p>
-          <p className="text-sm text-gray-300 mt-2">{postulation.petition.description.substring(0, 50)}...</p>
+          <p className="text-sm text-gray-300 mt-2">{postulation.petition.description}</p>
           <p className="text-sm text-gray-200 mt-1">Propuesta: {postulation.proposal}</p>
           <p className="text-sm font-bold text-white mt-1">Costo: ${postulation.cost}</p>
         </div>
