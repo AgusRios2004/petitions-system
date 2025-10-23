@@ -84,7 +84,7 @@ const PetitionDetailPage = () => {
   }
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto py-6">
       {isEditing ? (
         <PetitionEditForm
           petition={petition}

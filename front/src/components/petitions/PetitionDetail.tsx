@@ -165,7 +165,14 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        <div className="mt-6 flex justify-end space-x-4">
+        <div className="mt-6 flex justify-between space-x-4">
+          <Button
+            onClick={() => window.history.back()}
+            variant="secondary"
+            fullWidth={false}
+          >
+            Volver
+          </Button>
           {isOwner && (
             <>
               <Button
@@ -194,6 +201,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
               </Button>
             </>
           )}
+
         </div>
       </div>
       {showPostulations && (
