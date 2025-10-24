@@ -85,12 +85,12 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           </span>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 pb-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Descripción</h2>
           <p className="text-gray-600 whitespace-pre-wrap">{petition.description}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
           <div>
             <span className="font-medium text-gray-500">Tipo de Petición: </span>
             <span className="text-gray-800">{petition.typePetitions?.name}</span>
@@ -131,17 +131,12 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-300">Adjuntos</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Adjuntos</h3>
             {isOwner && !user?.provider && (
               <Link href={`/petition/${petition.id_petition}/add-attachment`}>
                 <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
-              </Link>
-            )}
-            {!isOwner && user?.provider && (
-              <Link href={`/postulation/create/${petition.id_petition}`}>
-                <Button size="sm" variant="primary">Postularse</Button>
               </Link>
             )}
           </div>
@@ -153,7 +148,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
                     href={`http://localhost:3000/${file.path}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
+                    className="text-blue-500 underline hover:text-blue-600"
                   >
                     {file.name}
                   </a>
@@ -165,43 +160,44 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        <div className="mt-6 flex justify-between space-x-4">
+        <div className="mt-8 flex flex-wrap justify-end gap-4">
           <Button
             onClick={() => window.history.back()}
             variant="secondary"
-            fullWidth={false}
+            className="flex-1 min-w-[120px]"
           >
             Volver
           </Button>
+          {!isOwner && user?.provider && (
+            <Link href={`/postulation/create/${petition.id_petition}`} className="flex-1 min-w-[120px]">
+              <Button variant="primary" className="w-full">Postularse</Button>
+            </Link>
+          )}
           {isOwner && (
             <>
               <Button
                 onClick={togglePostulations}
                 variant="primary"
-                className="bg-green-500 hover:bg-green-600"
-                fullWidth={false}
+                className="bg-green-500 hover:bg-green-600 flex-1 min-w-[120px]"
               >
                 {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
               </Button>
               <Button
                 onClick={() => onEdit(petition.id_petition)}
                 variant="primary"
-                className="bg-yellow-500 hover:bg-yellow-600"
-                fullWidth={false}
+                className="bg-yellow-500 hover:bg-yellow-600 flex-1 min-w-[120px]"
               >
                 Editar
               </Button>
               <Button
                 onClick={() => onDelete(petition.id_petition)}
                 variant="primary"
-                className="bg-red-500 hover:bg-red-600"
-                fullWidth={false}
+                className="bg-red-500 hover:bg-red-600 flex-1 min-w-[120px]"
               >
                 Eliminar
               </Button>
             </>
           )}
-
         </div>
       </div>
       {showPostulations && (
