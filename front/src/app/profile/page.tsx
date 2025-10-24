@@ -19,9 +19,24 @@ interface UserProfile {
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 import ProviderOportunities from '@/components/petitions/ProviderOportunities';
 
+import { useSearchParams } from 'next/navigation';
+
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
-  const [activeTab, setActiveTab] = useState('perfil-publico');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'perfil-publico';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId);
+    router.push(`/profile?tab=${tabId}`, { scroll: false });
+  };
+
   const tabs = [
     { id: 'perfil-publico', label: 'Mi Perfil Público' },
     { id: 'oportunidades', label: 'Buscar Oportunidades' },
@@ -37,7 +52,7 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-white'

@@ -92,7 +92,11 @@ export default function CreatePostulationPage() {
       router.push(`/petition/${petitionId}`);
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Error al crear la postulación');
+      if (error.response && error.response.status === 409) {
+        toast.error('No se puede postular 2 veces a la misma petición.');
+      } else {
+        toast.error(error.message || 'Error al crear la postulación');
+      }
     },
   });
 
@@ -216,7 +220,7 @@ export default function CreatePostulationPage() {
               variant="secondary"
               onClick={() => {
                 if (window.confirm('¿Estás seguro de que quieres volver? Los cambios no guardados se perderán.')) {
-                  router.back();
+                  router.push('/profile?tab=oportunidades');
                 }
               }}
               className="w-full"
