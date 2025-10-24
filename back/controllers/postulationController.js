@@ -33,7 +33,7 @@ exports.createPostulation = async (req, res) => {
         const postulation = await service.createPostulation(req.body, req.user.sub);
         return success(res, postulation, 201);
     } catch (e) {
-        return error(res, e.message, 500);
+        return error(res, e.message, e.statusCode || 500);
     }
 }
 
