@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_update: {
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
+            allowNull: true,
         },
         // 🚨 CRÍTICO: NO DEBE HABER NINGÚN CAMPO id_postulation AQUÍ
         // Si tienes un campo así, ELIMÍNALO

@@ -59,7 +59,8 @@ class PostulationService {
                     include: ['article']
                 },
                 'createdBy',
-                'updatedBy'
+                'updatedBy',
+                'states'
             ],
         });
     }
@@ -113,7 +114,8 @@ class PostulationService {
                 cost: cost,
                 id_state: 3,
                 id_user_create: userId,
-                winner: false
+                winner: false,
+                date_create: new Date(),
             }, { transaction: t });
 
             // Lógica de inventario (ya estaba bien, solo ajustamos id_user_create)
@@ -151,11 +153,17 @@ class PostulationService {
                 throw error;
             }
 
-            await postulation.update({
-                proposal,
-                cost,
-                id_user_update,
-            }, {transaction: t});
+                        await postulation.update({
+
+                            proposal,
+
+                            cost,
+
+                            id_user_update,
+
+                            date_update: new Date(),
+
+                        }, { transaction: t });
 
             await Inventory.destroy({where: {id_postulation: id}, transaction: t});
 
@@ -187,6 +195,7 @@ class PostulationService {
         return await postulation.update({
             id_state: data.id_state,
             id_user_update: data.id_user_update,
+            date_update: new Date(),
         });
     }
 }
