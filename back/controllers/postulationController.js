@@ -84,3 +84,14 @@ exports.changePostulationState = async (req, res) => {
         return error(res, e.message, 500);
     }
 }
+
+exports.winnerPostulation = async (req, res) => {
+    try {
+        const postulation = await service.updatePostulationWinnerStatus(req.params.id, req.body.winner, req.user.sub);
+        if(!postulation) return error(res, 'Postulación no encontrada', 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: " ,e.message);
+        return error(res, e.message, 500)
+    }
+};

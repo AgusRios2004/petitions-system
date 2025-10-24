@@ -7,5 +7,6 @@ router.get('/:id', authRequired, ctrl.getPostulationById);
 router.post('/', authRequired, ctrl.createPostulation);
 router.put('/:id', authRequired, ctrl.updatePostulation);
 router.patch('/:id/state', authRequired, onlyStaff, ctrl.changePostulationState);
+router.patch('/:id/winner', authRequired, ctrl.winnerPostulation);
 
 module.exports = router;

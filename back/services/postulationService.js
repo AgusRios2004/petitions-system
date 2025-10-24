@@ -202,6 +202,16 @@ class PostulationService {
             date_update: new Date(),
         });
     }
+
+    async updatePostulationWinnerStatus(id, winnerStatus, userId) {
+        const postulation = await Postulation.findByPk(id);
+        if(!postulation) return null;
+        return await postulation.update({
+            winner: winnerStatus,
+            id_user_update: userId,
+            date_update: new Date(),
+        });
+    }
 }
 
 module.exports = new PostulationService();
