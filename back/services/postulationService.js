@@ -1,3 +1,4 @@
+const { where } = require('sequelize');
 const { Postulation, Inventory, sequelize, User, Provider, Petition, State } = require('../models');
 
 class PostulationService {
@@ -140,14 +141,44 @@ class PostulationService {
     }
 
     async updatePostulation(id, data) {
-        const postulation = await Postulation.findByPk(id);
-        if(!postulation) return null;
-        return await postulation.update({ 
-            proposal: data.proposal,
-            cost: data.cost,
-            id_state: data.id_state,
-            id_user_update: data.id_user_update,
-         });
+        const {proposal, cost, articles, id_user_update} = data;
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(id, {transaction: t});
+            if(!postulation){
+                const error = new Error('Postulacion no encontrada');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            await postulation.update({
+                proposal,
+                cost,
+                id_user_update,
+            }, {transaction: t});
+
+            await Inventory.destroy({where: {id_postulation: id}, transaction: t});
+
+            if(articles && articles.length > 0) {
+                const inventoryData = articles.map(article => ({
+                    id_article: article.id_article,
+                    quantity: article.quantity,
+                    cost: article.cost,
+                    id_postulation: postulation.id_postulation,
+                    id_user_create: id_user_update,
+                    date_create: new Date(),
+                }));
+                await Inventory.bulkCreate(inventoryData, {transaction: t});
+            }
+
+            await t.commit();
+            return await this.getPostulationById(postulation.id_postulation);
+        } catch (e) {
+            await t.rollback();
+            console.error("Error: " ,e.message);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
+        }
     }
 
     async changePostulationState(id, data) {
