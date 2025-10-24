@@ -31,7 +31,10 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
           )}
         </div>
       </div>
-      <div className='flex justify-end mt-4'>
+      <div className='flex justify-end mt-4 gap-2'>
+        <Link href={`/postulation/edit/${postulation.id_postulation}`}>
+          <Button variant='primary' fullWidth={false}>Editar</Button>
+        </Link>
         <Link href={`/postulation/${postulation.id_postulation}`}>
           <Button variant='secondary' fullWidth={false} >Ver detalles</Button>
         </Link>
