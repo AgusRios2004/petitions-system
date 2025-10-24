@@ -1,14 +1,42 @@
 const service = require('../services/postulationService');
 const { error, success } = require('../middlewares/response');
+const { Petition, Customer } = require('../models');
 
 exports.getAllPostulations = async (req, res) => {
     try {
         const { id_state, id_customer, id_petition, id_provider } = req.query;
+        const { is_staff, is_superuser, sub: userId } = req.user;
+
         const filter = {};
         if (id_state) filter.id_state = id_state;
         if (id_customer) filter.id_customer = id_customer;
         if (id_petition) filter.id_petition = id_petition;
         if (id_provider) filter.id_provider = id_provider;
+
+        // If user is not staff/superuser, they can only see postulations for their own petitions.
+        if (!is_staff && !is_superuser) {
+            if (!id_petition) {
+                // if no petition id is provided, we can't check ownership, so return nothing
+                return success(res, []);
+            }
+
+            const petition = await Petition.findByPk(id_petition, {
+                include: [{
+                    model: Customer,
+                    as: 'customers'
+                }]
+            });
+
+            if (!petition) {
+                return error(res, 'Petición no encontrada', 404);
+            }
+
+            // Check if the petition belongs to the user
+            if (petition.customers.user_id !== userId) {
+                return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
+            }
+        }
+
         const postulations = await service.getAllPostulations(filter);
         return success(res, postulations);
     } catch (e) {

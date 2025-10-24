@@ -52,7 +52,11 @@ class PostulationService {
     async getPostulationById(id) {
         return await Postulation.findByPk(id, {
             include: [
-                'petition',
+                { 
+                    model: Petition, 
+                    as: 'petition', 
+                    include: ['customers'] 
+                },
                 {
                     model: Inventory,
                     as: 'inventories',
