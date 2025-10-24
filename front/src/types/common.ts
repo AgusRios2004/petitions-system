@@ -97,6 +97,11 @@ export interface IPostulation {
   petition: {
     id_petition: number;
     description: string;
+    id_customer: number;
+    customers: {
+      id_customer: number;
+      user_id: number;
+    };
   };
   inventories: IInventory[];
 }

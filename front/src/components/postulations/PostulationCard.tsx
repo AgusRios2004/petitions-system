@@ -4,10 +4,11 @@ import { Button } from '../ui/Button';
 import { IPostulation } from '@/types/common';
 
 interface PostulationCardProps {
-  postulation: IPostulation;  
+  postulation: IPostulation;
+  role: 'provider' | 'customer';
 }
 
-const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
+const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) => {
   console.log(postulation)
   return (
     <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
@@ -32,9 +33,11 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation }) => {
         </div>
       </div>
       <div className='flex justify-end mt-4 gap-2'>
-        <Link href={`/postulation/edit/${postulation.id_postulation}`}>
-          <Button variant='primary' fullWidth={false}>Editar</Button>
-        </Link>
+        {role === 'provider' && (
+            <Link href={`/postulation/edit/${postulation.id_postulation}`}>
+                <Button variant='primary' fullWidth={false}>Editar</Button>
+            </Link>
+        )}
         <Link href={`/postulation/${postulation.id_postulation}`}>
           <Button variant='secondary' fullWidth={false} >Ver detalles</Button>
         </Link>

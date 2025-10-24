@@ -1,15 +1,22 @@
 'use client';
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { postulationService } from '@/service/postulationService';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { IPostulation } from '@/types/common';
+import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
+
+const ACCEPTED_STATE_ID = 1;
+const REJECTED_STATE_ID = 2;
 
 export default function PostulationDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const postulationId = params.id as string;
 
   const { data: postulationData, isLoading, error } = useQuery<{ data: IPostulation }>({ 
@@ -18,20 +25,65 @@ export default function PostulationDetailPage() {
     enabled: !!postulationId,
   });
 
+  const acceptMutation = useMutation({
+    mutationFn: async () => {
+      await postulationService.updatePostulation(postulationId, { winner: true, id_user_update: user!.id_user });
+      return await postulationService.changePostulationState(postulationId, { id_state: ACCEPTED_STATE_ID, id_user_update: user!.id_user });
+    },
+    onSuccess: () => {
+      toast.success('Postulación aceptada con éxito');
+      queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al aceptar la postulación');
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: () => {
+      return postulationService.changePostulationState(postulationId, { id_state: REJECTED_STATE_ID, id_user_update: user!.id_user });
+    },
+    onSuccess: () => {
+      toast.success('Postulación rechazada');
+      queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al rechazar la postulación');
+    },
+  });
+
   if (isLoading) return <p>Cargando detalles de la postulación...</p>;
   if (error) return <p>Error al cargar la postulación: {error.message}</p>;
   if (!postulationData || !postulationData.data) return <p>Postulación no encontrada.</p>;
 
   const postulation = postulationData.data;
-  console.log(postulation)
+
+  const handleBack = () => {
+    if (user?.customer) {
+      router.push(`/petition/${postulation.petition.id_petition}`);
+    } else {
+      router.back();
+    }
+  };
+
+  const handleAccept = () => {
+    if (window.confirm('¿Está seguro de que desea aceptar esta postulación? Esta acción marcará la postulación como ganadora.')) {
+      acceptMutation.mutate();
+    }
+  };
+
+  const handleDecline = () => {
+    if (window.confirm('¿Está seguro de que desea rechazar esta postulación?')) {
+      declineMutation.mutate();
+    }
+  };
+
+  const isOwner = user?.customer?.id_customer === postulation.petition.customers.id_customer;
+
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <Link href="/profile?tab=postulaciones" className="text-blue-500 hover:underline">
-            &larr; Volver a Mis Postulaciones
-          </Link>
-        </div>
+        
         <h1 className="text-3xl font-bold mb-6 text-gray-800">Detalles de la Postulación</h1>
 
         <div className="space-y-4">
@@ -85,10 +137,27 @@ export default function PostulationDetailPage() {
           )}
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <Link href={`/postulation/edit/${postulation.id_postulation}`}>
-            <Button variant="primary">Editar Postulación</Button>
-          </Link>
+        {isOwner && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Acciones del Cliente</h2>
+            <div className="flex gap-4">
+              <Button onClick={handleAccept} variant="primary" disabled={acceptMutation.isPending || postulation.winner}>
+                {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
+              </Button>
+              <Button onClick={handleDecline} variant="destructive" disabled={declineMutation.isPending}>
+                {declineMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 flex justify-between items-center">
+            <Button onClick={handleBack} variant="secondary">&larr; Volver</Button>
+            {user?.provider && (
+                <Link href={`/postulation/edit/${postulation.id_postulation}`}>
+                    <Button variant="primary">Editar Postulación</Button>
+                </Link>
+            )}
         </div>
       </div>
     </div>
