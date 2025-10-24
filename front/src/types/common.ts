@@ -81,6 +81,7 @@ export interface IPostulation {
   cost: number;
   winner: boolean;
   date_create: string;
+  date_update: string | null;
   createdBy: {
     id_user: number;
     name: string;
@@ -97,4 +98,5 @@ export interface IPostulation {
     id_petition: number;
     description: string;
   };
+  inventories: IInventory[];
 }
