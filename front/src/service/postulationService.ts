@@ -50,4 +50,14 @@ export const postulationService = {
             throw error;
         }
     },
+    
+    updateWinner: async (id: string, payload: {winner: boolean, id_user_update: number}) => {
+        try {
+            const response = await apiClient.patch(`/postulation/${id}/winner`, payload);
+            return response.data;
+        } catch (e) {
+            console.error("Error: ", e);
+            throw e;
+        }
+    }
 };

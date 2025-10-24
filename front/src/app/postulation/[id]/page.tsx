@@ -27,7 +27,7 @@ export default function PostulationDetailPage() {
 
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      await postulationService.updatePostulation(postulationId, { winner: true, id_user_update: user!.id_user });
+      await postulationService.updateWinner(postulationId, { winner: true, id_user_update: user!.id_user });
       return await postulationService.changePostulationState(postulationId, { id_state: ACCEPTED_STATE_ID, id_user_update: user!.id_user });
     },
     onSuccess: () => {
