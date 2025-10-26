@@ -148,19 +148,19 @@ exports.updatePetition = async (req, res) => {
     }
 };
 
-exports.deletePetition = async (req, res) => {
+
+
+exports.cancelPetition = async (req, res) => {
     try {
         const { id } = req.params;
-        const { id_state } = req.body;
+        const userId = req.user.sub; // O req.user.id, dependiendo de cómo esté en tu token
 
-        if (!id_state) return error(res, 'Estado es requerido');
+        const petition = await service.cancelPetition(Number(id), userId);
+        
+        return success(res, petition, 'Petición y postulaciones asociadas canceladas correctamente.');
 
-        const ok = await service.deletePetition(id, { id_state, id_user_update: req.user.sub });
-        if (!ok) return error(res, 'Petición no encontrada', 404);
-
-        return success(res, ok, 'Petición eliminada correctamente');
     } catch (e) {
-        console.error('Error: ', e);
-        return error(res, e.message, 500);
+        console.error('Error en el controlador de cancelación de petición:', e);
+        return error(res, e.message, e.statusCode || 500);
     }
 };
