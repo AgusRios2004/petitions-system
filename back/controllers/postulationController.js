@@ -95,3 +95,14 @@ exports.winnerPostulation = async (req, res) => {
         return error(res, e.message, 500)
     }
 };
+
+exports.acceptPostulation = async (req, res) => {
+    try {
+        const postulation = await service.acceptPostulation(req.params.id, req.user.sub);
+        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: ", e);
+        return error(res, e.message, 500);
+    }
+}

@@ -212,6 +212,46 @@ class PostulationService {
             date_update: new Date(),
         });
     }
+
+    async acceptPostulation(id, userId) {
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(id, {transaction: t});
+            if(!postulation) {
+                const error = new Error("Postulación no encontrada.")
+                error.statusCode = 404; 
+                throw error;
+            }
+            
+            await postulation.update({
+                winner: true,
+                id_state: 1,
+                id_user_update: userId,
+                data_update: new Date(),
+            }, { transaction: t });
+
+            const petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
+            if(!petition){
+                const e = new Error("Petición no encontrada");
+                e.statusCode = 404;
+                throw e;
+            }
+
+            await petition.update({
+                id_state: 1,
+                id_user_update: userId,
+                date_update: new Date(),
+            }, {transaction: t});
+
+            await t.commit()
+
+            return await this.getPostulationById(id);
+        } catch (e) {
+            console.error("Error: ", e);
+            e.statusCode = 404;
+            throw e;
+        }
+    }
 }
 
 module.exports = new PostulationService();
