@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Petition {
   id_petition: number;
@@ -66,6 +67,7 @@ import PetitionPostulations from '@/components/postulations/PetitionPostulations
 
 const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
   const { user } = useAuth();
+  const router = useRouter();
   const [showPostulations, setShowPostulations] = React.useState(false);
   console.log('PetitionDetail Props:', petition);
 
@@ -162,7 +164,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
 
         <div className="mt-8 flex flex-wrap justify-end gap-4">
           <Button
-            onClick={() => window.history.back()}
+            onClick={() => router.push('/profile')}
             variant="secondary"
             className="flex-1 min-w-[120px]"
           >

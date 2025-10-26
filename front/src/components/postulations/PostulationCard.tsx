@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
+import { getStatusColor } from '@/helpers/statusHelper';
 import { IPostulation } from '@/types/common';
 
 interface PostulationCardProps {
@@ -22,12 +23,13 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
           <p className="text-sm font-bold text-white mt-1">Costo: ${postulation.cost}</p>
         </div>
         <div className="text-right">
-          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${postulation.states.state === 'Activo' ? 'bg-green-700 text-green-100' : 'bg-yellow-700 text-yellow-100'}`}>
-            {postulation.states.state}
-          </span>
-          {postulation.winner && (
-            <span className="mt-2 inline-block text-sm font-semibold px-3 py-1 rounded-full bg-blue-700 text-blue-100">
+          {postulation.winner ? (
+            <span className={`mt-2 inline-block text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor('Aceptado')}`}>
               Ganador
+            </span>
+          ) : (
+            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
+              {postulation.states.state}
             </span>
           )}
         </div>
