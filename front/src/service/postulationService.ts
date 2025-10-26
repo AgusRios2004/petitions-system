@@ -41,23 +41,24 @@ export const postulationService = {
         }
     },
 
-    changePostulationState: async (id: string, payload: { id_state: number; id_user_update: number; }) => {
+    acceptPostulation: async (id: string) => {
         try {
-            const response = await apiClient.patch(`/postulation/${id}/state`, payload);
+            const response = await apiClient.patch(`/postulation/${id}/accept`);
             return response.data;
         } catch (error) {
-            console.error(`Error changing state for postulation with ID ${id}:`, error);
+            console.error(`Error accepting postulation with ID ${id}:`, error);
             throw error;
         }
     },
-    
-    updateWinner: async (id: string, payload: {winner: boolean, id_user_update: number}) => {
+
+    declinePostulation: async (id: string, payload: { id_user_update: number; }) => {
         try {
-            const response = await apiClient.patch(`/postulation/${id}/winner`, payload);
+            // Asegúrate de que el backend tenga este endpoint
+            const response = await apiClient.patch(`/postulation/${id}/decline`, payload);
             return response.data;
-        } catch (e) {
-            console.error("Error: ", e);
-            throw e;
+        } catch (error) {
+            console.error(`Error declining postulation with ID ${id}:`, error);
+            throw error;
         }
     }
 };

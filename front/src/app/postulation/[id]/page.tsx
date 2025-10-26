@@ -26,13 +26,17 @@ export default function PostulationDetailPage() {
   });
 
   const acceptMutation = useMutation({
-    mutationFn: async () => {
-      await postulationService.updateWinner(postulationId, { winner: true, id_user_update: user!.id_user });
-      return await postulationService.changePostulationState(postulationId, { id_state: ACCEPTED_STATE_ID, id_user_update: user!.id_user });
-    },
+    mutationFn: () => postulationService.acceptPostulation(postulationId),
     onSuccess: () => {
       toast.success('Postulación aceptada con éxito');
       queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+      queryClient.invalidateQueries({ queryKey: ['petitions'] });
+
+      setTimeout(() => {
+        alert('¡Volverá al menú principal!');
+        router.push('/profile');
+      }, 1000);
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al aceptar la postulación');
@@ -40,9 +44,7 @@ export default function PostulationDetailPage() {
   });
 
   const declineMutation = useMutation({
-    mutationFn: () => {
-      return postulationService.changePostulationState(postulationId, { id_state: REJECTED_STATE_ID, id_user_update: user!.id_user });
-    },
+    mutationFn: () => postulationService.declinePostulation(postulationId, { id_user_update: user!.id_user }),
     onSuccess: () => {
       toast.success('Postulación rechazada');
       queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
