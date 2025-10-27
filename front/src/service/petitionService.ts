@@ -6,7 +6,7 @@ import apiClient from "./apiClient";
  * @returns The response from the API, containing the newly created petition.
  */
 export const createPetition = async (payload: any) => {
-  const response = await apiClient.post("/api/petition", payload);
+  const response = await apiClient.post("/petition", payload);
   console.log('API Response:', response.data);
   return response.data;
 };
@@ -37,7 +37,7 @@ export const updatePetitionState = async (id_petition: number, payload: { id_sta
   return response.data;
 };
 
-export const deletePetition = async (id_petition: number) => {
-  const response = await apiClient.delete(`/petition/${id_petition}`);
+export const cancelPetition = async (id_petition: number) => {
+  const response = await apiClient.put(`/petition/cancel/${id_petition}`);
   return response.data;
 };
