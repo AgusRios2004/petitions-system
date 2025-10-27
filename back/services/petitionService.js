@@ -93,15 +93,6 @@ class PetitionService {
             throw error;
         }
     }
-
-    async deletePetition(id, data) {
-        const petition = await Petition.findByPk(id);
-        if (!petition) return null;
-        return await petition.update({ 
-            id_state: data.id_state, // Asumo que esto es para borrado lógico
-            id_user_update: data.id_user_update,
-        });
-    }
 }
 
 module.exports = new PetitionService();
