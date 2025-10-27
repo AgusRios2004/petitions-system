@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { cancelPetition } from '@/service/petitionService';
 
 interface Petition {
   id_petition: number;
@@ -60,12 +61,11 @@ interface Petition {
 interface PetitionDetailProps {
   petition: Petition;
   onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
 }
 
 import PetitionPostulations from '@/components/postulations/PetitionPostulations';
 
-const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
+const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => {
   const { user } = useAuth();
   const router = useRouter();
   const [showPostulations, setShowPostulations] = React.useState(false);
@@ -74,6 +74,19 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
   const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
 
   const togglePostulations = () => setShowPostulations(!showPostulations);
+
+  const handleCancelPetition = async () => {
+    if (window.confirm('¿Estás seguro de que quieres cancelar esta petición?')) {
+      try {
+        await cancelPetition(petition.id_petition);
+        alert('Petición cancelada exitosamente');
+        router.push('/profile');
+      } catch (error) {
+        console.error('Error al cancelar la petición:', error);
+        alert('Hubo un error al cancelar la petición');
+      }
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -191,24 +204,26 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
               >
                 Editar
               </Button>
-              <Button
-                onClick={() => onDelete(petition.id_petition)}
-                variant="primary"
-                className="bg-red-500 hover:bg-red-600 flex-1 min-w-[120px]"
-              >
-                Eliminar
-              </Button>
             </>
           )}
         </div>
+        {isOwner && petition.id_state !== 1 && (
+          <div className="mt-4">
+            <Button
+              onClick={handleCancelPetition}
+              variant="primary"
+              className="w-full bg-red-500 hover:bg-red-600"
+            >
+              Cancelar Petición
+            </Button>
+          </div>
+        )}
       </div>
       {showPostulations && (
         <div className="mt-4">
           <PetitionPostulations petitionId={petition.id_petition} />
         </div>
       )}
-    </div>
-  );
-};
+    </div>)}
 
-export default PetitionDetail;
+    export default PetitionDetail;

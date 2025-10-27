@@ -60,5 +60,25 @@ export const postulationService = {
             console.error(`Error declining postulation with ID ${id}:`, error);
             throw error;
         }
+    },
+
+    rejectPostulation: async (id: string, payload: {id_user_update: number}) =>{
+        try {
+            const response = await apiClient.patch(`/postulation/${id}/reject`, payload);
+            return response.data;
+        } catch (e) {
+            console.error("Error: ", e);
+            throw e;
+        }
+    },
+
+    withdrawPostulation: async (id: string, payload: {id_user_update: number}) => {
+        try {
+            const response = await apiClient.patch(`/postulation/${id}/cancel`, payload);
+            return response.data;
+        } catch (e) {
+            console.error("Error: ", e);
+            throw e;
+        }
     }
 };

@@ -92,6 +92,7 @@ export interface IPostulation {
     };
   };
   states: {
+    id_state: number;
     state: string;
   };
   petition: {

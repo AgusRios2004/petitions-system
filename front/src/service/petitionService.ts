@@ -38,6 +38,6 @@ export const updatePetitionState = async (id_petition: number, payload: { id_sta
 };
 
 export const cancelPetition = async (id_petition: number) => {
-  const response = await apiClient.put(`/petition/cancel/${id_petition}`);
+  const response = await apiClient.patch(`/petition/${id_petition}/cancel`);
   return response.data;
 };

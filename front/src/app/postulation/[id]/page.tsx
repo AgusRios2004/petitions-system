@@ -54,6 +54,17 @@ export default function PostulationDetailPage() {
     },
   });
 
+  const withdrawMutation = useMutation({
+    mutationFn: () => postulationService.withdrawPostulation(postulationId, { id_user_update: user!.id_user }),
+    onSuccess: () => {
+      toast.success('Postulación retirada con éxito');
+      queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al retirar la postulación');
+    },
+  });
+
   if (isLoading) return <p>Cargando detalles de la postulación...</p>;
   if (error) return <p>Error al cargar la postulación: {error.message}</p>;
   if (!postulationData || !postulationData.data) return <p>Postulación no encontrada.</p>;
@@ -77,6 +88,12 @@ export default function PostulationDetailPage() {
   const handleDecline = () => {
     if (window.confirm('¿Está seguro de que desea rechazar esta postulación?')) {
       declineMutation.mutate();
+    }
+  };
+
+  const handleWithdraw = () => {
+    if (window.confirm('¿Está seguro de que desea retirar esta postulación?')) {
+      withdrawMutation.mutate();
     }
   };
 
@@ -139,27 +156,39 @@ export default function PostulationDetailPage() {
           )}
         </div>
 
-        {isOwner && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Acciones del Cliente</h2>
-            <div className="flex gap-4">
-              <Button onClick={handleAccept} variant="primary" disabled={acceptMutation.isPending || postulation.winner}>
-                {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
-              </Button>
-              <Button onClick={handleDecline} variant="destructive" disabled={declineMutation.isPending}>
-                {declineMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+        <div className="mt-8 space-y-4">
+          {user?.provider && (
+            <div className="flex justify-center gap-4">
+              <Link href={`/postulation/edit/${postulation.id_postulation}`}>
+                <Button variant="primary">Editar Postulación</Button>
+              </Link>
+              <Button
+                onClick={handleWithdraw}
+                variant="destructive"
+                disabled={withdrawMutation.isPending || postulation.states.id_state !== 3}
+              >
+                {withdrawMutation.isPending ? 'Cancelando...' : 'Cancelar Postulación'}
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="mt-8 flex justify-between items-center">
-            <Button onClick={handleBack} variant="secondary">&larr; Volver</Button>
-            {user?.provider && (
-                <Link href={`/postulation/edit/${postulation.id_postulation}`}>
-                    <Button variant="primary">Editar Postulación</Button>
-                </Link>
-            )}
+          <div className="flex justify-end">
+            <Button onClick={handleBack} variant="secondary">Volver</Button>
+          </div>
+
+          {isOwner && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Acciones del Cliente</h2>
+              <div className="flex gap-4">
+                <Button onClick={handleAccept} variant="primary" disabled={acceptMutation.isPending || postulation.winner}>
+                  {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
+                </Button>
+                <Button onClick={handleDecline} variant="destructive" disabled={declineMutation.isPending}>
+                  {declineMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
