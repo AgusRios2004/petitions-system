@@ -23,6 +23,7 @@ const stateRoutes = require('./routes/stateRoutes');
 const typePetitionRoutes = require('./routes/typePetitionRoutes');
 const attachmentRoutes = require('./routes/attachmentRoutes');
 const articleRoutes = require('./routes/articleRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/states', stateRoutes);
 app.use('/api/type-petitions', typePetitionRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/article', articleRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // Middleware de manejo de errores (debe ser el último)
 app.use(errorHandler);
