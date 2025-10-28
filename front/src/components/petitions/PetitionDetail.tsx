@@ -214,7 +214,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               variant="primary"
               className="w-full bg-red-500 hover:bg-red-600"
             >
-              Dar de baja
+              Cancelar postulacion
             </Button>
           </div>
         )}
