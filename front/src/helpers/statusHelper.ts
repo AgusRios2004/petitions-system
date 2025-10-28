@@ -1,8 +1,7 @@
 export const STATUS_TABS = [
   { label: 'Pendientes', value: 3 },
   { label: 'Aceptadas', value: 1 },
-  { label: 'Rechazadas', value: 2 },
-  { label: 'Finalizadas', value: 7 },
+  { label: 'Canceladas', value: 5 },
 ];
 
 // 🎨 Define colores consistentes para cada estado del sistema
