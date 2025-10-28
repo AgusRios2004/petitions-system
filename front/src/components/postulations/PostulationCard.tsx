@@ -10,7 +10,8 @@ interface PostulationCardProps {
 }
 
 const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) => {
-  console.log(postulation)
+  const isPostulationInactive = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4 || postulation.states.id_state === 6;
+
   return (
     <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
       <div className="flex justify-between items-start">
@@ -35,7 +36,7 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
         </div>
       </div>
       <div className='flex justify-end mt-4 gap-2'>
-        {role === 'provider' && (
+        {role === 'provider' && !isPostulationInactive && (
             <Link href={`/postulation/edit/${postulation.id_postulation}`}>
                 <Button variant='primary' fullWidth={false}>Editar</Button>
             </Link>

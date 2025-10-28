@@ -207,14 +207,14 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             </>
           )}
         </div>
-        {isOwner && !user?.provider && petition.id_state !== 1 && (
+        {isOwner && petition.id_state !== 1 && (
           <div className="mt-4">
             <Button
               onClick={handleCancelPetition}
               variant="primary"
               className="w-full bg-red-500 hover:bg-red-600"
             >
-              Cancelar Petición
+              Dar de baja
             </Button>
           </div>
         )}

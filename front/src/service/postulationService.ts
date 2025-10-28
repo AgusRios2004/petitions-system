@@ -54,7 +54,7 @@ export const postulationService = {
     declinePostulation: async (id: string, payload: { id_user_update: number; }) => {
         try {
             // Asegúrate de que el backend tenga este endpoint
-            const response = await apiClient.patch(`/postulation/${id}/decline`, payload);
+            const response = await apiClient.patch(`/postulation/${id}/reject`, payload);
             return response.data;
         } catch (error) {
             console.error(`Error declining postulation with ID ${id}:`, error);

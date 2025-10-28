@@ -98,6 +98,7 @@ export default function PostulationDetailPage() {
   };
 
   const isOwner = user?.customer?.id_customer === postulation.petition.customers.id_customer;
+  const isPostulationUneditable = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4;
 
   return (
     <div className="container mx-auto p-6">
@@ -157,7 +158,7 @@ export default function PostulationDetailPage() {
         </div>
 
         <div className="mt-8 space-y-4">
-          {user?.provider && (
+          {user?.provider && !isPostulationUneditable && (
             <div className="flex justify-center gap-4">
               <Link href={`/postulation/edit/${postulation.id_postulation}`}>
                 <Button variant="primary">Editar Postulación</Button>
