@@ -95,7 +95,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
           <h1 className="text-2xl font-bold text-gray-800">
             {petition.profession?.name || 'Sin título'}
           </h1>
-          <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+          <span className="bg-red-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded-full">
             {petition.states?.state || 'Sin Estado'}
           </span>
         </div>
@@ -188,15 +188,9 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               <Button variant="primary" className="w-full">Postularse</Button>
             </Link>
           )}
-          {isOwner && (
+          
+          {isOwner && petition.id_state == 3 && (
             <>
-              <Button
-                onClick={togglePostulations}
-                variant="primary"
-                className="bg-green-500 hover:bg-green-600 flex-1 min-w-[120px]"
-              >
-                {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
-              </Button>
               <Button
                 onClick={() => onEdit(petition.id_petition)}
                 variant="primary"
@@ -204,20 +198,27 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               >
                 Editar
               </Button>
+              <Button
+                onClick={handleCancelPetition}
+                variant="primary"
+                className="bg-red-500 hover:bg-red-600 flex-1 min-w-[120px]"
+              >
+                Cancelar petición
+              </Button>
             </>
           )}
         </div>
-        {isOwner && petition.id_state !== 1 && (
-          <div className="mt-4">
+        <div className='mt-4'>
+          {isOwner && (
             <Button
-              onClick={handleCancelPetition}
+              onClick={togglePostulations}
               variant="primary"
-              className="w-full bg-red-500 hover:bg-red-600"
+              className="bg-green-500 hover:bg-green-600 flex-1 min-w-[120px]"
             >
-              Cancelar postulacion
+              {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       {showPostulations && (
         <div className="mt-4">

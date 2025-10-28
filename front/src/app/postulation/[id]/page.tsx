@@ -170,14 +170,11 @@ export default function PostulationDetailPage() {
               >
                 {withdrawMutation.isPending ? 'Cancelando...' : 'Cancelar Postulación'}
               </Button>
+
             </div>
           )}
-
-          <div className="flex justify-end">
-            <Button onClick={handleBack} variant="secondary">Volver</Button>
-          </div>
-
-          {isOwner && (
+          
+          {isOwner && postulation.states.id_state == 3 &&(
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Acciones del Cliente</h2>
               <div className="flex gap-4">
@@ -190,6 +187,11 @@ export default function PostulationDetailPage() {
               </div>
             </div>
           )}
+
+          <div className="flex justify-end">
+            <Button onClick={handleBack} variant="secondary">Volver</Button>
+          </div>
+
         </div>
       </div>
     </div>
