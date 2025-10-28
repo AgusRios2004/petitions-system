@@ -17,8 +17,8 @@ import { getTypeProviders } from '@/service/typeProviderService';
 import { useAuth } from '@/context/AuthContext';
 
 // Tipos y componentes
-import { Profession, TypePetition, TypeProvider } from '@/WebApiResponse/api';
 import { Button } from '@/components/ui/Button';
+import { TypePetition, TypeProvider, Profession, ApiResponse } from '@/types/common';
 
 // Esquema de validación para el formulario principal
 const petitionSchema = z
@@ -58,17 +58,17 @@ export default function CreatePetitionPage() {
   const { user } = useAuth();
 
   // Carga de datos usando useQuery
-  const { data: typePetitions, isLoading: isLoadingTypePetitions } = useQuery({
+  const { data: typePetitions, isLoading: isLoadingTypePetitions } = useQuery<ApiResponse<TypePetition[]>>({ // Aquí se aplica el tipo
     queryKey: ['typePetitions'],
     queryFn: getTypePetitions,
   });
 
-  const { data: typeProviders, isLoading: isLoadingTypeProviders } = useQuery({
+  const { data: typeProviders, isLoading: isLoadingTypeProviders } = useQuery<ApiResponse<TypeProvider[]>>({ // Y aquí
     queryKey: ['typeProviders'],
     queryFn: getTypeProviders,
   });
 
-  const { data: professions, isLoading: isLoadingProfessions } = useQuery({
+  const { data: professions, isLoading: isLoadingProfessions } = useQuery<ApiResponse<Profession[]>>({ // Y finalmente aquí
     queryKey: ['professions'],
     queryFn: getProfessions,
   });
@@ -169,6 +169,8 @@ export default function CreatePetitionPage() {
       // El toast ya muestra el error específico, no es necesario otro toast aquí.
     }
   };
+
+  console.log(typePetitions, typeProviders, professions);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">

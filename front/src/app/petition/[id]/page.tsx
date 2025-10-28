@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPetitionById, updatePetition, deletePetition } from '@/service/petitionService';
+import { getPetitionById, updatePetition } from '@/service/petitionService';
 import PetitionDetail from '@/components/petitions/PetitionDetail';
 import toast from 'react-hot-toast';
 // Placeholder for the form component we will create
@@ -39,18 +39,6 @@ const PetitionDetailPage = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deletePetition(id),
-    onSuccess: () => {
-      toast.success('Petición eliminada con éxito');
-      queryClient.invalidateQueries({ queryKey: ['petitions'] });
-      router.push('/petition'); // Redirect to petitions list
-    },
-    onError: () => {
-      toast.error('Error al eliminar la petición');
-    },
-  });
-
   const handleEdit = () => {
     setIsEditing(true);
   };
@@ -61,12 +49,6 @@ const PetitionDetailPage = () => {
 
   const handleUpdate = (formData: any) => {
     updateMutation.mutate({ id: petitionId, payload: formData });
-  };
-
-  const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta petición?')) {
-      deleteMutation.mutate(petitionId);
-    }
   };
 
   if (isLoading) {
@@ -84,7 +66,7 @@ const PetitionDetailPage = () => {
   }
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto py-6">
       {isEditing ? (
         <PetitionEditForm
           petition={petition}
@@ -96,7 +78,6 @@ const PetitionDetailPage = () => {
         <PetitionDetail
           petition={petition}
           onEdit={handleEdit}
-          onDelete={handleDelete}
         />
       )}
     </div>

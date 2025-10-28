@@ -1,13 +1,42 @@
 const service = require('../services/postulationService');
 const { error, success } = require('../middlewares/response');
+const { Petition, Customer } = require('../models');
 
 exports.getAllPostulations = async (req, res) => {
     try {
-        const { id_state, id_customer, id_petition } = req.query;
+        const { id_state, id_customer, id_petition, id_provider } = req.query;
+        const { is_staff, is_superuser, sub: userId } = req.user;
+
         const filter = {};
         if (id_state) filter.id_state = id_state;
         if (id_customer) filter.id_customer = id_customer;
         if (id_petition) filter.id_petition = id_petition;
+        if (id_provider) filter.id_provider = id_provider;
+
+        // If user is not staff/superuser, they can only see postulations for their own petitions.
+        if (!is_staff && !is_superuser) {
+            if (!id_petition) {
+                // if no petition id is provided, we can't check ownership, so return nothing
+                return success(res, []);
+            }
+
+            const petition = await Petition.findByPk(id_petition, {
+                include: [{
+                    model: Customer,
+                    as: 'customers'
+                }]
+            });
+
+            if (!petition) {
+                return error(res, 'Petición no encontrada', 404);
+            }
+
+            // Check if the petition belongs to the user
+            if (petition.customers.user_id !== userId) {
+                return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
+            }
+        }
+
         const postulations = await service.getAllPostulations(filter);
         return success(res, postulations);
     } catch (e) {
@@ -29,10 +58,10 @@ exports.getPostulationById = async (req, res) => {
 
 exports.createPostulation = async (req, res) => {
     try {
-        const postulation = await service.createPostulation(req.body);
+        const postulation = await service.createPostulation(req.body, req.user.sub);
         return success(res, postulation, 201);
     } catch (e) {
-        return error(res, e.message, 500);
+        return error(res, e.message, e.statusCode || 500);
     }
 }
 
@@ -46,9 +75,9 @@ exports.updatePostulation = async (req, res) => {
     }
 }
 
-exports.deletePostulation = async (req, res) => {
+exports.changePostulationState = async (req, res) => {
     try {
-        const postulation = await service.deletePostulation(req.params.id, req.body);
+        const postulation = await service.changePostulationState(req.params.id, req.body);
         if (!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {
@@ -56,12 +85,46 @@ exports.deletePostulation = async (req, res) => {
     }
 }
 
-exports.changePostulationState = async (req, res) => {
+exports.winnerPostulation = async (req, res) => {
     try {
-        const postulation = await service.changePostulationState(req.params.id, req.body);
-        if (!postulation) return error(res, 'Postulación no encontrada', 404);
+        const postulation = await service.updatePostulationWinnerStatus(req.params.id, req.body.winner, req.user.sub);
+        if(!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {
+        console.error("Error: " ,e.message);
+        return error(res, e.message, 500)
+    }
+};
+
+exports.acceptPostulation = async (req, res) => {
+    try {
+        const postulation = await service.acceptPostulation(req.params.id, req.user.sub);
+        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: ", e);
+        return error(res, e.message, 500);
+    }
+}
+
+exports.rejectPostulation = async (req, res) => {
+    try {
+        const postulation = await service.rejectPostulation(req.params.id, req.user.sub);
+        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: ", e);
+        return error(res, e.message, 500);
+    }
+}
+
+exports.withdrawPostulation = async (req, res) => {
+    try {
+        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub);
+        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: ", e);
         return error(res, e.message, 500);
     }
 }

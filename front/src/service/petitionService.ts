@@ -6,7 +6,7 @@ import apiClient from "./apiClient";
  * @returns The response from the API, containing the newly created petition.
  */
 export const createPetition = async (payload: any) => {
-  const response = await apiClient.post("/api/petition", payload);
+  const response = await apiClient.post("/petition", payload);
   console.log('API Response:', response.data);
   return response.data;
 };
@@ -17,27 +17,27 @@ export const createPetition = async (payload: any) => {
  * @returns The paginated response from the API.
  */
 export const getPetitions = async (params: any) => {
-  const response = await apiClient.get("/api/petition", { params });
+  const response = await apiClient.get("/petition", { params });
   return response.data;
 };
 
 export const getPetitionById = async (id_petition: number) => {
-  const response = await apiClient.get(`/api/petition/${id_petition}`);
+  const response = await apiClient.get(`/petition/${id_petition}`);
   return response.data;
 };
 
 export const updatePetition = async (id_petition: number, payload: any) => {
   console.log('Updating petition with payload:', payload, id_petition);
-  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  const response = await apiClient.put(`/petition/${id_petition}`, payload);
   return response.data;
 };
 
 export const updatePetitionState = async (id_petition: number, payload: { id_state: number }) => {
-  const response = await apiClient.put(`/api/petition/${id_petition}`, payload);
+  const response = await apiClient.put(`/petition/${id_petition}`, payload);
   return response.data;
 };
 
-export const deletePetition = async (id_petition: number) => {
-  const response = await apiClient.delete(`/api/petition/${id_petition}`);
+export const cancelPetition = async (id_petition: number) => {
+  const response = await apiClient.patch(`/petition/${id_petition}/cancel`);
   return response.data;
 };

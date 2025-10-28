@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER(11),
             allowNull: false,
         },
-        cant: {
-            type: DataTypes.INTEGER(11),
-            allowNull: false,
-        },
         cost: {
             type: DataTypes.DOUBLE,
             allowNull: false,
@@ -54,7 +50,6 @@ module.exports = (sequelize, DataTypes) => {
                 
                 Inventory.belongsTo(models.Postulation, {
                     foreignKey: 'id_postulation',
-                    targetKey: 'idpostulation',
                     as: 'postulation'
                 });
                 

@@ -1,10 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
     const Postulation = sequelize.define('Postulation', {
-        // SOLO DEBE EXISTIR ESTE CAMPO COMO PRIMARY KEY
-        idpostulation: {
+        id_postulation: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
+        },
+        id_provider: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
         },
         id_petition: {
             type: DataTypes.INTEGER,
@@ -21,10 +24,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         cost: {
             type: DataTypes.DECIMAL(10, 2),
-            allowNull: false,
-        },
-        current: {
-            type: DataTypes.STRING(255),
             allowNull: false,
         },
         id_state: {
@@ -45,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_update: {
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
+            allowNull: true,
         },
         // 🚨 CRÍTICO: NO DEBE HABER NINGÚN CAMPO id_postulation AQUÍ
         // Si tienes un campo así, ELIMÍNALO
@@ -72,8 +71,18 @@ module.exports = (sequelize, DataTypes) => {
 
         Postulation.hasMany(models.Inventory, {
             foreignKey: 'id_postulation',
-            sourceKey: 'idpostulation',  // La PK real
+            sourceKey: 'id_postulation',  // La PK real
             as: 'inventories',
+        });
+
+        Postulation.belongsTo(models.State, {
+            foreignKey: 'id_state',
+            as: 'states',
+        });
+
+        Postulation.belongsTo(models.Provider, {
+            foreignKey: 'id_provider',
+            as: 'provider',
         });
     };
 

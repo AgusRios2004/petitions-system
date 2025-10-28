@@ -33,7 +33,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
             {petition.typePetitions?.name || 'Sin Categoría'}
           </span>
           <span
-            className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(petition.states?.state)}`}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-normal ${getStatusColor(petition.states?.state)}`}
           >
             {petition.states?.state || 'Sin Estado'}
           </span>

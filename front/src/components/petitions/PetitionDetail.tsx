@@ -2,6 +2,8 @@ import React from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { cancelPetition } from '@/service/petitionService';
 
 interface Petition {
   id_petition: number;
@@ -59,14 +61,32 @@ interface Petition {
 interface PetitionDetailProps {
   petition: Petition;
   onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
 }
 
-const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDelete }) => {
+import PetitionPostulations from '@/components/postulations/PetitionPostulations';
+
+const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => {
   const { user } = useAuth();
+  const router = useRouter();
+  const [showPostulations, setShowPostulations] = React.useState(false);
   console.log('PetitionDetail Props:', petition);
 
   const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
+
+  const togglePostulations = () => setShowPostulations(!showPostulations);
+
+  const handleCancelPetition = async () => {
+    if (window.confirm('¿Estás seguro de que quieres cancelar esta petición?')) {
+      try {
+        await cancelPetition(petition.id_petition);
+        alert('Petición cancelada exitosamente');
+        router.push('/profile');
+      } catch (error) {
+        console.error('Error al cancelar la petición:', error);
+        alert('Hubo un error al cancelar la petición');
+      }
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -75,17 +95,17 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           <h1 className="text-2xl font-bold text-gray-800">
             {petition.profession?.name || 'Sin título'}
           </h1>
-          <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+          <span className="bg-red-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded-full">
             {petition.states?.state || 'Sin Estado'}
           </span>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 pb-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Descripción</h2>
           <p className="text-gray-600 whitespace-pre-wrap">{petition.description}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
           <div>
             <span className="font-medium text-gray-500">Tipo de Petición: </span>
             <span className="text-gray-800">{petition.typePetitions?.name}</span>
@@ -126,12 +146,14 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-300">Adjuntos</h3>
-            <Link href={`/petition/${petition.id_petition}/add-attachment`}>
-              <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
-            </Link>
+            <h3 className="text-lg font-semibold text-gray-800">Adjuntos</h3>
+            {isOwner && !user?.provider && petition.id_state == 3 && (
+              <Link href={`/petition/${petition.id_petition}/add-attachment`}>
+                <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
+              </Link>
+            )}
           </div>
           {petition.attachments && petition.attachments.length > 0 ? (
             <ul className="list-disc list-inside pl-2 text-gray-400">
@@ -141,7 +163,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
                     href={`http://localhost:3000/${file.path}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
+                    className="text-blue-500 underline hover:text-blue-600"
                   >
                     {file.name}
                   </a>
@@ -153,38 +175,56 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit, onDel
           )}
         </div>
 
-        <div className="mt-6 flex justify-end space-x-4">
-          {isOwner && (
+        <div className="mt-8 flex flex-wrap justify-end gap-4">
+          <Button
+            onClick={() => router.push('/profile')}
+            variant="secondary"
+            className="flex-1 min-w-[120px]"
+          >
+            Volver
+          </Button>
+          {!isOwner && user?.provider && (
+            <Link href={`/postulation/create/${petition.id_petition}`} className="flex-1 min-w-[120px]">
+              <Button variant="primary" className="w-full">Postularse</Button>
+            </Link>
+          )}
+          
+          {isOwner && petition.id_state == 3 && (
             <>
-              <Button
-                variant="primary"
-                className="bg-green-500 hover:bg-green-600"
-                fullWidth={false}
-              >
-                Ver Postulaciones
-              </Button>
               <Button
                 onClick={() => onEdit(petition.id_petition)}
                 variant="primary"
-                className="bg-yellow-500 hover:bg-yellow-600"
-                fullWidth={false}
+                className="bg-yellow-500 hover:bg-yellow-600 flex-1 min-w-[120px]"
               >
                 Editar
               </Button>
               <Button
-                onClick={() => onDelete(petition.id_petition)}
+                onClick={handleCancelPetition}
                 variant="primary"
-                className="bg-red-500 hover:bg-red-600"
-                fullWidth={false}
+                className="bg-red-500 hover:bg-red-600 flex-1 min-w-[120px]"
               >
-                Eliminar
+                Cancelar petición
               </Button>
             </>
           )}
         </div>
+        <div className='mt-4'>
+          {isOwner && (
+            <Button
+              onClick={togglePostulations}
+              variant="primary"
+              className="bg-green-500 hover:bg-green-600 flex-1 min-w-[120px]"
+            >
+              {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+      {showPostulations && (
+        <div className="mt-4">
+          <PetitionPostulations petitionId={petition.id_petition} />
+        </div>
+      )}
+    </div>)}
 
-export default PetitionDetail;
+    export default PetitionDetail;
