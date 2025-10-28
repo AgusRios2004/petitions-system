@@ -18,6 +18,7 @@ interface UserProfile {
 
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 import ProviderOportunities from '@/components/petitions/ProviderOportunities';
+import ProviderAvailability from '@/components/availability/ProviderAvailability';
 
 import { useSearchParams } from 'next/navigation';
 
@@ -68,6 +69,8 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
           <ProviderPostulations id_provider={user.provider.id_provider} />
         ) : activeTab === 'oportunidades' ? (
           <ProviderOportunities />
+        ) : activeTab === 'disponibilidad' ? (
+          <ProviderAvailability />
         ) : (
           <p>Contenido de la pestaña: {activeTab}</p>
         )}
