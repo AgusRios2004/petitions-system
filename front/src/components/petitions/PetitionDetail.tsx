@@ -149,7 +149,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-800">Adjuntos</h3>
-            {isOwner && !user?.provider && (
+            {isOwner && !user?.provider && petition.id_state == 3 && (
               <Link href={`/petition/${petition.id_petition}/add-attachment`}>
                 <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
               </Link>

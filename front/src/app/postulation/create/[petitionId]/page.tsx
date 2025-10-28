@@ -220,7 +220,7 @@ export default function CreatePostulationPage() {
               variant="secondary"
               onClick={() => {
                 if (window.confirm('¿Estás seguro de que quieres volver? Los cambios no guardados se perderán.')) {
-                  router.push('/profile?tab=oportunidades');
+                  router.push(`/petition/${petitionId}`);
                 }
               }}
               className="w-full"
