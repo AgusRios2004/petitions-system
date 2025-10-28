@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        id_week: {
-            type: DataTypes.INTEGER(11),
-            allowNull: true,
-        },
         id_user_create: {
             type: DataTypes.STRING(45),
             allowNull: true,
