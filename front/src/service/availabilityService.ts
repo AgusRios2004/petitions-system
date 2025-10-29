@@ -39,7 +39,7 @@ export const availabilityService = {
     
     deleteAvailability: async (id: number) : Promise<ApiResponse<null>> => {
         try {
-            await apiClient.delete(`/availability/${id}`);
+            await apiClient.delete(`/availability/me/${id}`);
             return { data: null, error: null };
         } catch (error: any) {
             console.error('Error deleting availability:', error);
@@ -50,7 +50,7 @@ export const availabilityService = {
     // 2. Usamos la nueva interfaz en la firma de la función.
     updateAvailability: async (id: number, payload: IUpdateAvailabilityPayload) : Promise<ApiResponse<IAvailability>> => {
         try {
-            const response = await apiClient.put(`/availability/${id}`, payload);
+            const response = await apiClient.put(`/availability/me/${id}`, payload);
             return { data: response.data.data, error: null };
         } catch (error: any) {
             console.error('Error updating availability:', error);

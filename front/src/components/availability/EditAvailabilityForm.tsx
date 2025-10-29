@@ -101,6 +101,8 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
 
   const isLoading = isLoadingAvailability || isLoadingWeeks || isLoadingHours;
 
+  
+
   // El JSX del formulario y el modal
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
