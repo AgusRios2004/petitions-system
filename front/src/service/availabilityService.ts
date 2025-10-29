@@ -6,6 +6,15 @@ interface AvailabilityParams {
     id_week?: number;
 }
 
+// --- ¡AQUÍ LA SOLUCIÓN! ---
+// 1. Definimos una interfaz específica para el PAYLOAD de la actualización.
+// Esto describe exactamente lo que la API espera en un PUT/PATCH.
+export interface IUpdateAvailabilityPayload {
+    id_week: number;
+    id_from_hour: number;
+    id_until_hour: number;
+}
+
 export const availabilityService = {
     getAllAvailabilities: async (params: AvailabilityParams = {}): Promise<ApiResponse<IAvailability[]>> => {
         try {
@@ -17,4 +26,35 @@ export const availabilityService = {
             return { data: null, error: error.message || 'Error al obtener las disponibilidades' };
         }
     },
+
+    getAvailabilityById: async (id: number) : Promise<ApiResponse<IAvailability>> => {
+        try {
+            const response = await apiClient.get(`/availability/${id}`);
+            return { data: response.data.data, error: null };
+        } catch (error: any) {
+            console.error('Error fetching availability by ID:', error);
+            return { data: null, error: error.message || 'Error al obtener la disponibilidad' };
+        }   
+    },
+    
+    deleteAvailability: async (id: number) : Promise<ApiResponse<null>> => {
+        try {
+            await apiClient.delete(`/availability/${id}`);
+            return { data: null, error: null };
+        } catch (error: any) {
+            console.error('Error deleting availability:', error);
+            return { data: null, error: error.message || 'Error al eliminar la disponibilidad' };
+        }
+    },
+
+    // 2. Usamos la nueva interfaz en la firma de la función.
+    updateAvailability: async (id: number, payload: IUpdateAvailabilityPayload) : Promise<ApiResponse<IAvailability>> => {
+        try {
+            const response = await apiClient.put(`/availability/${id}`, payload);
+            return { data: response.data.data, error: null };
+        } catch (error: any) {
+            console.error('Error updating availability:', error);
+            return { data: null, error: error.message || 'Error al actualizar la disponibilidad' };
+        }
+    }
 }

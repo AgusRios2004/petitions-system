@@ -117,12 +117,26 @@ export interface IAvailability {
       lastname: string,
     },
   },
-  days: {
+  week: {
     id_week: number,
     name: string,
   },
-  hours: {
+  fromHour: {
+    id_hour: number,
+    name: string,
+  },
+  untilHour: {
     id_hour: number,
     name: string,
   },
 };
+
+export interface IWeek {
+  id_week: number;
+  name: string;
+}
+
+export interface IHour {
+  id_hour: number;
+  name: string;
+}
