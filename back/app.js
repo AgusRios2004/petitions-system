@@ -24,6 +24,8 @@ const typePetitionRoutes = require('./routes/typePetitionRoutes');
 const attachmentRoutes = require('./routes/attachmentRoutes');
 const articleRoutes = require('./routes/articleRoutes');
 const availabilityRoutes = require('./routes/availabilityRoutes');
+const weekRoutes = require('./routes/weekRoutes');
+const hourRoutes = require('./routes/hourRotues');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -49,6 +51,8 @@ app.use('/api/type-petitions', typePetitionRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/article', articleRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/weeks', weekRoutes);
+app.use('/api/hours', hourRoutes);
 
 // Middleware de manejo de errores (debe ser el último)
 app.use(errorHandler);
