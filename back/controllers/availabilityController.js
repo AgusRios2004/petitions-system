@@ -16,7 +16,12 @@ const getProviderIdFromUser = async (userId) => {
 exports.getAvailability = async (req, res) => {
   try {
     const providerId = await getProviderIdFromUser(req.user.sub);
-    const availabilities = await service.getAllAvailabilities({ id_provider: providerId });
+    // Extraer filtros de la query string
+    const filters = { 
+      id_provider: providerId,
+      ...req.query
+    };
+    const availabilities = await service.getAllAvailabilities(filters);
     return success(res, availabilities, 'Disponibilidad obtenida.');
   } catch (e) {
     return error(res, e.message, e.status || 500);
