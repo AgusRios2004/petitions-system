@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         id_user_update: {
             type: DataTypes.INTEGER(11),
-            allowNull: false,
+            allowNull: true,
         },
         date_create: {
             type: DataTypes.DATE,
