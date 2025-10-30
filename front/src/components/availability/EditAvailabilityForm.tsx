@@ -7,6 +7,7 @@ import { availabilityService } from '@/service/availabilityService';
 import { weekService } from '@/service/weekService'; 
 import { hourService } from '@/service/hourService';
 import { Button } from '@/components/ui/Button';
+import toast from 'react-hot-toast';
 
 // Interfaz para las props del componente
 interface EditAvailabilityFormProps {
@@ -70,11 +71,12 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
       // Invalidamos las queries para refrescar los datos en toda la app
       queryClient.invalidateQueries({ queryKey: ['availabilities'] });
       queryClient.invalidateQueries({ queryKey: ['availability', availabilityId] });
-      onFinished(); // Cerramos el modal
+      toast.success('Disponibilidad actualizada con éxito.');
+      onFinished();
     },
     onError: (error) => {
       console.error("Error al actualizar:", error);
-      // Aquí podrías mostrar una notificación de error
+      toast.error('Error al actualizar la disponibilidad.');
     }
   });
 
