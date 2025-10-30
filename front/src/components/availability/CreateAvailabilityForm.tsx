@@ -71,6 +71,28 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
             toast.error('Por favor, completa todos los campos.');
             return;
         }
+
+        const fromHour = hours?.find(h => h.id_hour === parseInt(formState.id_from_hour));
+        const untilHour = hours?.find(h => h.id_hour === parseInt(formState.id_until_hour));
+
+        if (fromHour && untilHour) {
+            // Extraer solo la primera parte de la cadena de la hora (ej. "00:00" de "00:00 - 00:30")
+            const fromTimeStr = fromHour.name.split(' ')[0];
+            const untilTimeStr = untilHour.name.split(' ')[0];
+
+            // Convertir a formato de fecha para comparación
+            const fromTime = new Date(`2000/01/01 ${fromTimeStr}`);
+            const untilTime = new Date(`2000/01/01 ${untilTimeStr}`);
+
+            if (fromTime >= untilTime) {
+                toast.error('La hora "Desde" no puede ser igual o posterior a la hora "Hasta".');
+                return;
+            }
+        } else {
+            toast.error('No se pudieron encontrar los detalles de las horas seleccionadas.');
+            return;
+        }
+
         createAvailabilityMutation.mutate(formState);
     };
 
