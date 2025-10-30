@@ -25,7 +25,7 @@ interface AvailabilityCardProps {
 
 const AvailabilityCard: React.FC<AvailabilityCardProps> = ({ availability, onEdit, onDelete }) => {
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md flex flex-col justify-between transition-all duration-200 ease-in-out hover:bg-gray-700 hover:scale-105">
+    <div className="bg-gray-700 p-6 rounded-lg shadow-md flex flex-col justify-between transition-all duration-200 ease-in-out hover:bg-gray-600 hover:scale-105 max-w-xs"> 
       <div>
         <p className="font-bold text-lg text-white">{availability.week.name}</p>
         <p className="text-gray-300 mt-1">

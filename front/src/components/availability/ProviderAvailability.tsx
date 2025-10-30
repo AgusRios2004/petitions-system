@@ -6,7 +6,10 @@ import { availabilityService } from '@/service/availabilityService';
 import Tabs from '@/components/ui/Tabs';
 import AvailabilityCard from './AvailabilityCard';
 // 1. IMPORTAMOS EL NUEVO FORMULARIO DE EDICIÓN
+import { Button } from '@/components/ui/Button';
 import EditAvailabilityForm from './EditAvailabilityForm';
+import CreateAvailabilityForm from './CreateAvailabilityForm'; // Importa el formulario de creación
+import toast from 'react-hot-toast';
 
 const availabilityTabs = [
   { label: 'Todos', value: 0 },
@@ -22,6 +25,7 @@ const availabilityTabs = [
 const ProviderAvailability = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isCreating, setIsCreating] = useState(false); // Estado para mostrar/ocultar el formulario de creación
 
   const queryClient = useQueryClient();
 
@@ -38,10 +42,12 @@ const ProviderAvailability = () => {
     mutationFn: (id: number) => availabilityService.deleteAvailability(id),
     onSuccess: () => {
       console.log('Disponibilidad eliminada con éxito');
-      queryClient.invalidateQueries({ queryKey: ['availabilities', activeTab] });
+      queryClient.invalidateQueries({ queryKey: ['availabilities'] });
+      toast.success('Disponibilidad eliminada con éxito.');
     },
     onError: (err) => {
       console.error('Error al eliminar la disponibilidad:', err);
+      toast.error('Error al eliminar la disponibilidad.');
     },
   });
 
@@ -63,9 +69,13 @@ const ProviderAvailability = () => {
     setEditingId(null);
   };
 
+  const handleFinishedCreation = () => {
+    setIsCreating(false);
+    queryClient.invalidateQueries({ queryKey: ['availabilities', activeTab] });
+  };
+
   return (
     <div>
-      {/* 2. RENDERIZAMOS EL MODAL DE FORMA CONDICIONAL */}
       {editingId && (
         <EditAvailabilityForm 
           availabilityId={editingId} 
@@ -73,7 +83,19 @@ const ProviderAvailability = () => {
         />
       )}
 
-      <h2 className="text-2xl font-bold mb-4">Gestionar Disponibilidad</h2>
+      {isCreating && (
+        <CreateAvailabilityForm onFinished={handleFinishedCreation} />
+      )}
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Gestionar Disponibilidad</h2>
+        <Button 
+          fullWidth={false}
+          onClick={() => setIsCreating(true)}
+        >
+          Crear
+        </Button>
+      </div>
       
       <div className="flex justify-start mb-4">
         <Tabs
@@ -87,7 +109,7 @@ const ProviderAvailability = () => {
       {isError && <p className="text-center text-red-500">Error: {error?.message}</p>}
       
       {data && data.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
           {data.map((availability: any) => (
             <AvailabilityCard 
               key={availability.id_availability}

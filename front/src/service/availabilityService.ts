@@ -56,5 +56,15 @@ export const availabilityService = {
             console.error('Error updating availability:', error);
             return { data: null, error: error.message || 'Error al actualizar la disponibilidad' };
         }
-    }
+    },
+
+    createAvailability: async (payload: {id_week: string; id_from_hour: string; id_until_hour: string;}): Promise<ApiResponse<IAvailability>> => {
+        try {
+            const response = await apiClient.post('/availability/me', payload);
+            return { data: response.data.data, error: null };
+        } catch (error: any) {
+            console.error('Error creating availability:', error);
+            return { data: null, error: error.message || 'Error al crear la disponibilidad' };
+        }   
+    },
 }
