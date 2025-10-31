@@ -140,3 +140,57 @@ export interface IHour {
   id_hour: number;
   name: string;
 }
+
+export interface IProvider {
+  id_provider: number;
+  user: {
+    id_user: number;
+    name: string;
+    lastname: string;
+    profile_image: string | null;
+  };
+  typeProvider: {
+    id_type_provider: number;
+    name: string;
+  };
+  profession: {
+    id_profession: number;
+    name: string;
+  };
+  address: {
+    id_address: number;
+    street: string;
+    number: string;
+  };
+  availabilities?: {
+    id_availability: number;
+    week: {
+      id_week: number;
+      name: string;
+    };
+    fromHour: {
+      id_hour: number;
+      name: string;
+    };
+    untilHour: {
+      id_hour: number;
+      name: string;
+    };
+  };
+  grades?: {
+    id_grade: number;
+    score: number;
+  }
+  portfolio?: {
+    id_portfolio: number;
+    description: string;
+    link: string;
+  }[];
+  providerCategories?: {
+    id_provider_category: number;
+    category: {
+      id_category: number;
+      name: string;
+    };
+  }
+}
