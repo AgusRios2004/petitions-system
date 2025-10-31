@@ -107,30 +107,6 @@ export interface IPostulation {
   inventories: IInventory[];
 }
 
-export interface IAvailability {
-  id_availability: number;
-  provider: {
-    id_provider: number,
-    user: {
-      id_user: number,
-      name: string,
-      lastname: string,
-    },
-  },
-  week: {
-    id_week: number,
-    name: string,
-  },
-  fromHour: {
-    id_hour: number,
-    name: string,
-  },
-  untilHour: {
-    id_hour: number,
-    name: string,
-  },
-};
-
 export interface IWeek {
   id_week: number;
   name: string;
@@ -141,6 +117,26 @@ export interface IHour {
   name: string;
 }
 
+// New IAddress interface
+export interface IAddress {
+  id_address: number;
+  street: string;
+  number: string;
+  floor?: string;
+  apartment?: string;
+  postal_code: string;
+  city: City; // Use the existing City interface
+}
+
+// Updated IAvailability interface (removed provider field)
+export interface IAvailability {
+  id_availability: number;
+  week: IWeek;
+  fromHour: IHour;
+  untilHour: IHour;
+};
+
+// Updated IProvider interface
 export interface IProvider {
   id_provider: number;
   user: {
@@ -149,38 +145,14 @@ export interface IProvider {
     lastname: string;
     profile_image: string | null;
   };
-  typeProvider: {
-    id_type_provider: number;
-    name: string;
-  };
-  profession: {
-    id_profession: number;
-    name: string;
-  };
-  address: {
-    id_address: number;
-    street: string;
-    number: string;
-  };
-  availabilities?: {
-    id_availability: number;
-    week: {
-      id_week: number;
-      name: string;
-    };
-    fromHour: {
-      id_hour: number;
-      name: string;
-    };
-    untilHour: {
-      id_hour: number;
-      name: string;
-    };
-  };
+  typeProvider: TypeProvider;
+  profession: Profession;
+  address: IAddress; // Use the new IAddress interface
+  availabilities?: IAvailability[]; // Now an array of IAvailability
   grades?: {
     id_grade: number;
     score: number;
-  }
+  }[]; // grades can be multiple
   portfolio?: {
     id_portfolio: number;
     description: string;
@@ -192,5 +164,5 @@ export interface IProvider {
       id_category: number;
       name: string;
     };
-  }
+  }[];
 }
