@@ -14,5 +14,12 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
     });
 
+    Profession.associate = (models) => {
+        Profession.hasMany(models.Provider, {
+            foreignKey: 'id_profession',
+            as: 'providers',
+        });
+    }
+
     return Profession;
 };

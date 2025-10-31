@@ -48,10 +48,12 @@ module.exports = (sequelize, DataTypes) => {
         });
         Address.hasOne(models.Provider, {
             foreignKey: 'address_id',
+            sourceKey: 'id_address',
             as: 'providerAddress',
         });
         Address.hasOne(models.Customer, {
             foreignKey: 'address_id',
+            sourceKey: 'id_address',
             as: 'customerAddress',
         });
     }

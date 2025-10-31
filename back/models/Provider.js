@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         Provider.belongsTo(models.Address, {
             foreignKey: 'address_id',
+            targetKey: 'id_address',
             as: 'address',
         });
         Provider.hasMany(models.ProviderCategory, {
@@ -65,6 +66,11 @@ module.exports = (sequelize, DataTypes) => {
         Provider.hasMany(models.Availability, {
             foreignKey: 'id_provider',
             as: 'availabilities',
+        });
+
+        Provider.belongsTo(models.Profession, {
+            foreignKey: 'id_profession',
+            as: 'profession',
         });
     }
     return Provider;
