@@ -9,9 +9,9 @@ class ProviderService {
     }
     
     async getProviderById(id){
-        return await Provider.findByPk(id), {
-            include: ['user'],
-        };
+        return await Provider.findByPk(id, {
+            include: ['user', 'availabilities', 'profession', 'typeProvider', 'address', 'portfolios', 'providerCategories'],
+        });
     }
 
     async createProvider(data){
@@ -45,6 +45,12 @@ class ProviderService {
     }
 
     async deleteProvider(id){};
+
+    async getPublicProfile(id){
+        return await Provider.findByPk(id, {
+            include: ['user', 'profession', 'typeProvider', 'address', 'providerCategories', 'availabilities', 'grades', 'portfolios'],
+        });
+    }
 }
 
 module.exports = new ProviderService();

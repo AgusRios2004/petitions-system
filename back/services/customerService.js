@@ -10,7 +10,7 @@ class CustomerService {
 
     async getCustomerById(id){
         return await Customer.findByPk(id, {
-            include: ['user'],
+            include: ['user', 'address', 'interests',],
         });
     }
 

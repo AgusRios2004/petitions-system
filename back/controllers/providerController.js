@@ -19,6 +19,18 @@ exports.getProviderById = async(req, res) =>{
     }
 }
 
+exports.getPublicProfile = async(req, res) => {
+    try {
+        const provider = await service.getPublicProfile(req.params.id);
+        if (!provider) {
+            return response.error(res, 'Perfil de proveedor no encontrado.', 404);
+        }
+        return response.success(res, provider, 'Perfil público del proveedor.');
+    } catch (e) {
+        return response.error(res, e.message, 500);
+    }
+}
+
 exports.createProvider = async(req, res) => {
     try {
         const provider = await service.createProvider(req.body);
