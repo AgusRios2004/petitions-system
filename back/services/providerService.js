@@ -4,13 +4,37 @@ const userService = require('./userService');
 class ProviderService {
     async getProviders(){
         return await Provider.findAll({
-            include: ['user'],
+            include: [
+                'user',
+                {
+                    association: 'availabilities',
+                    include: ['week', 'fromHour', 'untilHour']
+                },
+                {
+                    association: 'address',
+                    include: ['city']
+                }
+            ],
         });
     }
     
     async getProviderById(id){
         return await Provider.findByPk(id, {
-            include: ['user', 'availabilities', 'profession', 'typeProvider', 'address', 'portfolios', 'providerCategories'],
+            include: [
+                'user',
+                {
+                    association: 'availabilities',
+                    include: ['week', 'fromHour', 'untilHour']
+                },
+                'profession',
+                'typeProvider',
+                {
+                    association: 'address',
+                    include: ['city']
+                },
+                'portfolios',
+                'providerCategories'
+            ],
         });
     }
 
@@ -48,7 +72,22 @@ class ProviderService {
 
     async getPublicProfile(id){
         return await Provider.findByPk(id, {
-            include: ['user', 'profession', 'typeProvider', 'address', 'providerCategories', 'availabilities', 'grades', 'portfolios'],
+            include: [
+                'user',
+                'profession',
+                'typeProvider',
+                {
+                    association: 'address',
+                    include: ['city']
+                },
+                'providerCategories',
+                {
+                    association: 'availabilities',
+                    include: ['week', 'fromHour', 'untilHour']
+                },
+                'grades',
+                'portfolios'
+            ],
         });
     }
 }
