@@ -106,3 +106,37 @@ export interface IPostulation {
   };
   inventories: IInventory[];
 }
+
+export interface IAvailability {
+  id_availability: number;
+  provider: {
+    id_provider: number,
+    user: {
+      id_user: number,
+      name: string,
+      lastname: string,
+    },
+  },
+  week: {
+    id_week: number,
+    name: string,
+  },
+  fromHour: {
+    id_hour: number,
+    name: string,
+  },
+  untilHour: {
+    id_hour: number,
+    name: string,
+  },
+};
+
+export interface IWeek {
+  id_week: number;
+  name: string;
+}
+
+export interface IHour {
+  id_hour: number;
+  name: string;
+}
