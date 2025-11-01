@@ -51,6 +51,16 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
 
+        {/* Botón para ver postulaciones - al principio y a la derecha */}
+        <div className="flex justify-end mb-8">
+            <a
+                href={`/provider/${providerId}/postulations`}
+                className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            >
+                Ver Historial de Postulaciones
+            </a>
+        </div>
+
         {/* Sección Información Personal */}
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
           <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
@@ -67,7 +77,6 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
             />
           )}
         </div>
-
         {/* Sección Dirección */}
         {provider.address && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
