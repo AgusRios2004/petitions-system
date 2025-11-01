@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { providerService } from '@/service/providerService';
@@ -14,6 +14,8 @@ interface ProviderPublicProfilePageProps {
 const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ params: providerIdFromProps }) => {
   const params = useParams();
   const providerId = providerIdFromProps?.toString() || (params.id as string);
+
+  const [selectedDay, setSelectedDay] = useState<string>(''); // New state for filter
 
   const { data: provider, isLoading, isError, error } = useQuery<IProvider, Error>({
     queryKey: ['providerPublicProfile', providerId],
@@ -34,9 +36,16 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
   }
   console.log(provider);
 
+  // Filter availabilities based on selectedDay
+  const filteredAvailabilities = selectedDay
+    ? provider.availabilities?.filter(
+        (availability) => availability.week.name.toLowerCase() === selectedDay.toLowerCase()
+      )
+    : provider.availabilities;
+
   return (
     <div className="min-h-screen bg-gray-800 text-gray-100 py-10 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Título principal */}
         <h1 className="text-4xl font-extrabold mb-10 text-center text-white tracking-tight">
           Perfil Público de {provider.user.name} {provider.user.lastname}
@@ -73,6 +82,29 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
           </div>
         )}
 
+        {/* Filtro de Disponibilidad */}
+        {provider.availabilities && provider.availabilities.length > 0 && (
+          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+              Filtrar Disponibilidades
+            </h2>
+            <select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value)}
+              className="block w-full p-2 mb-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-400 focus:ring-cyan-500 focus:border-cyan-500"
+            >
+              <option value="">Todos los días</option>
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+            </select>
+          </div>
+        )}
+
         {/* Disponibilidad (usarás tu componente Card después) */}
       {provider.availabilities && provider.availabilities.length > 0 && (
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
@@ -80,7 +112,7 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
             Disponibildades
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {provider.availabilities.map((availability: IAvailability) => (
+            {filteredAvailabilities?.map((availability: IAvailability) => ( // Use filteredAvailabilities
               <AvailabilityCard
                 key={availability.id_availability}
                 availability={availability}
@@ -107,7 +139,7 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
 
         {/* Portafolio */}
         {provider.portfolio && provider.portfolio.length > 0 && (
-          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
             <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
               Portafolio
             </h2>
