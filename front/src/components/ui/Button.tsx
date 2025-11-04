@@ -35,8 +35,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     return (
       <button
-        className={`${fullWidth ? 'w-full' : 'inline-flex'} transition duration-200 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-        ref={ref}
+        className={`${fullWidth ? 'w-full' : 'inline-flex'} cursor-pointer transition duration-200 font-semibold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}        ref={ref}
         {...props}
       >
         {children}

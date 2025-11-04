@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { providerService } from '@/service/providerService';
 import { IProvider, IAvailability } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
+import { useAuth } from '@/context/AuthContext'; // Import useAuth
+import { Button } from '@/components/ui/Button'; // Import Button component
 
 interface ProviderPublicProfilePageProps {
   providerId?: number;
@@ -13,9 +15,19 @@ interface ProviderPublicProfilePageProps {
 
 const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ providerId: providerIdFromProps }) => {
   const params = useParams();
+  const router = useRouter(); // Initialize useRouter
+  const { user } = useAuth(); // Get logged-in user
+
   const providerId = providerIdFromProps?.toString() || (params.id as string);
 
   const [selectedDay, setSelectedDay] = useState<string>(''); // New state for filter
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    if (user && user.provider) {
+      setIsOwner(user.provider.id_provider.toString() === providerId);
+    }
+  }, [user, providerId]);
 
   const { data: provider, isLoading, isError, error } = useQuery<IProvider, Error>({
     queryKey: ['providerPublicProfile', providerId],
@@ -181,6 +193,21 @@ const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ p
                 <li key={index} className="text-gray-200">⭐ Puntuación: {grade.score}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Conditional Back Button for clients at the bottom */}
+        {!isOwner && (
+          <div className="mt-8">
+            <Button
+              onClick={() => router.back()}
+              variant="secondary"
+              size="md"
+              fullWidth={true}
+              className="!bg-gray-600 !hover:bg-gray-700 !text-white !font-bold !transition-colors"
+            >
+              Volver
+            </Button>
           </div>
         )}
       </div>
