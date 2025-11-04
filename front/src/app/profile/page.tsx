@@ -73,7 +73,7 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
         ) : activeTab === 'disponibilidad' ? (
           <ProviderAvailability />
         ) : activeTab == "perfil-publico" ? (
-          <ProviderPublicProfilePage params={user.provider?.id_provider} />
+          <ProviderPublicProfilePage providerId={user.provider?.id_provider} />
         ) : (
           <p>Contenido de la pestaña: {activeTab}</p>
         )}

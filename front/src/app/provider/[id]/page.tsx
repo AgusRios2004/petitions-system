@@ -8,10 +8,10 @@ import { IProvider, IAvailability } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
 
 interface ProviderPublicProfilePageProps {
-  params?: number;
+  providerId?: number;
 }
 
-const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ params: providerIdFromProps }) => {
+const ProviderPublicProfilePage: React.FC<ProviderPublicProfilePageProps> = ({ providerId: providerIdFromProps }) => {
   const params = useParams();
   const providerId = providerIdFromProps?.toString() || (params.id as string);
 

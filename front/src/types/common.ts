@@ -105,6 +105,7 @@ export interface IPostulation {
     };
   };
   inventories: IInventory[];
+  id_provider: number;
 }
 
 export interface IWeek {
