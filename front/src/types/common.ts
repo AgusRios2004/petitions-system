@@ -171,18 +171,18 @@ export interface IProvider {
 export interface IUser {
   id_user: number;
   name: string;
-  emaiL: string;
+  email: string;
   lastname: string;
   profile_image?: string | null;
   role_id?: number; 
 }
 
-export interface ICustoemr {
+export interface ICustomer {
   id_customer: number;
   user_id: number;
 }
 
 export interface IProfile extends IUser {
-  custoemr?: ICustoemr;
+  customer?: ICustomer;
   provider?: IProvider;
 }

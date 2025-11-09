@@ -1,7 +1,7 @@
 import apiClient from './apiClient';
 import { ApiResponse, IProfile } from '@/types/common';
 
-export async function getProfile():  Promise<ApiResponse<IProfile[]>>{
+export async function getProfile():  Promise<ApiResponse<IProfile>>{
     try {
         const response = await apiClient.get('/profile/me');
         return {data: response.data, error: null}
