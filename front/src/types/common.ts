@@ -167,3 +167,22 @@ export interface IProvider {
     };
   }[];
 }
+
+export interface IUser {
+  id_user: number;
+  name: string;
+  emaiL: string;
+  lastname: string;
+  profile_image?: string | null;
+  role_id?: number; 
+}
+
+export interface ICustoemr {
+  id_customer: number;
+  user_id: number;
+}
+
+export interface IProfile extends IUser {
+  custoemr?: ICustoemr;
+  provider?: IProvider;
+}
