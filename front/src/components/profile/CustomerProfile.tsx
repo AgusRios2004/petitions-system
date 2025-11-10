@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UserProfile } from '@/types/common'; // Importamos UserProfile desde common.ts
+import { useQuery } from '@tanstack/react-query';
+import { UserProfile, ICustomer } from '@/types/common';
+import { customerService } from '@/service/customerService';
 
-// Importaciones de componentes existentes
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
-
-// Importaciones de los nuevos componentes que hemos creado
 import CustomerInfo from './customer/CustomerInfo';
 import CustomerHistory from './customer/CustomerHistory';
 
@@ -14,11 +13,55 @@ import CustomerHistory from './customer/CustomerHistory';
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
   const [activeTab, setActiveTab] = useState('peticiones');
 
+  const customerId = user.customer?.id_customer;
+
+  const {
+    data: detailedCustomer,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<ICustomer, Error>({
+    queryKey: ['customerProfile', customerId],
+    queryFn: ({ queryKey }) => {
+      const [, id] = queryKey;
+      const customerIdFromKey = id as number; 
+
+      if (typeof customerIdFromKey !== 'number') {
+        return Promise.reject(new Error('Customer ID no válido.'));
+      }
+      return customerService.getCustomerById(customerIdFromKey);
+    },
+    enabled: !!customerId,
+  });
+
   const customerTabs = [
     { id: 'peticiones', label: 'Mis Peticiones' },
     { id: 'informacion', label: 'Información Personal' },
     { id: 'historial', label: 'Historial y Calificaciones' },
   ];
+
+  const renderTabContent = () => {
+    if (activeTab === 'peticiones'){
+      return customerId ? <CustomerPetitions customerId={customerId}/> : null;
+    }
+
+    if (isLoading) {
+      return <p className="text-gray-400">Cargando información del perfil...</p>;
+    }
+
+    if (isError) {
+      return <p className="text-red-500">Error al cargar el perfil: {error.message}</p>;
+    }
+
+    if (detailedCustomer) {
+      if (activeTab === 'informacion') {
+        return <CustomerInfo customer={detailedCustomer} user={user} />;
+      }
+      if (activeTab === 'historial') {
+        return <CustomerHistory customer={detailedCustomer} />;
+      }
+    }
+  }
 
   return (
     <div>
@@ -39,13 +82,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         </nav>
       </div>
       <div className="p-6 bg-gray-800 rounded-lg min-h-[400px]">
-        {activeTab === 'peticiones' && user.customer ? (
-          <CustomerPetitions customerId={user.customer.id_customer} />
-        ) : activeTab === 'informacion' ? (
-          <CustomerInfo user={user} /> // Usamos el nuevo componente
-        ) : activeTab === 'historial' ? (
-          <CustomerHistory user={user} /> // Usamos el nuevo componente
-        ) : null}
+        {renderTabContent()}
       </div>
     </div>
   );

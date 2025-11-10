@@ -177,9 +177,24 @@ export interface IUser {
   role_id?: number; 
 }
 
+export interface IGender {
+  id_gender: number;
+  gender: string;
+}
+
+export interface IInterest {
+  id_interest: number;
+  category: ICategory;
+}
+
 export interface ICustomer {
   id_customer: number;
   user_id: number;
+  dni: string;
+  phone: string;
+  gender: IGender;
+  interest: IInterest;
+  address: IAddress;
 }
 
 export interface IProfile extends IUser {
@@ -192,9 +207,10 @@ export interface UserProfile {
   name: string;
   lastname: string;
   email: string;
-  customer: {
-    id_customer: number;
-  } | null;
+  address: {
+    address: IAddress;
+  };
+  customer: ICustomer | null;
   provider: {
     id_provider: number;
   } | null;
