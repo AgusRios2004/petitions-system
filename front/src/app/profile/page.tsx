@@ -84,6 +84,21 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
 
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 
+// --- COMPONENTE PARA PERFIL INCOMPLETO ---
+const IncompleteProfile = ({ role }: { role: 'customer' | 'provider' }) => {
+  return (
+    <div className="text-center text-gray-400 mt-10 p-6 bg-gray-800 rounded-lg">
+      <h2 className="text-2xl font-bold text-white mb-4">Perfil Incompleto</h2>
+      <p>
+        Hemos detectado que tu cuenta de '{role === 'customer' ? 'cliente' : 'proveedor'}' no tiene un perfil de datos asociado.
+      </p>
+      <p className="mt-2">
+        Esto puede ocurrir si el registro no se completó correctamente o por una inconsistencia en la base de datos. Por favor, contacta a soporte para solucionarlo.
+      </p>
+    </div>
+  );
+};
+
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
   const [activeTab, setActiveTab] = useState('peticiones');
@@ -170,15 +185,26 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        {user.role === 'provider' ? (
-          <ProviderProfile user={user as UserProfile} />
-        ) : user.role === 'customer' ? (
-          <CustomerProfile user={user as UserProfile} />
-        ) : (
-          <p className="text-center text-gray-400 mt-10">
-            Rol desconocido o sin asignar.
-          </p>
-        )}
+        {(() => {
+          if (user.role === 'provider') {
+            // Si el rol es 'provider', nos aseguramos de que user.provider exista.
+            return user.provider 
+              ? <ProviderProfile user={user as UserProfile} /> 
+              : <IncompleteProfile role="provider" />;
+          }
+          if (user.role === 'customer') {
+            // Si el rol es 'customer', nos aseguramos de que user.customer exista.
+            return user.customer 
+              ? <CustomerProfile user={user as UserProfile} /> 
+              : <IncompleteProfile role="customer" />;
+          }
+          // Si el rol no es ninguno de los dos, mostramos el mensaje por defecto.
+          return (
+            <p className="text-center text-gray-400 mt-10">
+              Rol desconocido o sin asignar.
+            </p>
+          );
+        })()}
       </div>
     </main>
   );
