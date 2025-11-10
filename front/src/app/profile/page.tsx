@@ -4,141 +4,21 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
-interface UserProfile {
-  id_user: number;
-  name: string;
-  lastname: string;
-  email: string;
-  customer: { id_customer: number; } | null;
-  provider: { id_provider: number; } | null;
-  profile_picture_url?: string | null;
-  role: 'customer' | 'provider' | 'admin' | 'unknown';
-  is_staff?: boolean | number;
-}
+import { UserProfile } from '@/types/common'; // Importamos UserProfile desde common.ts
 
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 import ProviderOportunities from '@/components/petitions/ProviderOportunities';
 import ProviderAvailability from '@/components/availability/ProviderAvailability';
-import ProviderPublicProfilePage from '../provider/[id]/page';
 
 import { useSearchParams } from 'next/navigation';
 
-// --- COMPONENTE DE PERFIL DE PROVEEDOR ---
-const ProviderProfile = ({ user }: { user: UserProfile }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'perfil-publico';
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    router.push(`/profile?tab=${tabId}`, { scroll: false });
-  };
-
-  const tabs = [
-    { id: 'perfil-publico', label: 'Mi Perfil Público' },
-    { id: 'oportunidades', label: 'Buscar Oportunidades' },
-    { id: 'postulaciones', label: 'Mis Postulaciones' },
-    { id: 'disponibilidad', label: 'Disponibilidad' },
-    { id: 'configuracion', label: 'Configuración' },
-  ];
-
-  return (
-    <div>
-      <div className="border-b border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      <div className="p-6 bg-gray-800 rounded-lg min-h-[300px]">
-        {activeTab === 'postulaciones' && user.provider ? (
-          <ProviderPostulations id_provider={user.provider.id_provider} />
-        ) : activeTab === 'oportunidades' ? (
-          <ProviderOportunities />
-        ) : activeTab === 'disponibilidad' ? (
-          <ProviderAvailability />
-        ) : activeTab == "perfil-publico" ? (
-          <ProviderPublicProfilePage providerId={user.provider?.id_provider} />
-        ) : (
-          <p>Contenido de la pestaña: {activeTab}</p>
-        )}
-      </div>
-    </div>
-  );
-};
+import ProviderProfile from '@/components/profile/ProviderProfile';
 
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 
-// --- COMPONENTE PARA PERFIL INCOMPLETO ---
-const IncompleteProfile = ({ role }: { role: 'customer' | 'provider' }) => {
-  return (
-    <div className="text-center text-gray-400 mt-10 p-6 bg-gray-800 rounded-lg">
-      <h2 className="text-2xl font-bold text-white mb-4">Perfil Incompleto</h2>
-      <p>
-        Hemos detectado que tu cuenta de '{role === 'customer' ? 'cliente' : 'proveedor'}' no tiene un perfil de datos asociado.
-      </p>
-      <p className="mt-2">
-        Esto puede ocurrir si el registro no se completó correctamente o por una inconsistencia en la base de datos. Por favor, contacta a soporte para solucionarlo.
-      </p>
-    </div>
-  );
-};
+import IncompleteProfile from '@/components/profile/IncompleteProfile';
 
-// --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
-const CustomerProfile = ({ user }: { user: UserProfile }) => {
-  const [activeTab, setActiveTab] = useState('peticiones');
-
-  const customerTabs = [
-    { id: 'peticiones', label: 'Mis Peticiones' },
-    { id: 'informacion', label: 'Información Personal' },
-    { id: 'historial', label: 'Historial y Calificaciones' },
-  ];
-
-  return (
-    <div>
-      <div className="border-b border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {customerTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      <div className="p-6 bg-gray-800 rounded-lg min-h-[400px]">
-        {activeTab === 'peticiones' && user.customer ? (
-          <CustomerPetitions customerId={user.customer.id_customer} />
-        ) : activeTab === 'informacion' ? (
-          <p>Contenido de Información Personal...</p>
-        ) : activeTab === 'historial' ? (
-          <p>Contenido de Historial y Calificaciones...</p>
-        ) : null}
-      </div>
-    </div>
-  );
-};
+import CustomerProfile from '@/components/profile/CustomerProfile';
 
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE PERFIL ---

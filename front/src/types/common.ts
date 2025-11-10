@@ -186,3 +186,19 @@ export interface IProfile extends IUser {
   customer?: ICustomer;
   provider?: IProvider;
 }
+
+export interface UserProfile {
+  id_user: number; 
+  name: string;
+  lastname: string;
+  email: string;
+  customer: {
+    id_customer: number;
+  } | null;
+  provider: {
+    id_provider: number;
+  } | null;
+  profile_picture_url?: string | null;
+  role: 'customer' | 'provider' | 'admin' | 'unknown';
+  is_staff?: boolean | number
+}
