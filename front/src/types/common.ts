@@ -247,5 +247,5 @@ export interface UpdateCustomerPayload {
     postal_code: string;
     id_city: number;
   };
-  id_interest: number;
+  id_interest?: number;
 }
