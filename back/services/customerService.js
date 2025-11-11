@@ -11,7 +11,36 @@ class CustomerService {
 
     async getCustomerById(id){
         return await Customer.findByPk(id, {
-            include: ['user', 'address', 'interests',],
+            include: [
+                'user',
+                {
+                    model: models.Address,
+                    as: 'address',
+                    include: {
+                        model: models.City,
+                        as: 'city',
+                        include: {
+                            model: models.Department,
+                            as: 'department',
+                            include: [
+                                {
+                                    model: models.Province,
+                                    as: 'province',
+                                    include: {
+                                        model: models.Country,
+                                        as: 'country'
+                                    }
+                                },
+                                {
+                                    model: models.Country,
+                                    as: 'country'
+                                }
+                            ]
+                        }
+                    }
+                },
+                'interests',
+            ],
         });
     }
 
