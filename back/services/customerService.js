@@ -29,7 +29,11 @@ class CustomerService {
     async updateCustomer(id, data){
         const exist = Customer.findByPk(id);
         if(!exist) return null;
-        Customer.update(data);
+        await Customer.update(data, {
+            where: {
+                id: id
+            }
+        });
         return Customer.findByPk(id);
     }
 
