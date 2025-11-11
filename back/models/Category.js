@@ -19,14 +19,6 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_category',
             as: 'articles',
         });
-        Category.belongsTo(models.User, {
-            foreignKey: 'id_user_create',
-            as: 'createdBy',
-        });
-        Category.belongsTo(models.User, {
-            foreignKey: 'id_user_update',
-            as: 'updatedBy',
-        });
         Category.hasMany(models.ProviderCategory, {
             foreignKey: 'category_id',
             sourceKey: 'id_category',
