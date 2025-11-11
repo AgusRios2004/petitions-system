@@ -1,5 +1,6 @@
 const { Customer } = require('../models');
 const UserService = require('../services/userService');
+const AddressService = require('../services/addressService');
 
 class CustomerService {
     async getCustomers(){
@@ -26,15 +27,30 @@ class CustomerService {
         return customer;
     }
 
-    async updateCustomer(id, data){
-        const exist = Customer.findByPk(id);
-        if(!exist) return null;
-        await Customer.update(data, {
-            where: {
-                id: id
+    async updateCustomer(id, data) {
+        const { address, ...customerData } = data;
+    
+        const customer = await Customer.findByPk(id);
+    
+        if (!customer) {
+            throw new Error('Cliente no encontrado.');
+        }
+    
+        if (address) {
+            let updatedAddress;
+            if (address.id_address) {
+                updatedAddress = await AddressService.update(address.id_address, address);
+            } else {
+                updatedAddress = await AddressService.create(address);
             }
+            customer.address_id = updatedAddress.id_address;
+        }
+    
+        await customer.update(customerData);
+    
+        return await Customer.findByPk(id, {
+            include: ['user', 'address', 'interests'],
         });
-        return Customer.findByPk(id);
     }
 
     async deleteCustomer(){};
