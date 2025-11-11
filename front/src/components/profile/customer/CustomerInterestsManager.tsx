@@ -17,48 +17,43 @@ export const CustomerInterestsManager: React.FC<CustomerInterestsManagerProps> =
   const queryClient = useQueryClient();
   const [selectedCategoryToAdd, setSelectedCategoryToAdd] = useState<number>(0);
 
-  // 1. Query para obtener los intereses actuales del cliente
+  // Queries y Mutations (sin cambios)
   const { data: customerInterests, isLoading: isLoadingCustomerInterests } = useQuery<IInterest[]>({
     queryKey: ['customerInterests', customerId],
     queryFn: () => interestService.getInterestsByCustomer(customerId),
     enabled: !!customerId,
   });
 
-  // 2. Query para obtener todas las categorías disponibles (para el combo de añadir)
   const { data: allCategories, isLoading: isLoadingAllCategories } = useQuery<ICategory[]>({
     queryKey: ['allCategories'],
     queryFn: categoryService.getAllCategories,
   });
 
-  // 3. Mutación para añadir un interés
   const addInterestMutation = useMutation({
     mutationFn: (payload: CreateInterestPayload) => interestService.addInterest(payload),
     onSuccess: () => {
       toast.success('Interés añadido');
-      setSelectedCategoryToAdd(0); // Limpiar selección del combo
-      queryClient.invalidateQueries({ queryKey: ['customerInterests', customerId] }); // Refrescar la lista
+      setSelectedCategoryToAdd(0);
+      queryClient.invalidateQueries({ queryKey: ['customerInterests', customerId] });
     },
     onError: (error: any) => toast.error(`Error: ${error.message}`),
   });
 
-  // 4. Mutación para eliminar un interés
   const deleteInterestMutation = useMutation({
     mutationFn: (interestId: number) => interestService.deleteInterest(interestId),
     onSuccess: () => {
       toast.success('Interés eliminado');
-      queryClient.invalidateQueries({ queryKey: ['customerInterests', customerId] }); // Refrescar la lista
+      queryClient.invalidateQueries({ queryKey: ['customerInterests', customerId] });
     },
     onError: (error: any) => toast.error(`Error: ${error.message}`),
   });
 
-  // --- Manejadores de Eventos ---
   const handleAddInterest = () => {
     if (selectedCategoryToAdd > 0) {
       addInterestMutation.mutate({ id_customer: customerId, id_category: selectedCategoryToAdd });
     }
   };
 
-  // Filtra las categorías que el cliente ya tiene para no mostrarlas en el combo de añadir
   const availableCategoriesToAdd = allCategories?.filter(
     (cat) => !customerInterests?.some((ci) => ci.category.id_category === cat.id_category)
   );
@@ -93,28 +88,33 @@ export const CustomerInterestsManager: React.FC<CustomerInterestsManagerProps> =
       {/* Sección para Añadir Nuevo Interés */}
       <div className="pt-6 border-t border-gray-700">
         <h4 className="text-xl font-semibold text-white mb-4">Añadir Nuevo Interés</h4>
-        <div className="flex items-end gap-2">
-          <div className="flex-grow">
+        <div className="flex items-end gap-4">
+          {/* El combo ahora ocupa 3/4 del espacio */}
+          <div className="w-3/4">
             <Select 
               label="Seleccione una categoría" 
               options={availableCategoriesToAdd?.map(c => ({ value: c.id_category, label: c.name })) || []}
               value={selectedCategoryToAdd || 0}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCategoryToAdd(Number(e.target.value))}
+              // CORRECCIÓN: El onChange ahora es más robusto
+              onChange={(value) => setSelectedCategoryToAdd(Number(value) || 0)}
               disabled={isLoadingAllCategories || addInterestMutation.isPending}
               placeholder="Ver categorías disponibles..." 
-              className="w-full" // Asegura que el select ocupe todo el ancho disponible
             />
           </div>
-          <Button 
-            type="button" 
-            onClick={handleAddInterest} 
-            disabled={!selectedCategoryToAdd || addInterestMutation.isPending} 
-            variant="secondary"
-            className="px-4 py-2 text-sm" // Ajusta el padding y tamaño de texto del botón
-          >
-            {addInterestMutation.isPending ? '...' : 'Añadir'}
-          </Button>
-        </div>
+          {/* El botón ahora ocupa 1/4 del espacio */}
+          <div className="w-1/4">
+            <Button 
+              type="button" 
+              onClick={handleAddInterest} 
+              disabled={!selectedCategoryToAdd || addInterestMutation.isPending} 
+              variant="secondary"
+              fullWidth={true}
+              size="md"
+            >
+              {addInterestMutation.isPending ? '...' : 'Añadir'}
+            </Button>
+          </div>
+        </div> {/* <-- CORRECCIÓN: Esta es la llave de cierre que faltaba */}
       </div>
     </div>
   );

@@ -41,6 +41,8 @@ const customStyles: StylesConfig<SelectOption, false> = {
     border: '1px solid #4b5563',
     borderRadius: '0.375rem',
   }),
+  // Estilo para el portal, para asegurar que se muestre por encima de todo
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   option: (provided, state) => ({
     ...provided,
     backgroundColor: state.isSelected
@@ -76,22 +78,33 @@ export const Select: React.FC<CustomSelectProps> = ({
     onChange?.(option ? option.value : null);
   };
 
+  // Usamos un useEffect para renderizar en el cliente y evitar errores de SSR con document.body
+  const [isClient, setIsClient] = React.useState(false);
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+
   return (
     <div className="w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
         {label}
       </label>
-      <ReactSelect
-        {...rest}
-        id={id}
-        options={options}
-        styles={customStyles}
-        value={selectedOption}
-        onChange={handleChange}
-        placeholder={rest.placeholder || 'Seleccionar...'}
-        isDisabled={disabled}
-        noOptionsMessage={() => 'No hay opciones'}
-      />
+      {isClient && (
+        <ReactSelect
+          {...rest}
+          id={id}
+          options={options}
+          styles={customStyles}
+          value={selectedOption}
+          onChange={handleChange}
+          placeholder={rest.placeholder || 'Seleccionar...'}
+          isDisabled={disabled}
+          noOptionsMessage={() => 'No hay opciones'}
+          // Renderiza el menú en el body para evitar problemas de layout
+          menuPortalTarget={document.body}
+        />
+      )}
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
   );
