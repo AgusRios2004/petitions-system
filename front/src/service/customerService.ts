@@ -1,5 +1,6 @@
 import apiClient from "./apiClient";
-import { ICustomer, ApiResponse } from "@/types/common";
+import { ICustomer, ApiResponse, ProfileFormData } from "@/types/common";
+import axios from "axios";
 
 const getCustomerById = async (customerId: number): Promise<ICustomer> => {
     try {
@@ -12,10 +13,34 @@ const getCustomerById = async (customerId: number): Promise<ICustomer> => {
         }
     } catch (e) {
         console.error(e);
-        throw new Error('No se pudo obtener el perifl del cliente.');
+        if (axios.isAxiosError(e)) {
+            const errorMessage = e.response?.data?.error || 'No se pudo obtener el perfil del cliente.';
+            throw new Error(errorMessage);
+        }
+        throw new Error('No se pudo obtener el perfil del cliente.');
     }
 }
 
+const updateCustomer = async (customerId: number, payload: ProfileFormData): Promise<ICustomer> => {
+    try {
+        const response = await apiClient.put<ApiResponse<ICustomer>>(`/customer/${customerId}`, payload);
+        const updatedCustomer = response.data.data;
+        if (updatedCustomer) {
+            return updatedCustomer;
+        } else {
+            throw new Error(response.data?.error || 'La API no retornó datos actualizados del cliente.');
+        }
+    } catch (e) {
+        console.error('Error al actualizar el cliente:', e);
+        if (axios.isAxiosError(e)) {
+            const errorMessage = e.response?.data?.error || 'No se pudo actualizar el perfil del cliente.';
+            throw new Error(errorMessage);
+        }
+        throw new Error('No se pudo actualizar el perfil del cliente.');
+    }
+};
+
 export const customerService = {
-    getCustomerById
+    getCustomerById,
+    updateCustomer,
 }

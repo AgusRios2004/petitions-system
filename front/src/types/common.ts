@@ -192,6 +192,7 @@ export interface ICustomer {
   user_id: number;
   dni: string;
   phone: string;
+  id_gender: number;
   gender: IGender;
   interest: IInterest;
   address: IAddress;
@@ -217,4 +218,19 @@ export interface UserProfile {
   profile_picture_url?: string | null;
   role: 'customer' | 'provider' | 'admin' | 'unknown';
   is_staff?: boolean | number
+}
+
+export interface ProfileFormData {
+  dni: string;
+  phone: string;
+  id_gender: number;
+  address: {
+    id_address: number;
+    street: string;
+    number: string;
+    floor?: string;
+    apartment?: string;
+    postal_code: string;
+    id_city: number;
+  };
 }
