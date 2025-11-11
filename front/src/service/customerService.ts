@@ -21,7 +21,7 @@ const getCustomerById = async (customerId: number): Promise<ICustomer> => {
     }
 }
 
-const updateCustomer = async (customerId: number, payload: ProfileFormData): Promise<ICustomer> => {
+const updateCustomer = async (customerId: number, payload: UpdateCustomerPayload): Promise<ICustomer> => {
     try {
         const response = await apiClient.put<ApiResponse<ICustomer>>(`/customer/${customerId}`, payload);
         const updatedCustomer = response.data.data;

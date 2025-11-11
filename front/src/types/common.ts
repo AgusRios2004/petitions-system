@@ -234,3 +234,18 @@ export interface ProfileFormData {
     id_city: number;
   };
 }
+
+export interface UpdateCustomerPayload {
+  dni: string;
+  phone: string;
+  address: {
+    id_address: number | undefined;
+    street: string;
+    number: string;
+    floor?: string;
+    apartment?: string;
+    postal_code: string;
+    id_city: number;
+  };
+  id_interest: number;
+}
