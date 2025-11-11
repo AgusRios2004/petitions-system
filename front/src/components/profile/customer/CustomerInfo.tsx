@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { UserProfile, ICustomer } from '@/types/common';
 import { Button } from '@/components/ui/Button';
 import EditCustomerForm from './EditCustomerForm'; // Importar el formulario de edición
+import { CustomerInterestsManager } from './CustomerInterestsManager'; // Importar el gestor de intereses
 
 interface CustomerInfoProps {
   customer: ICustomer; // El objeto ICustomer detallado que viene de la API
@@ -16,14 +17,17 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
   // La dirección detallada ahora viene directamente del objeto 'customer'
   const address = customer.address;
 
-  // Si estamos en modo edición, mostramos el formulario
+  // Si estamos en modo edición, mostramos ambos componentes: el formulario y el gestor de intereses
   if (isEditing) {
     return (
-      <EditCustomerForm
-        customer={customer}
-        user={user}
-        onFinished={() => setIsEditing(false)} // Función para volver al modo vista
-      />
+      <div className="space-y-8">
+        <EditCustomerForm
+          customer={customer}
+          user={user}
+          onFinished={() => setIsEditing(false)} // Función para volver al modo vista
+        />
+        <CustomerInterestsManager customerId={customer.id_customer} />
+      </div>
     );
   }
 
