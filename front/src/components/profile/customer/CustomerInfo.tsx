@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link'; // Import Link
+import React, { useState } from 'react';
 import { UserProfile, ICustomer } from '@/types/common';
-import { Button } from '@/components/ui/Button'; // Import Button
+import { Button } from '@/components/ui/Button';
+import EditCustomerForm from './EditCustomerForm'; // Importar el formulario de edición
 
 interface CustomerInfoProps {
   customer: ICustomer; // El objeto ICustomer detallado que viene de la API
@@ -11,9 +11,23 @@ interface CustomerInfoProps {
 }
 
 const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   // La dirección detallada ahora viene directamente del objeto 'customer'
   const address = customer.address;
 
+  // Si estamos en modo edición, mostramos el formulario
+  if (isEditing) {
+    return (
+      <EditCustomerForm
+        customer={customer}
+        user={user}
+        onFinished={() => setIsEditing(false)} // Función para volver al modo vista
+      />
+    );
+  }
+
+  // Si no, mostramos la información del perfil
   return (
     <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
       <h3 className="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Información Personal</h3>
@@ -75,11 +89,9 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
 
       {/* --- Botón de Editar Perfil --- */}
       <div className="mt-8 pt-6 border-t border-gray-700 flex justify-end">
-        <Link href="/profile/edit">
-          <Button variant="primary" size="lg">
-            Editar Perfil
-          </Button>
-        </Link>
+        <Button variant="primary" size="lg" onClick={() => setIsEditing(true)}>
+          Editar Perfil
+        </Button>
       </div>
     </div>
   );
