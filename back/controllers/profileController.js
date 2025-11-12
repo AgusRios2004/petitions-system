@@ -78,14 +78,19 @@ exports.updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
         const { name, lastname, email } = req.body;
-        
-        if (!lastname && !name && !email && !password){
-            return error(res, "Faltan datos para actualizar: ", 400);
+
+        const dataToUpdate = {};
+        if (name) dataToUpdate.name = name;
+        if (lastname) dataToUpdate.lastname = lastname;
+        if (email) dataToUpdate.email = email;
+
+        if (Object.keys(dataToUpdate).length === 0) {
+            return error(res, "No se proporcionaron datos para actualizar.", 400);
         }
         
-        const updateUser = await UserService.updateUser(userId, {name, lastname, email});
+        const updatedUser = await UserService.updateUser(userId, dataToUpdate);
 
-        return success(res, updateUser, "Usuario modificado correctamente");
+        return success(res, updatedUser, "Usuario modificado correctamente");
     } catch (e) {
         console.error(e);
         return error(res, e.message, 500, e);
