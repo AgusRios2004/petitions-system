@@ -1,5 +1,6 @@
-const { Provider } = require('../models');
+const { Provider, Addrress } = require('../models');
 const userService = require('./userService');
+const addressService = require('./addressService')
 
 class ProviderService {
     async getProviders(){
@@ -38,15 +39,65 @@ class ProviderService {
         });
     }
 
+    async getProviderByIdWithDetails(id){
+        return await Provider.findByPk(id, {
+            include: [
+                'user',
+                {
+                    association: 'availabilities',
+                    include: ['week', 'fromHour', 'untilHour']
+                },
+                'profession',
+                'typeProvider',
+                {
+                    association: 'address',
+                    include: {
+                        association: 'city',
+                        include: {
+                            association: 'department',
+                            include: {
+                                association: 'province',
+                                include: ['country'],
+                           }
+                        }
+                    }
+                },
+                'portfolios',
+                {
+                    association: 'providerCategories',
+                    include: ['category',]
+                }
+            ],
+        });
+    }
+
+
     async createProvider(data){
         return await Provider.create(data);
     }
 
     async updateProvider(id, data){
-        const ok = Provider.findByPk(id);
-        if(!ok) return null;
-        Provider.update(data);
-        return await Provider.findByPk(id);
+        const { address, ...providerData} = data;
+
+        const provider = await Provider.findByPk(id);
+
+        if(!provider) {
+            throw new Error('Proveedor no encontrado.')
+        }
+
+        if(address) {
+            let savedAddress;
+            if(address.id_address){
+                savedAddress = await addressService.update(address.id_address, address);
+            } else {
+                savedAddress = await addressService.create(address);
+            }
+            provider.address_id = savedAddress.id_address;
+        }
+
+        await provider.update(providerData);
+
+        return await this.getProviderById(provider.id_provider);
     }
 
     async registerProvider(userData, providerData){

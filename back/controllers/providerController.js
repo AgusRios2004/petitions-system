@@ -1,5 +1,6 @@
 const service = require('../services/providerService');
 const response = require('../middlewares/response');
+const providerService = require('../services/providerService');
 
 exports.getAllProviders = async(req, res) => {
     try {
@@ -66,3 +67,16 @@ exports.registerProvider = async(req, res) => {
 }
 
 exports.deleteProvider = (req, res) => {};
+
+exports.getProviderByIdWithDetails = async(req, res) => {
+    try {
+        const provider = await providerService.getProviderByIdWithDetails(req.params.id);
+        
+        if(!provider) return response.error(res, "Proveedor no encontrado: ", 404, e);
+        
+        return response.success(res, provider, "Proveedor encontrado")
+    } catch (e) {
+        console.error("Error obtener al proveedor: ", e);
+        return response.error(res, e.message, 500, e);
+    }
+}
