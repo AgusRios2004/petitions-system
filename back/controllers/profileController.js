@@ -1,5 +1,6 @@
 const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
+const UserService = require('../services/userService');
 
 exports.createProfile = async (req, res) => {
     try {
@@ -72,3 +73,21 @@ exports.getProfile = async (req, res) => {
         return error(res, 'Error obteniendo el perfil');
     }
 };
+
+exports.updateUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { name, lastname, email } = req.body;
+        
+        if (!lastname && !name && !email && !password){
+            return error(res, "Faltan datos para actualizar: ", 400);
+        }
+        
+        const updateUser = await UserService.updateUser(userId, {name, lastname, email});
+
+        return success(res, updateUser, "Usuario modificado correctamente");
+    } catch (e) {
+        console.error(e);
+        return error(res, e.message, 500, e);
+    }
+}
