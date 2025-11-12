@@ -14,6 +14,7 @@ class CustomerService {
         return await Customer.findByPk(id, {
             include: [
                 'user',
+                'petitions',
                 {
                     model: models.Address,
                     as: 'address',
