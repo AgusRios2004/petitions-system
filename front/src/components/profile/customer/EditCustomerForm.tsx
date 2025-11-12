@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -41,6 +41,7 @@ interface EditCustomerFormProps {
 
 const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onFinished }) => {
   const queryClient = useQueryClient();
+  const isInitialLoad = useRef(true);
 
   const {
     control,
@@ -72,10 +73,42 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
   const watchedDepartment = watch('id_department');
 
   // --- Lógica de Cascada para Dirección ---
-  useEffect(() => { setValue('id_province', 0); setValue('id_department', 0); setValue('id_city', 0); }, [watchedCountry, setValue]);
-  useEffect(() => { setValue('id_department', 0); setValue('id_city', 0); }, [watchedProvince, setValue]);
-  useEffect(() => { setValue('id_city', 0); }, [watchedDepartment, setValue]);
+  useEffect(() => {
+    if (customer.address) {
+      const address = customer.address;
+      setValue('id_country', address.city?.department?.province?.country?.id_country || 0);
+      setValue('id_province', address?.city?.department?.province?.id_province || 0);
+      setValue('id_department', address.city?.department?.id_department || 0);
+      setValue('id_city', address.city?.id_city || 0);
 
+      setTimeout(() => {
+        isInitialLoad.current = false;
+      }, 500);
+    }
+  }, [customer, setValue]);
+
+  // --- Lógica de Cascada para Resets ---
+  useEffect(() => {
+    if (!isInitialLoad.current) {
+      setValue('id_province', 0);
+      setValue('id_department', 0);
+      setValue('id_city', 0);
+    }
+  }, [watchedCountry, setValue]);
+
+  useEffect(() => {
+    if (!isInitialLoad.current) {
+      setValue('id_department', 0);
+      setValue('id_city', 0);
+    }
+  }, [watchedProvince, setValue]);
+
+  useEffect(() => {
+    if (!isInitialLoad.current) {
+      setValue('id_city', 0);
+    }
+  }, [watchedDepartment, setValue]);
+  
   // --- Carga de Datos para Dirección ---
   const { data: countries, isLoading: isLoadingCountries } = useQuery({ queryKey: ['countries'], queryFn: locationService.getCountries });
   const { data: provinces, isLoading: isLoadingProvinces } = useQuery({ queryKey: ['provinces', watchedCountry], queryFn: () => locationService.getProvincesByCountry(watchedCountry), enabled: watchedCountry > 0 });

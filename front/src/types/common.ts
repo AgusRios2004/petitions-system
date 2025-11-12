@@ -26,16 +26,19 @@ export interface Country {
 export interface Province {
     id_province: number;
     name: string;
+    country: Country;
 };
 
 export interface Department {
     id_department: number;
     name: string;
+    province: Province;
 };
 
 export interface City {
     id_city: number;
     name: string;
+    department: Department;
 };
 
 export interface IArticle {
