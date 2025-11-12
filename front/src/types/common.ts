@@ -247,17 +247,26 @@ export interface ProfileFormData {
   };
 }
 
+export interface AddressPayload {
+  id_address: number;
+  street: string;
+  number: string;
+  floor?: string;
+  apartment?: string;
+  postal_code: string;
+  id_city: number;
+}
+
 export interface UpdateCustomerPayload {
   dni: string;
   phone: string;
-  address: {
-    id_address: number | undefined;
-    street: string;
-    number: string;
-    floor?: string;
-    apartment?: string;
-    postal_code: string;
-    id_city: number;
-  };
+  address: AddressPayload;
   id_interest?: number;
+}
+
+export interface UpdateProviderPayload {
+  description?: string;
+  id_profession?: number;
+  id_type_provider: number;
+  address?: AddressPayload;
 }
