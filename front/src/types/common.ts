@@ -178,6 +178,7 @@ export interface IUser {
   lastname: string;
   profile_image?: string | null;
   role_id?: number; 
+  date_create: string;
 }
 
 export interface IGender {
@@ -190,6 +191,12 @@ export interface IInterest {
   category: ICategory;
 }
 
+export interface IPetition {
+  id_petition: number;
+  id_customer: number;
+  description: string;
+}
+
 export interface ICustomer {
   id_customer: number;
   user_id: number;
@@ -199,6 +206,8 @@ export interface ICustomer {
   gender: IGender;
   interest: IInterest;
   address: IAddress;
+  petitions: IPetition[];
+  user: IUser;
 }
 
 export interface IProfile extends IUser {
