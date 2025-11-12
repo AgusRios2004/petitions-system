@@ -4,19 +4,21 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ICustomer, UserProfile, Country, Province, City, Department, UpdateCustomerPayload } from '@/types/common';
+import { ICustomer, UserProfile, UpdateCustomerPayload } from '@/types/common';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { customerService } from '@/service/customerService';
+import { userService } from '@/service/userService';
 import toast from 'react-hot-toast';
 import { locationService } from '@/service/locationService';
 
-// Schema solo para Info Personal y Dirección
+// Schema including email
 const profileSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido'),
   lastname: z.string().min(2, 'El apellido es requerido'),
+  email: z.string().email('El formato del email no es válido'),
   dni: z.string().min(7, 'El DNI es requerido'),
   phone: z.string().min(10, 'El teléfono es requerido'),
   
@@ -54,6 +56,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
     defaultValues: {
       name: user.name || '',
       lastname: user.lastname || '',
+      email: user.email || '',
       dni: customer.dni || '',
       phone: customer.phone || '',
       id_country: 0,
@@ -118,7 +121,13 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
   // --- Mutación para Actualizar el Perfil ---
   const mutation = useMutation({
     mutationFn: (data: ProfileFormData) => {
-      const payload: Partial<UpdateCustomerPayload> = { // Usamos Partial porque no enviaremos id_interest
+      const userPayload = {
+        name: data.name,
+        lastname: data.lastname,
+        email: data.email,
+      };
+
+      const customerPayload: UpdateCustomerPayload = {
         dni: data.dni,
         phone: data.phone,
         address: {
@@ -131,12 +140,18 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
           id_city: data.id_city,
         },
       };
-      // Aquí también podrías tener una lógica para actualizar el nombre/apellido en un endpoint de usuario
-      return customerService.updateCustomer(customer.id_customer, payload as UpdateCustomerPayload);
+
+      // Ejecutar ambas actualizaciones en paralelo
+      const userUpdatePromise = userService.updateUser(user.id_user, userPayload);
+      const customerUpdatePromise = customerService.updateCustomer(customer.id_customer, customerPayload);
+
+      return Promise.all([userUpdatePromise, customerUpdatePromise]);
     },
     onSuccess: () => {
       toast.success('Perfil actualizado con éxito');
+      // Invalidar ambas queries para asegurar que los datos se recarguen
       queryClient.invalidateQueries({ queryKey: ['customerProfile', customer.id_customer] });
+      queryClient.invalidateQueries({ queryKey: ['user'] }); // O la key que usas para el usuario en el contexto
       onFinished();
     },
     onError: (error: any) => toast.error(`Error al actualizar: ${error.message}`),
@@ -151,10 +166,11 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
       
       {/* --- 1. SECCIÓN DE INFO PERSONAL --- */}
       <div className="border-b border-gray-700 pb-6">
-        <h3 className="text-2xl font-bold text-white mb-6">Información Personal</h3>
+        <h3 className="text-2xl font-bold text-white mb-6">Información de la Cuenta</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Controller name="name" control={control} render={({ field }) => <Input {...field} label="Nombre" error={errors.name?.message} />} />
           <Controller name="lastname" control={control} render={({ field }) => <Input {...field} label="Apellido" error={errors.lastname?.message} />} />
+          <Controller name="email" control={control} render={({ field }) => <Input {...field} label="Email" error={errors.email?.message} />} />
           <Controller name="dni" control={control} render={({ field }) => <Input {...field} label="DNI" error={errors.dni?.message} />} />
           <Controller name="phone" control={control} render={({ field }) => <Input {...field} label="Teléfono" error={errors.phone?.message} />} />
         </div>
