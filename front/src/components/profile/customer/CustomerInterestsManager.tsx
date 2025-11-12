@@ -71,8 +71,12 @@ export const CustomerInterestsManager: React.FC<CustomerInterestsManagerProps> =
                 <span>{interest.category.name}</span>
                 <button 
                   type="button" 
-                  onClick={() => deleteInterestMutation.mutate(interest.id_interest)} 
-                  className="ml-3 font-bold text-xl text-white hover:text-gray-200" 
+                  onClick={() => {
+                    if (window.confirm('¿Estás seguro de que quieres eliminar este interés?')) {
+                      deleteInterestMutation.mutate(interest.id_interest);
+                    }
+                  }} 
+                  className="ml-3 font-bold text-xl text-white hover:text-gray-200 cursor-pointer" 
                   disabled={deleteInterestMutation.isPending}
                 >
                   &times;

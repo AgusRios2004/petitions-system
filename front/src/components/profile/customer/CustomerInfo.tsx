@@ -5,6 +5,8 @@ import { UserProfile, ICustomer } from '@/types/common';
 import { Button } from '@/components/ui/Button';
 import EditCustomerForm from './EditCustomerForm'; // Importar el formulario de edición
 import { CustomerInterestsManager } from './CustomerInterestsManager'; // Importar el gestor de intereses
+import { InfoItem } from '@/components/ui/InfoItem';
+import { FiMail, FiPhone, FiMapPin, FiCalendar, FiFileText, FiTag, FiUser, FiHash } from 'react-icons/fi';
 
 interface CustomerInfoProps {
   customer: ICustomer; // El objeto ICustomer detallado que viene de la API
@@ -14,82 +16,70 @@ interface CustomerInfoProps {
 const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
   const [isEditing, setIsEditing] = useState(false);
 
-  // La dirección detallada ahora viene directamente del objeto 'customer'
   const address = customer.address;
+  const fullLocation = [
+    address?.city?.name,
+    address?.city?.department?.province?.name,
+    address?.city?.department?.province?.country?.name,
+  ].filter(Boolean).join(', ');
 
-  // Si estamos en modo edición, mostramos ambos componentes: el formulario y el gestor de intereses
+  const memberSince = customer.user?.date_create 
+    ? new Date(customer.user.date_create).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : 'No disponible';
+
   if (isEditing) {
     return (
       <div className="space-y-8">
         <EditCustomerForm
           customer={customer}
           user={user}
-          onFinished={() => setIsEditing(false)} // Función para volver al modo vista
+          onFinished={() => setIsEditing(false)}
         />
         <CustomerInterestsManager customerId={customer.id_customer} />
       </div>
     );
   }
 
-  // Si no, mostramos la información del perfil
   return (
-    <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
+    <div className="p-6 bg-gray-800 rounded-lg shadow-lg">
       <h3 className="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Información Personal</h3>
 
-      <div className="space-y-4 text-gray-300">
-        {/* --- Información Básica del Usuario --- */}
-        <p>
-          <strong className="text-blue-400">Nombre:</strong> {user.name} {user.lastname}
-        </p>
-        <p>
-          <strong className="text-blue-400">Email:</strong> {user.email}
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-300">
+        {/* Columna Izquierda */}
+        <div className="space-y-6">
+          <InfoItem icon={<FiUser size={20} />} label="Nombre Completo" value={`${user.name} ${user.lastname}`} />
+          <InfoItem icon={<FiMail size={20} />} label="Email" value={user.email} />
+          {customer.dni && <InfoItem icon={<FiHash size={20} />} label="DNI" value={customer.dni} />}
+          {customer.phone && <InfoItem icon={<FiPhone size={20} />} label="Teléfono" value={customer.phone} />}
+        </div>
 
-        {/* --- Información Específica del Cliente --- */}
-        {customer.dni && (
-          <p>
-            <strong className="text-blue-400">DNI:</strong> {customer.dni}
-          </p>
-        )}
-        {customer.phone && (
-          <p>
-            <strong className="text-blue-400">Teléfono:</strong> {customer.phone}
-          </p>
-        )}
-        {customer.gender?.gender && (
-          <p>
-            <strong className="text-blue-400">Género:</strong> {customer.gender.gender}
-          </p>
-        )}
-
-        {/* --- Dirección --- */}
-        {address && (
-          <div className="pt-4 border-t border-gray-700">
-            <h4 className="text-xl font-semibold text-white mb-3">Dirección</h4>
-            <p>
-              <strong className="text-blue-400">Calle:</strong> {address.street} {address.number}
-            </p>
-            {address.floor && <p><strong className="text-blue-400">Piso:</strong> {address.floor}</p>}
-            {address.apartment && <p><strong className="text-blue-400">Depto:</strong> {address.apartment}</p>}
-            <p>
-              <strong className="text-blue-400">Código Postal:</strong> {address.postal_code}
-            </p>
-            {address.city?.name && <p><strong className="text-blue-400">Ciudad:</strong> {address.city.name}</p>}
-          </div>
-        )}
-
-        {/* --- Intereses --- */}
-        {customer.interest?.category?.name && (
-          <div className="pt-4 border-t border-gray-700">
-            <h4 className="text-xl font-semibold text-white mb-3">Intereses</h4>
-            <div className="bg-gray-700 p-3 rounded-md inline-block">
-              <span className="text-blue-300 font-medium">
-                {customer.interest.category.name}
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Columna Derecha */}
+        <div className="space-y-6">
+          <InfoItem icon={<FiCalendar size={20} />} label="Miembro Desde" value={memberSince} />
+          <InfoItem icon={<FiFileText size={20} />} label="Peticiones Totales" value={customer.petitions?.length ?? 0} />
+          {customer.gender?.gender && <InfoItem icon={<FiUser size={20} />} label="Género" value={customer.gender.gender} />}
+          {address && <InfoItem icon={<FiMapPin size={20} />} label="Ubicación" value={fullLocation} />}
+        </div>
       </div>
+
+      {/* --- Intereses --- */}
+      {customer.interest?.category?.name && (
+        <div className="mt-8 pt-6 border-t border-gray-700">
+          <h4 className="text-xl font-semibold text-white mb-3 flex items-center">
+            <FiTag className="mr-3 text-blue-400" size={22} />
+            Intereses
+          </h4>
+          <div className="bg-gray-700 p-3 rounded-md inline-block">
+            <span className="text-blue-300 font-medium">
+              {customer.interest.category.name}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* --- Botón de Editar Perfil --- */}
       <div className="mt-8 pt-6 border-t border-gray-700 flex justify-end">
