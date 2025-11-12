@@ -1,4 +1,5 @@
 const { Customer } = require('../models');
+const models = require('../models');
 const UserService = require('../services/userService');
 const AddressService = require('../services/addressService');
 
