@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ICustomer, UserProfile, UpdateCustomerPayload } from '@/types/common';
+import { useAuth } from '@/context/AuthContext';
+import { ICustomer, UserProfile, UpdateCustomerPayload, IUser } from '@/types/common';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -43,6 +44,7 @@ interface EditCustomerFormProps {
 
 const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onFinished }) => {
   const queryClient = useQueryClient();
+  const { updateUser } = useAuth();
   const isInitialLoad = useRef(true);
 
   const {
@@ -147,11 +149,15 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
 
       return Promise.all([userUpdatePromise, customerUpdatePromise]);
     },
-    onSuccess: () => {
+    onSuccess: ([updatedUser, updatedCustomer]) => {
       toast.success('Perfil actualizado con éxito');
-      // Invalidar ambas queries para asegurar que los datos se recarguen
+      
+      if (updatedUser) {
+        updateUser(updatedUser);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['customerProfile', customer.id_customer] });
-      queryClient.invalidateQueries({ queryKey: ['user'] }); // O la key que usas para el usuario en el contexto
+      
       onFinished();
     },
     onError: (error: any) => toast.error(`Error al actualizar: ${error.message}`),

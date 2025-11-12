@@ -21,6 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (payload: any) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
+  updateUser: (updatedData: Partial<User>) => void;
 }
 
 // --- CONTEXTO ---
@@ -83,6 +84,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.warn('Error guardando user en localStorage', err);
     }
+  };
+
+  const updateUser = (updatedData: Partial<User>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const newUser = { ...prevUser, ...updatedData };
+      saveUserToStorage(newUser);
+      return newUser;
+    });
   };
 
   // --- AUTH ACTIONS ---
@@ -148,6 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
