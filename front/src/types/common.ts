@@ -243,7 +243,7 @@ export interface ProfileFormData {
 }
 
 export interface AddressPayload {
-  id_address: number;
+  id_address?: number;
   street: string;
   number: string;
   floor?: string;
