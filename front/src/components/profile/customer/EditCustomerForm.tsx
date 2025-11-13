@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { userService } from '@/service/userService';
 import { useAuth } from '@/context/AuthContext';
 import { ICustomer, UserProfile, UpdateCustomerPayload, IUser } from '@/types/common';
 import { Button } from '@/components/ui/Button';
@@ -11,30 +12,15 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { customerService } from '@/service/customerService';
-import { userService } from '@/service/userService';
+import { updateUser } from '@/service/profileService';
 import toast from 'react-hot-toast';
 import { locationService } from '@/service/locationService';
+import { userProfileSchema } from '@/types/schemas/user.schema';
+import { customerProfileSchema } from '@/types/schemas/customer.schema';
+import { addressSchema } from '@/types/schemas/address.schema';
 
-// Schema including email
-const profileSchema = z.object({
-  name: z.string().min(2, 'El nombre es requerido'),
-  lastname: z.string().min(2, 'El apellido es requerido'),
-  email: z.string().email('El formato del email no es válido'),
-  dni: z.string().min(7, 'El DNI es requerido'),
-  phone: z.string().min(10, 'El teléfono es requerido'),
-  
-  id_country: z.number().min(1, 'Seleccione un país'),
-  id_province: z.number().min(1, 'Seleccione una provincia'),
-  id_department: z.number().min(1, 'Seleccione un departamento'),
-  id_city: z.number().min(1, 'Seleccione una ciudad'),
-  street: z.string().min(3, 'La calle es requerida'),
-  number: z.string().min(1, 'El número es requerido'),
-  postal_code: z.string().min(4, 'El código postal es requerido'),
-  floor: z.string().optional(),
-  apartment: z.string().optional(),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+const completeCustomerProfileSchema = userProfileSchema.merge(customerProfileSchema).merge(addressSchema);
+type ProfileFormData = z.infer<typeof completeCustomerProfileSchema>;
 
 interface EditCustomerFormProps {
   customer: ICustomer;
@@ -44,8 +30,8 @@ interface EditCustomerFormProps {
 
 const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onFinished }) => {
   const queryClient = useQueryClient();
-  const { updateUser } = useAuth();
   const isInitialLoad = useRef(true);
+  const { updateUser } = useAuth();
 
   const {
     control,
@@ -54,7 +40,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
     watch,
     setValue,
   } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(completeCustomerProfileSchema),
     defaultValues: {
       name: user.name || '',
       lastname: user.lastname || '',
@@ -123,7 +109,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
   // --- Mutación para Actualizar el Perfil ---
   const mutation = useMutation({
     mutationFn: (data: ProfileFormData) => {
-      const userPayload = {
+      const userPayload: Partial<IUser> = {
         name: data.name,
         lastname: data.lastname,
         email: data.email,
@@ -152,8 +138,8 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
     onSuccess: ([updatedUser, updatedCustomer]) => {
       toast.success('Perfil actualizado con éxito');
       
-      if (updatedUser) {
-        updateUser(updatedUser);
+      if(updatedUser) {
+        updateUser(updatedUser)
       }
 
       queryClient.invalidateQueries({ queryKey: ['customerProfile', customer.id_customer] });

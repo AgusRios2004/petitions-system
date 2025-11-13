@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { ApiResponse, IProfile, IProvider, UpdateProviderPayload } from '@/types/common';
+import { ApiResponse, IProfile, IUser } from '@/types/common';
 
 export async function getProfile():  Promise<ApiResponse<IProfile>>{
     try {
@@ -12,12 +12,18 @@ export async function getProfile():  Promise<ApiResponse<IProfile>>{
     }
 }
 
-export async function updateProviderProfile(providerId: number, payload: UpdateProviderPayload): Promise<ApiResponse<IProvider>>{
+export async function updateUser(userId: number, payload: Partial<IUser>): Promise<IUser> {
     try {
-        const response = await apiClient.put(`/providers/${providerId}`, payload);
-        return response.data.data;
+        const response = await apiClient.put<ApiResponse<IUser>>(`/profile/user/${userId}`, payload);
+        const updatedUser = response.data.data;
+        if (updatedUser) {
+            return updatedUser;
+        } else {
+            throw new Error(response.data?.error || 'La API no retornó datos actualizados del usuario.');
+        }
     } catch (e: any) {
-        console.error('Error: ', e.message);
-        throw e;
+        console.error('Error al actualizar el usuario:', e);
+        const errorMessage = e.response?.data?.error || 'No se pudo actualizar el perfil del usuario.';
+        throw new Error(errorMessage);
     }
 }

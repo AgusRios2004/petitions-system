@@ -89,7 +89,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUser = (updatedData: Partial<User>) => {
     setUser(prevUser => {
       if (!prevUser) return null;
+
       const newUser = { ...prevUser, ...updatedData };
+
+      // Deep merge for customer and provider objects
+      if (updatedData.customer) {
+        newUser.customer = { ...prevUser.customer, ...updatedData.customer };
+      }
+      if (updatedData.provider) {
+        newUser.provider = { ...prevUser.provider, ...updatedData.provider };
+      }
+      
       saveUserToStorage(newUser);
       return newUser;
     });
