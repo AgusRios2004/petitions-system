@@ -1,9 +1,15 @@
 'use client';
 
 import React from 'react';
-// import EditProfileForm from '@/components/profile/EditProfileForm'; // Futuro componente
+import EditProviderForm from '@/components/profile/provider/EditProviderForm';
+import { useAuth } from '@/context/AuthContext';
 
 const EditProfilePage = () => {
+  const { user } = useAuth();
+
+  // Extraer el ID del proveedor del usuario autenticado
+  const providerId = user?.provider?.id_provider;
+
   return (
     <main className="min-h-screen bg-gray-900 text-white p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
@@ -16,13 +22,14 @@ const EditProfilePage = () => {
           </p>
         </header>
 
-        <div className="p-6 bg-gray-800 rounded-lg">
-          {/* Aquí iría el futuro componente del formulario */}
-          {/* <EditProfileForm /> */}
-          <p className="text-center text-yellow-400">
-            El componente del formulario de edición (`EditProfileForm`) aún no ha sido creado.
-          </p>
-        </div>
+
+        {!providerId && (
+          <div className="bg-yellow-900/50 text-yellow-200 p-4 rounded-lg">
+            <p>No se encontró un perfil de proveedor asociado a tu cuenta.</p>
+          </div>
+        )}
+
+        {providerId && <EditProviderForm providerId={providerId} />}
       </div>
     </main>
   );

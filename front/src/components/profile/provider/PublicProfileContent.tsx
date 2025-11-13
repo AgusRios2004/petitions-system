@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { providerService } from '@/service/providerService';
+import { getProfilePublicProvider } from '@/service/providerService';
 import { IProvider, IAvailability } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
 import { useAuth } from '@/context/AuthContext';
@@ -28,7 +28,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
 
   const { data: provider, isLoading, isError, error } = useQuery<IProvider, Error>({
     queryKey: ['providerPublicProfile', providerId],
-    queryFn: () => providerService.getProfilePublicProvider(providerId.toString()),
+    queryFn: () => getProfilePublicProvider(providerId.toString()),
     enabled: !!providerId,
   });
 
@@ -57,7 +57,15 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
 
-        <div className="flex justify-end mb-8">
+        <div className="flex justify-end items-center gap-4 mb-8">
+            {isOwner && (
+                <Button
+                    onClick={() => router.push('/profile/edit')}
+                    className="!bg-blue-600 !hover:bg-blue-700"
+                >
+                    Editar Perfil
+                </Button>
+            )}
             <a
                 href={`/provider/${providerId}/postulations`}
                 className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
