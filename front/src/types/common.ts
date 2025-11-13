@@ -143,12 +143,7 @@ export interface IAvailability {
 // Updated IProvider interface
 export interface IProvider {
   id_provider: number;
-  user: {
-    id_user: number;
-    name: string;
-    lastname: string;
-    profile_image: string | null;
-  };
+  user: IUser;
   typeProvider: TypeProvider;
   profession: Profession;
   address: IAddress; // Use the new IAddress interface

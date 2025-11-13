@@ -12,7 +12,7 @@ export async function getProfile():  Promise<ApiResponse<IProfile>>{
     }
 }
 
-export async function updatePoviderProfile(providerId: number, payload: UpdateProviderPayload): Promise<ApiResponse<IProvider>>{
+export async function updateProviderProfile(providerId: number, payload: UpdateProviderPayload): Promise<ApiResponse<IProvider>>{
     try {
         const response = await apiClient.put(`/providers/${providerId}`, payload);
         return response.data.data;
