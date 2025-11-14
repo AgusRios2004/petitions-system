@@ -67,19 +67,23 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
       </div>
 
       {/* --- Intereses --- */}
-      {customer.interest?.category?.name && (
-        <div className="mt-8 pt-6 border-t border-gray-700">
-          <h4 className="text-xl font-semibold text-white mb-3 flex items-center">
-            <FiTag className="mr-3 text-blue-400" size={22} />
-            Intereses
-          </h4>
-          <div className="bg-gray-700 p-3 rounded-md inline-block">
-            <span className="text-blue-300 font-medium">
-              {customer.interest.category.name}
-            </span>
-          </div>
+      <div className="mt-8 pt-6 border-t border-gray-700">
+        <h4 className="text-xl font-semibold text-white mb-3 flex items-center">
+          <FiTag className="mr-3 text-blue-400" size={22} />
+          Intereses
+        </h4>
+        <div className="flex flex-wrap gap-3">
+          {customer.interests && customer.interests.length > 0 ? (
+            customer.interests.map((interest) => (
+              <div key={interest.id_interest} className="flex items-center bg-sky-600 text-white px-4 py-2 rounded-full text-md font-medium">
+                <span>{interest.category.name}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400">No hay intereses registrados.</p>
+          )}
         </div>
-      )}
+      </div>
 
       {/* --- Botón de Editar Perfil --- */}
       <div className="mt-8 pt-6 border-t border-gray-700 flex justify-end">

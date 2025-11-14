@@ -185,7 +185,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
       </div>
 
       <div className="flex justify-end space-x-4 pt-6 border-t border-gray-700">
-        <Button type="button" variant="secondary" onClick={onFinished}>Cancelar</Button>
+        <Button type="button" variant="secondary" onClick={onFinished}>Volver</Button>
         <Button type="submit" variant="primary" disabled={mutation.isPending}>{mutation.isPending ? 'Guardando...' : 'Guardar Cambios'}</Button>
       </div>
     </form>
