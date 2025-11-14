@@ -41,7 +41,14 @@ class CustomerService {
                         }
                     }
                 },
-                'interests',
+                {
+                    model: models.Interest,
+                    as: 'interests',
+                    include: {
+                        model: models.Category,
+                        as: 'category'
+                    }
+                },
             ],
         });
     }
