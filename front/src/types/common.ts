@@ -199,7 +199,7 @@ export interface ICustomer {
   phone: string;
   id_gender: number;
   gender: IGender;
-  interest: IInterest;
+  interests: IInterest[]; // Changed from singular 'interest' to plural 'interests'
   address: IAddress;
   petitions: IPetition[];
   user: IUser;
