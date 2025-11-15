@@ -77,12 +77,13 @@ exports.getProfile = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
-        const { name, lastname, email } = req.body;
+        const { name, lastname, email, profile_image } = req.body;
 
         const dataToUpdate = {};
         if (name) dataToUpdate.name = name;
         if (lastname) dataToUpdate.lastname = lastname;
         if (email) dataToUpdate.email = email;
+        if (profile_image) dataToUpdate.profile_image = profile_image;
 
         if (Object.keys(dataToUpdate).length === 0) {
             return error(res, "No se proporcionaron datos para actualizar.", 400);
