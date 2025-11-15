@@ -60,20 +60,21 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
         </h1>
 
         <div className="flex justify-end items-center gap-4 mb-8">
-            {isOwner && (
-                <Button
-                    onClick={() => router.push('/profile/edit')}
-                    className="!bg-blue-600 !hover:bg-blue-700"
-                >
-                    Editar Perfil
-                </Button>
-            )}
-            <a
-                href={`/provider/${providerId}/postulations`}
-                className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+          {isOwner ? (
+            <Button
+              onClick={() => router.push('/profile/edit')}
+              className="!bg-blue-600 !hover:bg-blue-700"
             >
-                Ver Historial de Postulaciones
+              Editar Perfil
+            </Button>
+          ) : user?.customer ? (
+            <a
+              href={`/provider/${providerId}/postulations`}
+              className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            >
+              Ver Historial de Postulaciones
             </a>
+          ) : null}
         </div>
 
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
