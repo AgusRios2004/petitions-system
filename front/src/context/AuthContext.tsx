@@ -8,7 +8,7 @@ interface User {
   name: string;
   lastname: string;
   email: string;
-  profile_picture_url?: string | null;
+  profile_image?: string | null;
   customer?: any | null;
   provider?: any | null;
   role: 'provider' | 'customer' | 'admin' | 'unknown';
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name: parsed.name,
             lastname: parsed.lastname,
             email: parsed.email,
-            profile_picture_url: parsed.profile_picture_url ?? null,
+            profile_image: parsed.profile_image ?? null,
             customer: parsed.customer ?? null,
             provider: parsed.provider ?? null,
             role,
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: basicUser.name,
         lastname: basicUser.lastname,
         email: basicUser.email,
-        profile_picture_url: basicUser.profile_picture_url ?? null,
+        profile_image: basicUser.profile_image ?? null,
         customer: basicUser.customer ?? null,
         provider: basicUser.provider ?? null,
         is_staff: basicUser.is_staff ?? false,

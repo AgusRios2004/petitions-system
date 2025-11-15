@@ -60,6 +60,8 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
       )
     : provider.availabilities;
 
+  console.log(provider)
+
   return (
     <div className="min-h-screen bg-gray-800 text-gray-100 py-10 px-4">
       <div className="max-w-2xl mx-auto">

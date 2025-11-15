@@ -14,7 +14,7 @@ interface ProfileImageUpdaterProps {
 }
 
 const ProfileImageUpdater: React.FC<ProfileImageUpdaterProps> = ({ imageUrl, userId, onUpdate }) => {
-  const { user, setUser } = useAuth();
+  const { user, updateUser: updateAuthUser } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +26,6 @@ const ProfileImageUpdater: React.FC<ProfileImageUpdaterProps> = ({ imageUrl, use
       setIsUploading(true);
       setError(null);
 
-      // 1. Upload image and get URL
       const uploadResult = await uploadService.uploadProfileImage(file);
       if (uploadResult.error || !uploadResult.data) {
         throw new Error(uploadResult.error || 'Failed to get image URL.');
@@ -40,8 +39,7 @@ const ProfileImageUpdater: React.FC<ProfileImageUpdaterProps> = ({ imageUrl, use
     onSuccess: (data) => {
       // Update the user in the auth context
       if (user) {
-        const newUser = { ...user, profile_image: data.profile_image };
-        setUser(newUser);
+        updateAuthUser({ profile_image: data.profile_image });
       }
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', userId] });
