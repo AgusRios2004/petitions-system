@@ -131,12 +131,18 @@ class ProviderService {
                     association: 'address',
                     include: ['city']
                 },
-                'providerCategories',
+                {
+                    association: 'providerCategories',
+                    include: ['category']
+                },
                 {
                     association: 'availabilities',
                     include: ['week', 'fromHour', 'untilHour']
                 },
-                'grades',
+                {
+                    association: 'grades',
+                    include: ['userCreate', 'grades']
+                },
                 'portfolios'
             ],
         });
