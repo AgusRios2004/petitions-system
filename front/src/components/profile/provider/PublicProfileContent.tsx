@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FiUser, FiBriefcase, FiTag, FiMapPin, FiCalendar, FiClock, FiGrid, FiFolder, FiStar, FiFileText, FiLink } from 'react-icons/fi';
 import { useQuery } from '@tanstack/react-query';
 import { getProfilePublicProvider } from '@/service/providerService';
 import { IProvider, IAvailability } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
+import InfoRow from '@/components/ui/InfoRow';
 
 interface PublicProfileContentProps {
   providerId: number;
@@ -75,12 +77,19 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
         </div>
 
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+            <FiUser className="mr-3 text-blue-400" size={24} />
             Información Personal
           </h2>
-          <p><strong>Nombre:</strong> {provider.user.name} {provider.user.lastname}</p>
-          <p><strong>Tipo de Proveedor:</strong> {provider.typeProvider.name}</p>
-          <p><strong>Profesión:</strong> {provider.profession.name}</p>
+          <InfoRow icon={FiUser} label="Nombre">
+            {provider.user.name} {provider.user.lastname}
+          </InfoRow>
+          <InfoRow icon={FiTag} label="Tipo de Proveedor">
+            {provider.typeProvider.name}
+          </InfoRow>
+          <InfoRow icon={FiBriefcase} label="Profesión">
+            {provider.profession.name}
+          </InfoRow>
           {provider.user.profile_image && (
             <img
               src={provider.user.profile_image}
@@ -91,20 +100,36 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
         </div>
         {provider.address && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiMapPin className="mr-3 text-blue-400" size={24} />
               Dirección
             </h2>
-            <p><strong>Calle:</strong> {provider.address.street} {provider.address.number}</p>
-            {provider.address.floor && <p><strong>Piso:</strong> {provider.address.floor}</p>}
-            {provider.address.apartment && <p><strong>Departamento:</strong> {provider.address.apartment}</p>}
-            <p><strong>Código Postal:</strong> {provider.address.postal_code}</p>
-            <p><strong>Ciudad:</strong> {provider.address.city.name}</p>
+            <InfoRow icon={FiMapPin} label="Calle">
+              {provider.address.street} {provider.address.number}
+            </InfoRow>
+            {provider.address.floor && (
+              <InfoRow icon={FiMapPin} label="Piso">
+                {provider.address.floor}
+              </InfoRow>
+            )}
+            {provider.address.apartment && (
+              <InfoRow icon={FiMapPin} label="Departamento">
+                {provider.address.apartment}
+              </InfoRow>
+            )}
+            <InfoRow icon={FiMapPin} label="Código Postal">
+              {provider.address.postal_code}
+            </InfoRow>
+            <InfoRow icon={FiMapPin} label="Ciudad">
+              {provider.address.city.name}
+            </InfoRow>
           </div>
         )}
 
         {provider.availabilities && provider.availabilities.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiCalendar className="mr-3 text-blue-400" size={24} />
               Filtrar Disponibilidades
             </h2>
             <select
@@ -126,7 +151,8 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
 
       {provider.availabilities && provider.availabilities.length > 0 && (
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+            <FiClock className="mr-3 text-blue-400" size={24} />
             Disponibildades
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -143,26 +169,32 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
 
         {provider.providerCategories && provider.providerCategories.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiGrid className="mr-3 text-blue-400" size={24} />
               Categorías
             </h2>
-            <ul className="list-disc list-inside text-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               {provider.providerCategories.map((pc) => (
-                <li key={pc.id_provider_category}>{pc.category.name}</li>
+                <InfoRow key={pc.id_provider_category} icon={FiTag} label="Categoría">
+                  {pc.category.name}
+                </InfoRow>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {provider.portfolio && provider.portfolio.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiFolder className="mr-3 text-blue-400" size={24} />
               Portafolio
             </h2>
-            <ul>
-              {provider.portfolio.map((item, index) => (
-                <li key={index} className="mb-3">
-                  <p className="text-gray-300">{item.description}</p>
+            {provider.portfolio.map((item, index) => (
+              <div key={index} className="mb-3">
+                <InfoRow icon={FiFileText} label="Descripción">
+                  {item.description}
+                </InfoRow>
+                <InfoRow icon={FiLink} label="Link">
                   <a
                     href={item.link}
                     target="_blank"
@@ -171,22 +203,23 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
                   >
                     {item.link}
                   </a>
-                </li>
-              ))}
-            </ul>
+                </InfoRow>
+              </div>
+            ))}
           </div>
         )}
 
         {provider.grades && provider.grades.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiStar className="mr-3 text-blue-400" size={24} />
               Calificaciones
             </h2>
-            <ul>
-              {provider.grades.map((grade, index) => (
-                <li key={index} className="text-gray-200">⭐ Puntuación: {grade.score}</li>
-              ))}
-            </ul>
+            {provider.grades.map((grade, index) => (
+              <InfoRow key={index} icon={FiStar} label="Puntuación">
+                <span className="text-yellow-400">{grade.score}</span>
+              </InfoRow>
+            ))}
           </div>
         )}
 
