@@ -7,6 +7,8 @@ import EditCustomerForm from './EditCustomerForm'; // Importar el formulario de 
 import { CustomerInterestsManager } from './CustomerInterestsManager'; // Importar el gestor de intereses
 import { InfoItem } from '@/components/ui/InfoItem';
 import { FiMail, FiPhone, FiMapPin, FiCalendar, FiFileText, FiTag, FiUser, FiHash } from 'react-icons/fi';
+import ProfileImageUpdater from '../ProfileImageUpdater';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CustomerInfoProps {
   customer: ICustomer; // El objeto ICustomer detallado que viene de la API
@@ -15,6 +17,7 @@ interface CustomerInfoProps {
 
 const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
 
   const address = customer.address;
   const fullLocation = [
@@ -31,6 +34,10 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
       })
     : 'No disponible';
 
+  const handleImageUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['customerProfile', customer.id_customer] });
+  };
+
   if (isEditing) {
     return (
       <div className="space-y-8">
@@ -46,6 +53,14 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
 
   return (
     <div className="p-6 bg-gray-800 rounded-lg shadow-lg">
+      <div className="flex justify-center mb-8">
+        <ProfileImageUpdater
+          imageUrl={customer.user?.profile_image}
+          userId={user.id_user}
+          onUpdate={handleImageUpdate}
+        />
+      </div>
+
       <h3 className="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Información Personal</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-gray-300">

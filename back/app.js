@@ -28,11 +28,17 @@ const weekRoutes = require('./routes/weekRoutes');
 const hourRoutes = require('./routes/hourRotues');
 const interestRoutes = require('./routes/interestRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const imageUploadRoutes = require('./routes/imageUploadRoutes');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(helmet());
 app.use(cors());
+
+// Servir archivos estáticos desde la carpeta 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), authRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/provider', providerRoutes);
@@ -55,6 +61,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/weeks', weekRoutes);
 app.use('/api/hours', hourRoutes);
 app.use('/api/interests', interestRoutes);
+app.use('/api/upload', imageUploadRoutes);
 
 // Middleware de manejo de errores (debe ser el último)
 app.use(errorHandler);

@@ -11,6 +11,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import InfoRow from '@/components/ui/InfoRow';
 
+import ProfileImageUpdater from '../ProfileImageUpdater';
+import { useQueryClient } from '@tanstack/react-query';
+
 interface PublicProfileContentProps {
   providerId: number;
 }
@@ -18,6 +21,7 @@ interface PublicProfileContentProps {
 const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId }) => {
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [isOwner, setIsOwner] = useState(false);
@@ -28,7 +32,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
     }
   }, [user, providerId]);
 
-  const { data: provider, isLoading, isError, error } = useQuery<IProvider, Error>({
+  const { data: provider, isLoading, isError, error, refetch } = useQuery<IProvider, Error>({
     queryKey: ['providerPublicProfile', providerId],
     queryFn: () => getProfilePublicProvider(providerId.toString()),
     enabled: !!providerId,
@@ -46,6 +50,10 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
     return <div>No se encontró el perfil del proveedor.</div>;
   }
 
+  const handleImageUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+  };
+
   const filteredAvailabilities = selectedDay
     ? provider.availabilities?.filter(
         (availability) => availability.week.name.toLowerCase() === selectedDay.toLowerCase()
@@ -55,6 +63,22 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
   return (
     <div className="min-h-screen bg-gray-800 text-gray-100 py-10 px-4">
       <div className="max-w-2xl mx-auto">
+        <div className="flex justify-center mb-8">
+          {isOwner && user ? (
+            <ProfileImageUpdater
+              imageUrl={provider.user.profile_image}
+              userId={user.id_user}
+              onUpdate={handleImageUpdate}
+            />
+          ) : (
+            <img
+              src={provider.user.profile_image || '/default-avatar.png'}
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-cyan-600 shadow-lg"
+            />
+          )}
+        </div>
+
         <h1 className="text-4xl font-extrabold mb-10 text-center text-white tracking-tight">
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
@@ -91,13 +115,6 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           <InfoRow icon={FiBriefcase} label="Profesión">
             {provider.profession.name}
           </InfoRow>
-          {provider.user.profile_image && (
-            <img
-              src={provider.user.profile_image}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mt-4 border-2 border-cyan-600 shadow-md shadow-cyan-900/40"
-            />
-          )}
         </div>
         {provider.address && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
