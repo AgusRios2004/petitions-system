@@ -152,11 +152,7 @@ export interface IProvider {
     id_grade: number;
     score: number;
   }[]; // grades can be multiple
-  portfolio?: {
-    id_portfolio: number;
-    description: string;
-    link: string;
-  }[];
+  portfolio?: IPortfolioItem[];
   providerCategories?: {
     id_provider_category: number;
     category: {
@@ -264,4 +260,17 @@ export interface UpdateProviderPayload {
   id_profession?: number;
   id_type_provider: number;
   address?: AddressPayload;
+}
+
+export interface IAttachment {
+  path: string; // El nombre del archivo que te devuelve multer
+  name: string;
+}
+
+export interface IPortfolioItem {
+  id_portfolio: number;
+  name: string;
+  description: string;
+  date_crete: Date;
+  attachments: IAttachment[];
 }

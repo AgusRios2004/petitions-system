@@ -210,20 +210,27 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               Portafolio
             </h2>
             {provider.portfolio.map((item, index) => (
-              <div key={index} className="mb-3">
-                <InfoRow icon={FiFileText} label="Descripción">
-                  {item.description}
-                </InfoRow>
-                <InfoRow icon={FiLink} label="Link">
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 underline"
-                  >
-                    {item.link}
-                  </a>
-                </InfoRow>
+              <div key={index} className="mb-6 border-b border-gray-700 pb-4">
+                <h3 className="font-bold text-white text-lg">{item.name}</h3>
+                <p className="text-gray-400 mb-2">{item.description}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {item.attachments && item.attachments.length > 0 ? (
+                    item.attachments.map((file, fileIndex) => (
+                      <a
+                        key={fileIndex}
+                        href={`http://localhost:3001/uploads/portfolio/${file.path}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-slate-700 hover:bg-slate-600 text-cyan-400 px-3 py-1 rounded text-sm flex items-center gap-2 transition-colors"
+                      >
+                        📎 {file.name}
+                      </a>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-xs italic">Sin archivos adjuntos</span>
+                  )}
+                </div>
+                
               </div>
             ))}
           </div>
