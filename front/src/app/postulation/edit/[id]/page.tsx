@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import { IArticle, ICategory } from '@/types/common';
 import { categoryService } from '@/service/categoryService';
 import Link from 'next/link';
+import { ca } from 'zod/v4/locales';
 
 type FormValues = {
   proposal: string;
@@ -72,7 +73,7 @@ export default function EditPostulationPage() {
           setArticles(articlesRes.data);
           setFilteredArticles(articlesRes.data);
         }
-        if (categoriesRes.data) setCategories(categoriesRes.data);
+        if (categoriesRes) setCategories(categoriesRes);
       } catch (error) {
         toast.error('Error al cargar datos maestros.');
       }
@@ -104,7 +105,7 @@ export default function EditPostulationPage() {
   const withdrawMutation = useMutation({
     mutationFn: () => {
       const CANCELED_STATE_ID = 5; //
-      return postulationService.changePostulationState(postulationId, { id_state: CANCELED_STATE_ID, id_user_update: user!.id_user });
+      return postulationService.withdrawPostulation(postulationId, { id_state: CANCELED_STATE_ID, id_user_update: user!.id_user });
     },
     onSuccess: () => {
       toast.success('Te has dado de baja de la postulación.');
@@ -128,6 +129,8 @@ export default function EditPostulationPage() {
   };
 
   if (isPostulationLoading) return <p>Cargando postulación...</p>;
+
+  console.log(categories)
 
   return (
     <div className="container mx-auto p-6">

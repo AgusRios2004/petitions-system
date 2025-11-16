@@ -79,7 +79,7 @@ export default function CreatePetitionPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
     reset,
   } = useForm<PetitionFormValues>({
     resolver: zodResolver(petitionSchema),
@@ -167,6 +167,16 @@ export default function CreatePetitionPage() {
     } catch (err) {
       console.error('Error en el proceso de creación:', err);
       // El toast ya muestra el error específico, no es necesario otro toast aquí.
+    }
+  };
+
+  const handleBackClick = () => {
+    if (isDirty) {
+      if (window.confirm('Tiene cambios sin guardar. ¿Está seguro de que desea volver? Perderá los cambios.')) {
+        router.back();
+      }
+    } else {
+      router.back();
     }
   };
 
@@ -321,10 +331,11 @@ export default function CreatePetitionPage() {
                 </div>
             </div>
         </div>
-
-
         <Button type="submit" disabled={isSubmitting || isAnyDataLoading}>
           {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Crear Petición'}
+        </Button>
+        <Button type="button" variant="secondary" onClick={handleBackClick} disabled={isSubmitting}>
+          Volver
         </Button>
       </form>
     </div>
