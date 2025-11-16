@@ -239,13 +239,13 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           </div>
         )}
 
-        {provider.portfolio && provider.portfolio.length > 0 && (
+        {provider.portfolios && provider.portfolios.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
             <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
               <FiFolder className="mr-3 text-blue-400" size={24} />
               Portafolio
             </h2>
-            {provider.portfolio.map((item, index) => (
+            {provider.portfolios.map((item, index) => (
               <PortfolioCard key={index} item={item} />
             ))}
           </div>

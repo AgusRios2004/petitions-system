@@ -152,7 +152,7 @@ export interface IProvider {
     id_grade: number;
     score: number;
   }[]; // grades can be multiple
-  portfolio?: IPortfolioItem[];
+  portfolios?: IPortfolioItem[];
   providerCategories?: {
     id_provider_category: number;
     category: {
