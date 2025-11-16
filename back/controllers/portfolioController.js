@@ -3,12 +3,11 @@ const { success, error } = require('../middlewares/response');
 
 exports.createPortfolio = async (req, res) => {    
     try {
-        const { id_provider } = req.params;
-        const { name, description } = req.body;
-        const id_user_create = req.user.id_user;
+        const { name, description, providerId } = req.body;
+        const id_user_create = req.user.sub;
 
         const portfolioData = {
-            id_provider: id_provider,
+            id_provider: providerId,
             name: name,
             description: description,
             id_user_create: id_user_create,

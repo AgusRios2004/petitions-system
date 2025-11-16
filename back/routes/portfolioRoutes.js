@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post('/:id_provider', [authRequired, upload.single('portfolioFile')], ctrl.createPortfolio);
+router.post('/', [authRequired, upload.single('image')], ctrl.createPortfolio);
 router.get('/:id_provider', authRequired, ctrl.getPortfoliosByProvider);
 
 module.exports = router;

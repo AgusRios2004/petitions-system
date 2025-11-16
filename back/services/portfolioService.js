@@ -17,9 +17,11 @@ class PortfolioService {
         const newPortfolio = await Portfolio.create(data);
 
         if(fileData){
-            await attachmentService.create({
-                ...fileData,
-                id_portfolio: newPortfolio.id_portfolio
+            await attachmentService.createAttachment({
+                name: fileData.originalname,
+                path: fileData.filename,
+                id_portfolio: newPortfolio.id_portfolio,
+                id_user_create: data.id_user_create
             });
         }
 
