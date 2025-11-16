@@ -41,3 +41,15 @@ exports.getPortfoliosByProvider = async (req, res) => {
         error(res, "Error al obtener los porfolio", 500, e)
     }
 }
+
+exports.deletePortfolio = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {id_provider} = req.body;
+        await portfolioService.deletePortfolio(id, id_provider);
+        success(res, null, "Borrado exitosamente", 200);
+    } catch (e) {
+        console.error("Error: ", e);
+        error(res, e.message, 500, e);
+    }
+}

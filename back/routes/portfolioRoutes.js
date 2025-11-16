@@ -19,5 +19,6 @@ const upload = multer({ storage: storage });
 
 router.post('/', [authRequired, upload.single('image')], ctrl.createPortfolio);
 router.get('/:id_provider', authRequired, ctrl.getPortfoliosByProvider);
+router.delete('/:id', authRequired, ctrl.deletePortfolio);
 
 module.exports = router;
