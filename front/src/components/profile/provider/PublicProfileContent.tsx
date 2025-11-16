@@ -2,17 +2,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiBriefcase, FiTag, FiMapPin, FiCalendar, FiClock, FiGrid, FiFolder, FiStar, FiFileText, FiLink } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiTag, FiMapPin, FiCalendar, FiClock, FiGrid, FiFolder, FiStar, FiFileText, FiLink, FiDownload } from 'react-icons/fi';
 import { useQuery } from '@tanstack/react-query';
 import { getProfilePublicProvider } from '@/service/providerService';
-import { IProvider, IAvailability } from '@/types/common';
+import { IProvider, IAvailability, IPortfolioItem } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import InfoRow from '@/components/ui/InfoRow';
+import AddPortfolioButton from '@/components/portfolio/AddPortfolioButton';
 
 import ProfileImageUpdater from '../ProfileImageUpdater';
 import { useQueryClient } from '@tanstack/react-query';
+
+interface PortfolioCardProps {
+  item: IPortfolioItem;
+}
+
+const PortfolioCard: React.FC<PortfolioCardProps> = ({ item }) => {
+  return (
+      <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+          <h3 className="font-bold text-white text-lg">{item.name}</h3>
+          <p className="text-gray-400 mb-2">{item.description}</p>
+          <div className="flex flex-wrap gap-2 mt-2">
+              {item.attachments && item.attachments.length > 0 ? (
+                  item.attachments.map((file, fileIndex) => (
+                      <a
+                          key={fileIndex}
+                          href={`http://localhost:3001/uploads/${file.path}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-slate-700 hover:bg-slate-600 text-cyan-400 px-3 py-1 rounded text-sm flex items-center gap-2 transition-colors"
+                      >
+                          <FiFileText />
+                          {file.name}
+                          <FiDownload className="ml-2" />
+                      </a>
+                  ))
+              ) : (
+                  <span className="text-gray-500 text-xs italic">Sin archivos adjuntos</span>
+              )}
+          </div>
+      </div>
+  );
+};
 
 interface PublicProfileContentProps {
   providerId: number;
@@ -87,12 +120,15 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
 
         <div className="flex justify-end items-center gap-4 mb-8">
           {isOwner ? (
-            <Button
-              onClick={() => router.push('/profile/edit')}
-              className="!bg-blue-600 !hover:bg-blue-700"
-            >
-              Editar Perfil
-            </Button>
+            <>
+              <AddPortfolioButton providerId={providerId} />
+              <Button
+                onClick={() => router.push('/profile/edit')}
+                className="!bg-blue-600 !hover:bg-blue-700"
+              >
+                Editar Perfil
+              </Button>
+            </>
           ) : user?.customer ? (
             <a
               href={`/provider/${providerId}/postulations`}
@@ -210,28 +246,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               Portafolio
             </h2>
             {provider.portfolio.map((item, index) => (
-              <div key={index} className="mb-6 border-b border-gray-700 pb-4">
-                <h3 className="font-bold text-white text-lg">{item.name}</h3>
-                <p className="text-gray-400 mb-2">{item.description}</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {item.attachments && item.attachments.length > 0 ? (
-                    item.attachments.map((file, fileIndex) => (
-                      <a
-                        key={fileIndex}
-                        href={`http://localhost:3001/uploads/portfolio/${file.path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-slate-700 hover:bg-slate-600 text-cyan-400 px-3 py-1 rounded text-sm flex items-center gap-2 transition-colors"
-                      >
-                        📎 {file.name}
-                      </a>
-                    ))
-                  ) : (
-                    <span className="text-gray-500 text-xs italic">Sin archivos adjuntos</span>
-                  )}
-                </div>
-                
-              </div>
+              <PortfolioCard key={index} item={item} />
             ))}
           </div>
         )}
