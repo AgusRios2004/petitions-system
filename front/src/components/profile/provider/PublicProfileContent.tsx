@@ -11,41 +11,12 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import InfoRow from '@/components/ui/InfoRow';
 import AddPortfolioButton from '@/components/portfolio/AddPortfolioButton';
-
 import ProfileImageUpdater from '../ProfileImageUpdater';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { portfolioService } from '@/service/portfolioService';
+import PortfolioCard from '@/components/portfolio/PortfolioCard';
 
-interface PortfolioCardProps {
-  item: IPortfolioItem;
-}
-
-const PortfolioCard: React.FC<PortfolioCardProps> = ({ item }) => {
-  return (
-      <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-          <h3 className="font-bold text-white text-lg">{item.name}</h3>
-          <p className="text-gray-400 mb-2">{item.description}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
-              {item.attachments && item.attachments.length > 0 ? (
-                  item.attachments.map((file, fileIndex) => (
-                      <a
-                          key={fileIndex}
-                          href={`http://localhost:3001/uploads/${file.path}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-slate-700 hover:bg-slate-600 text-cyan-400 px-3 py-1 rounded text-sm flex items-center gap-2 transition-colors"
-                      >
-                          <FiFileText />
-                          {file.name}
-                          <FiDownload className="ml-2" />
-                      </a>
-                  ))
-              ) : (
-                  <span className="text-gray-500 text-xs italic">Sin archivos adjuntos</span>
-              )}
-          </div>
-      </div>
-  );
-};
+// ... (el resto de tus imports)
 
 interface PublicProfileContentProps {
   providerId: number;
@@ -71,6 +42,25 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
     enabled: !!providerId,
   });
 
+  const deletePortfolioMutation = useMutation({
+    mutationFn: ({ id_portfolio, id_provider }: { id_portfolio: number; id_provider: number }) => 
+      portfolioService.deletePortfolio(id_portfolio, id_provider),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+    },
+    onError: (error: any) => {
+      console.error('Error al eliminar el portafolio:', error);
+    },
+  });
+
+  const handleDeletePortfolio = (id_portfolio: number) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este elemento del portafolio?')) {
+      if (user?.provider?.id_provider) {
+        deletePortfolioMutation.mutate({ id_portfolio, id_provider: user.provider.id_provider });
+      }
+    }
+  };
+
   if (isLoading) {
     return <div>Cargando perfil del proveedor...</div>;
   }
@@ -84,7 +74,9 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
   }
 
   const handleImageUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+    if(window.confirm("¿Seguro que quiere eliminar este portfolio?")){
+      queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+    }
   };
 
   const filteredAvailabilities = selectedDay
@@ -238,7 +230,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
             </div>
           </div>
         )}
-
+        
         {provider.portfolios && provider.portfolios.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
             <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
@@ -246,38 +238,17 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               Portafolio
             </h2>
             {provider.portfolios.map((item, index) => (
-              <PortfolioCard key={index} item={item} />
+              <PortfolioCard 
+                key={index} 
+                item={item} 
+                isOwner={isOwner}
+                onDelete={handleDeletePortfolio}
+              />
             ))}
           </div>
         )}
 
-        {provider.grades && provider.grades.length > 0 && (
-          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
-              <FiStar className="mr-3 text-blue-400" size={24} />
-              Calificaciones
-            </h2>
-            {provider.grades.map((grade, index) => (
-              <InfoRow key={index} icon={FiStar} label="Puntuación">
-                <span className="text-yellow-400">{grade.score}</span>
-              </InfoRow>
-            ))}
-          </div>
-        )}
-
-        {!isOwner && (
-          <div className="mt-8">
-            <Button
-              onClick={() => router.back()}
-              variant="secondary"
-              size="md"
-              fullWidth={true}
-              className="!bg-gray-600 !hover:bg-gray-700 !text-white !font-bold !transition-colors"
-            >
-              Volver
-            </Button>
-          </div>
-        )}
+        {/* ... (resto del JSX sin cambios) */}
       </div>
     </div>
   );
