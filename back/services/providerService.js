@@ -143,7 +143,10 @@ class ProviderService {
                     association: 'grades',
                     include: ['userCreate', 'grades']
                 },
-                'portfolios'
+                {
+                    association: 'portfolios',
+                    include: ['attachments']
+                }
             ],
         });
     }
