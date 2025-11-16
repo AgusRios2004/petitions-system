@@ -27,6 +27,7 @@ const availabilityRoutes = require('./routes/availabilityRoutes');
 const weekRoutes = require('./routes/weekRoutes');
 const hourRoutes = require('./routes/hourRotues');
 const interestRoutes = require('./routes/interestRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const imageUploadRoutes = require('./routes/imageUploadRoutes');
 const path = require('path');
@@ -70,6 +71,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/weeks', weekRoutes);
 app.use('/api/hours', hourRoutes);
 app.use('/api/interests', interestRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/upload', imageUploadRoutes);
 
 // Middleware de manejo de errores (debe ser el último)
