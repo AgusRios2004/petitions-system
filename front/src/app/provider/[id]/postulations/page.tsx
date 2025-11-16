@@ -86,7 +86,7 @@ const ProviderPostulationsPage: React.FC = () => {
               {postulations.map((postulation) => (
                 <div key={postulation.id_postulation} className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
                   <h3 className="text-xl font-semibold mb-2 text-cyan-400">
-                    Postulación a: {postulation.petition.description}
+                    Postulación a: {postulation.petition?.description}
                   </h3>
                   <p className="text-gray-300 mb-2">
                     <strong className="text-white">Propuesta:</strong> {postulation.proposal}
@@ -97,9 +97,11 @@ const ProviderPostulationsPage: React.FC = () => {
                   <p className="text-gray-300 mb-2">
                     <strong className="text-white">Estado:</strong> {postulation.states.state}
                   </p>
-                  <Link href={`/petition/${postulation.petition.id_petition}`} className="text-cyan-400 hover:text-cyan-300 underline">
-                    Ver Detalles de la Petición
-                  </Link>
+                  {postulation.petition && (
+                    <Link href={`/petition/${postulation.petition.id_petition}`} className="text-cyan-400 hover:text-cyan-300 underline">
+                      Ver Detalles de la Petición
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

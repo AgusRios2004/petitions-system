@@ -16,11 +16,15 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
     <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
       <div className="flex justify-between items-start">
         <div>
-          <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-lg font-semibold text-white hover:underline">
-            <p className="text-lg font-semibold text-white">
+          {postulation.createdBy?.provider?.id_provider ? (
+            <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-lg font-semibold text-white hover:underline">
               {postulation.createdBy.name} {postulation.createdBy.lastname}
+            </Link>
+          ) : (
+            <p className="text-lg font-semibold text-white">
+              {postulation.createdBy?.name} {postulation.createdBy?.lastname}
             </p>
-          </Link>
+          )}
           <p className="text-sm text-gray-300 mt-2">{postulation.petition.description}</p>
           <p className="text-sm text-gray-200 mt-1">Propuesta: {postulation.proposal}</p>
           <p className="text-sm font-bold text-white mt-1">Costo: ${postulation.cost}</p>

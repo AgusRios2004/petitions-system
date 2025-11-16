@@ -248,7 +248,31 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           </div>
         )}
 
-        {/* ... (resto del JSX sin cambios) */}
+        {provider.grades && provider.grades.length > 0 && (
+          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiStar className="mr-3 text-blue-400" size={24} />
+              Calificaciones
+            </h2>
+            {provider.grades.map((grade, index) => (
+              <InfoRow key={index} icon={FiStar} label="Puntuación">
+                <span className="text-yellow-400">{grade.score}</span>
+              </InfoRow>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-8">
+          <Button
+            onClick={() => router.back()}
+            variant="secondary"
+            size="md"
+            fullWidth={true}
+            className="!bg-gray-600 !hover:bg-gray-700 !text-white !font-bold !transition-colors"
+          >
+            Volver
+          </Button>
+        </div>
       </div>
     </div>
   );
