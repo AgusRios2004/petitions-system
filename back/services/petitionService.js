@@ -1,4 +1,4 @@
-const { Petition, Customer, sequelize } = require('../models');
+const { Petition, Customer, sequelize, Postulation, State } = require('../models');
 const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
 const { Op } = require('sequelize');
 
@@ -17,7 +17,14 @@ class PetitionService {
 
         return await Petition.findAndCountAll({
             where,
-            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider'],
+            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider', {
+                model: Postulation,
+                as: 'postulations',
+                include : [{
+                    model: State,
+                    as: 'states',
+                }]
+            }],
             limit,
             offset,
             order: [[sortBy, order]]
