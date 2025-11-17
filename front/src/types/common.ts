@@ -273,3 +273,19 @@ export interface IProviderCategory {
   id: number;
   category: ICategory;
 }
+
+export interface IGradeForm {
+  id_provider?: number;
+  id_customer?: number;
+  commetn: string;
+  grade_number: number;
+};
+
+export interface IGrade {
+  id_grade: number;
+  id_provider?: number;
+  id_customer?: number;
+  comment: string;
+  grade_number: number;
+  date_create: string;
+};
