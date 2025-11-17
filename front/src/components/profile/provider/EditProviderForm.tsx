@@ -21,10 +21,13 @@ import { UpdateProviderPayload, IUser } from '@/types/common';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { categoryService } from '@/service/categoryService';
 
-const completeProviderProfileSchema = providerProfileSchema.merge(userProfileSchema).merge(addressSchema);
+const completeProviderProfileSchema = providerProfileSchema.merge(userProfileSchema).merge(addressSchema).extend({
+  categoryIds: z.array(z.number()).min(1, "Debes seleccionar al menos una categoría"), // Y la lista no puede estar vacía.
+});
+
 type CompleteProviderProfileFormData = z.infer<typeof completeProviderProfileSchema>;
-
 
 const EditProviderForm = ({ providerId }: { providerId: number }) => {
   const queryClient = useQueryClient();
@@ -56,6 +59,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
       id_city: 0,
       id_type_provider: 0,
       id_profession: 0,
+      categoryIds: [],
     }
   });
 
@@ -76,6 +80,12 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
   });
   const professions = professionsResponse.data || [];
 
+  const { data: categoriesResponse =  {data: [], error: null } } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoryService.getAllCategories
+  })
+  const allCategories = categoriesResponse || [];
+
   // 5. Poblar el formulario y manejar cascada
   useEffect(() => {
     if (providerData) {
@@ -95,6 +105,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
       setValue('id_city', p.address?.city?.id_city || 0);
       setValue('id_type_provider', p.typeProvider?.id_type_provider || 0);
       setValue('id_profession', p.profession?.id_profession || 0);
+      setValue('categoryIds', p.providerCategories?.map(pc => pc.category.id_category) || []);
       
       setTimeout(() => {
         isInitialLoad.current = false;
@@ -176,9 +187,6 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
 
   if (isLoadingProvider) return <p className="text-white">Cargando perfil...</p>;
   if (isError) return <p className="text-red-500">Error al cargar el perfil.</p>;
-
-  console.log(provinces)
-  console.log(departments)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800 p-6 rounded-lg shadow-lg">

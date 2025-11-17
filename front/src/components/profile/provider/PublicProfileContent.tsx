@@ -15,8 +15,7 @@ import ProfileImageUpdater from '../ProfileImageUpdater';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { portfolioService } from '@/service/portfolioService';
 import PortfolioCard from '@/components/portfolio/PortfolioCard';
-
-// ... (el resto de tus imports)
+import { ProviderCategoriesManager } from './ProviderCategoriesManager';
 
 interface PublicProfileContentProps {
   providerId: number;
@@ -74,10 +73,10 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
   }
 
   const handleImageUpdate = () => {
-    if(window.confirm("¿Seguro que quiere eliminar este portfolio?")){
-      queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
-    }
+    queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
   };
+  
+  console.log(provider.providerCategories)
 
   const filteredAvailabilities = selectedDay
     ? provider.availabilities?.filter(
@@ -185,14 +184,14 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               onChange={(e) => setSelectedDay(e.target.value)}
               className="block w-full p-2 mb-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-400 focus:ring-cyan-500 focus:border-cyan-500"
             >
-              <option value="">Todos los días</option>
-              <option value="Lunes">Lunes</option>
-              <option value="Martes">Martes</option>
-              <option value="Miércoles">Miércoles</option>
-              <option value="Jueves">Jueves</option>
-              <option value="Viernes">Viernes</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
+              <option key="all" value="">Todos los días</option>
+              <option key="monday" value="Lunes">Lunes</option>
+              <option key="tuesday" value="Martes">Martes</option>
+              <option key="wednesday" value="Miércoles">Miércoles</option>
+              <option key="thursday" value="Jueves">Jueves</option>
+              <option key="friday" value="Viernes">Viernes</option>
+              <option key="saturday" value="Sábado">Sábado</option>
+              <option key="sunday" value="Domingo">Domingo</option>
             </select>
           </div>
         )}
@@ -215,21 +214,25 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
         </div>
       )}
 
-        {provider.providerCategories && provider.providerCategories.length > 0 && (
-          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
-              <FiGrid className="mr-3 text-blue-400" size={24} />
-              Categorías
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              {provider.providerCategories.map((pc) => (
-                <InfoRow key={pc.id_provider_category} icon={FiTag} label="Categoría">
-                  {pc.category.name}
-                </InfoRow>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+            <FiGrid className="mr-3 text-blue-400" size={24} />
+            Categorías
+          </h2>
+          {isOwner ? (
+            <ProviderCategoriesManager providerId={provider.id_provider} currentCategories={provider.providerCategories || []} />
+          ) : (
+            provider.providerCategories && provider.providerCategories.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {provider.providerCategories.map((pc) => (
+                  <InfoRow key={pc.id} icon={FiTag} label="Categoría">
+                    {pc.category.name}
+                  </InfoRow>
+                ))}
+              </div>
+            )
+          )}
+        </div>
         
         {provider.portfolios && provider.portfolios.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
@@ -237,9 +240,9 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               <FiFolder className="mr-3 text-blue-400" size={24} />
               Portafolio
             </h2>
-            {provider.portfolios.map((item, index) => (
+            {provider.portfolios.map((item) => (
               <PortfolioCard 
-                key={index} 
+                key={item.id_portfolio} 
                 item={item} 
                 isOwner={isOwner}
                 onDelete={handleDeletePortfolio}
@@ -254,8 +257,8 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               <FiStar className="mr-3 text-blue-400" size={24} />
               Calificaciones
             </h2>
-            {provider.grades.map((grade, index) => (
-              <InfoRow key={index} icon={FiStar} label="Puntuación">
+            {provider.grades.map((grade) => (
+              <InfoRow key={grade.id_grade} icon={FiStar} label="Puntuación">
                 <span className="text-yellow-400">{grade.score}</span>
               </InfoRow>
             ))}

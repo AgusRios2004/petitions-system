@@ -153,13 +153,7 @@ export interface IProvider {
     score: number;
   }[]; // grades can be multiple
   portfolios?: IPortfolioItem[];
-  providerCategories?: {
-    id_provider_category: number;
-    category: {
-      id_category: number;
-      name: string;
-    };
-  }[];
+  providerCategories?: IProviderCategory[];
 }
 
 export interface IUser {
@@ -273,4 +267,9 @@ export interface IPortfolioItem {
   description: string;
   date_crete: Date;
   attachments: IAttachment[];
+}
+
+export interface IProviderCategory {
+  id: number;
+  category: ICategory;
 }
