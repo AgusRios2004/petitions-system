@@ -126,15 +126,13 @@ export default function CreatePostulationPage() {
           </div>
 
           {/* Costo total */}
-          <div>
-            <Label className="font-semibold">Costo total</Label>
             <Input
               type="number"
+              label="Costo total"
               {...register('cost', { valueAsNumber: true })}
               placeholder="Costo total de la propuesta"
               variant="white"
             />
-          </div>
 
           {/* Artículos */}
           <div>
@@ -172,9 +170,9 @@ export default function CreatePostulationPage() {
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.quantity`} className="text-sm">Cantidad</Label>
                   <Input
                     type="number"
+                    label="Cantidad"
                     {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
                     placeholder="Ej: 10"
                     variant="white"
@@ -182,9 +180,9 @@ export default function CreatePostulationPage() {
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.cost`} className="text-sm">Costo</Label>
                   <Input
                     type="number"
+                    label="Costo"
                     {...register(`articles.${index}.cost`, { valueAsNumber: true })}
                     placeholder="Ej: 2500"
                     variant="white"

@@ -37,6 +37,7 @@ export default function EditPostulationPage() {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [filteredArticles, setFilteredArticles] = useState<IArticle[]>([]);
+  const [isMasterDataLoading, setIsMasterDataLoading] = useState(true);
 
   const { data: postulationData, isLoading: isPostulationLoading } = useQuery({
     queryKey: ['postulation', postulationId],
@@ -64,6 +65,7 @@ export default function EditPostulationPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsMasterDataLoading(true);
       try {
         const [articlesRes, categoriesRes] = await Promise.all([
           articleService.getAllArticles(),
@@ -76,6 +78,8 @@ export default function EditPostulationPage() {
         if (categoriesRes) setCategories(categoriesRes);
       } catch (error) {
         toast.error('Error al cargar datos maestros.');
+      } finally {
+        setIsMasterDataLoading(false);
       }
     };
     fetchData();
@@ -104,8 +108,7 @@ export default function EditPostulationPage() {
 
   const withdrawMutation = useMutation({
     mutationFn: () => {
-      const CANCELED_STATE_ID = 5; //
-      return postulationService.withdrawPostulation(postulationId, { id_state: CANCELED_STATE_ID, id_user_update: user!.id_user });
+      return postulationService.withdrawPostulation(postulationId, { id_user_update: user!.id_user });
     },
     onSuccess: () => {
       toast.success('Te has dado de baja de la postulación.');
@@ -128,7 +131,7 @@ export default function EditPostulationPage() {
     }
   };
 
-  if (isPostulationLoading) return <p>Cargando postulación...</p>;
+  if (isPostulationLoading || isMasterDataLoading) return <p>Cargando postulación...</p>;
 
   console.log(categories)
 
@@ -148,8 +151,7 @@ export default function EditPostulationPage() {
           </div>
 
           <div>
-            <Label className="font-semibold">Costo total</Label>
-            <Input type="number" variant='white' {...register('cost', { valueAsNumber: true })} />
+            <Input type="number" label="Costo total" variant='white' {...register('cost', { valueAsNumber: true })} />
           </div>
 
           <div>
@@ -177,7 +179,7 @@ export default function EditPostulationPage() {
                     className="p-2 border rounded w-full bg-white text-gray-900"
                   >
                     <option value="0" disabled>Seleccione un artículo</option>
-                    {[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)!])].filter(Boolean).map((a) => (
+                    {[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)])].filter(Boolean).map((a) => (
                       <option key={a.id_article} value={a.id_article}>
                         {a.name}
                       </option>
@@ -185,9 +187,9 @@ export default function EditPostulationPage() {
                   </select>
                 </div>
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.quantity`} className="text-sm">Cantidad</Label>
                   <Input
                     type="number"
+                    label="Cantidad"
                     {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
                     placeholder="Ej: 10"
                     variant="white"
@@ -195,9 +197,9 @@ export default function EditPostulationPage() {
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.cost`} className="text-sm">Costo</Label>
                   <Input
                     type="number"
+                    label="Costo"
                     {...register(`articles.${index}.cost`, { valueAsNumber: true })}
                     placeholder="Ej: 2500"
                     variant="white"
