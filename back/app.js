@@ -74,7 +74,12 @@ app.use('/api/interests', interestRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/upload', imageUploadRoutes);
 
-// Middleware de manejo de errores (debe ser el último)
+app.use('/api/week', require('./routes/weekRoutes'));
+
+// Provider-Category routes
+app.use('/api/provider-category', require('./routes/providerCategoryRoutes'));
+
+// Middleware para manejo de errores
 app.use(errorHandler);
 
 (async () => {
