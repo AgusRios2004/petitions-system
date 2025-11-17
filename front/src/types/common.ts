@@ -26,16 +26,19 @@ export interface Country {
 export interface Province {
     id_province: number;
     name: string;
+    country: Country;
 };
 
 export interface Department {
     id_department: number;
     name: string;
+    province: Province;
 };
 
 export interface City {
     id_city: number;
     name: string;
+    department: Department;
 };
 
 export interface IArticle {
@@ -105,31 +108,8 @@ export interface IPostulation {
     };
   };
   inventories: IInventory[];
+  id_provider: number;
 }
-
-export interface IAvailability {
-  id_availability: number;
-  provider: {
-    id_provider: number,
-    user: {
-      id_user: number,
-      name: string,
-      lastname: string,
-    },
-  },
-  week: {
-    id_week: number,
-    name: string,
-  },
-  fromHour: {
-    id_hour: number,
-    name: string,
-  },
-  untilHour: {
-    id_hour: number,
-    name: string,
-  },
-};
 
 export interface IWeek {
   id_week: number;
@@ -139,4 +119,157 @@ export interface IWeek {
 export interface IHour {
   id_hour: number;
   name: string;
+}
+
+// New IAddress interface
+export interface IAddress {
+  id_address: number;
+  street: string;
+  number: string;
+  floor?: string;
+  apartment?: string;
+  postal_code: string;
+  city: City; // Use the existing City interface
+}
+
+// Updated IAvailability interface (removed provider field)
+export interface IAvailability {
+  id_availability: number;
+  week: IWeek;
+  fromHour: IHour;
+  untilHour: IHour;
+};
+
+// Updated IProvider interface
+export interface IProvider {
+  id_provider: number;
+  user: IUser;
+  typeProvider: TypeProvider;
+  profession: Profession;
+  address: IAddress; // Use the new IAddress interface
+  availabilities?: IAvailability[]; // Now an array of IAvailability
+  grades?: {
+    id_grade: number;
+    score: number;
+  }[]; // grades can be multiple
+  portfolios?: IPortfolioItem[];
+  providerCategories?: IProviderCategory[];
+}
+
+export interface IUser {
+  id_user: number;
+  name: string;
+  email: string;
+  lastname: string;
+  profile_image?: string | null;
+  role_id?: number; 
+  date_create: string;
+}
+
+export interface IGender {
+  id_gender: number;
+  gender: string;
+}
+
+export interface IInterest {
+  id_interest: number;
+  category: ICategory;
+}
+
+export interface IPetition {
+  id_petition: number;
+  id_customer: number;
+  description: string;
+}
+
+export interface ICustomer {
+  id_customer: number;
+  user_id: number;
+  dni: string;
+  phone: string;
+  id_gender: number;
+  gender: IGender;
+  interests: IInterest[]; // Changed from singular 'interest' to plural 'interests'
+  address: IAddress;
+  petitions: IPetition[];
+  user: IUser;
+}
+
+export interface IProfile extends IUser {
+  customer?: ICustomer;
+  provider?: IProvider;
+}
+
+export interface UserProfile {
+  id_user: number; 
+  name: string;
+  lastname: string;
+  email: string;
+  address: {
+    address: IAddress;
+  };
+  customer: ICustomer | null;
+  provider: {
+    id_provider: number;
+  } | null;
+  profile_picture_url?: string | null;
+  role: 'customer' | 'provider' | 'admin' | 'unknown';
+  is_staff?: boolean | number
+}
+
+export interface ProfileFormData {
+  dni: string;
+  phone: string;
+  id_gender: number;
+  address: {
+    id_address: number;
+    street: string;
+    number: string;
+    floor?: string;
+    apartment?: string;
+    postal_code: string;
+    id_city: number;
+  };
+}
+
+export interface AddressPayload {
+  id_address?: number;
+  street: string;
+  number: string;
+  floor?: string;
+  apartment?: string;
+  postal_code: string;
+  id_city: number;
+}
+
+export interface UpdateCustomerPayload {
+  dni: string;
+  phone: string;
+  address: AddressPayload;
+  id_interest?: number;
+}
+
+export interface UpdateProviderPayload {
+  description?: string;
+  id_profession?: number;
+  id_type_provider: number;
+  address?: AddressPayload;
+}
+
+export interface IAttachment {
+  path: string; // El nombre del archivo que te devuelve multer
+  name: string;
+}
+
+export interface IPortfolioItem {
+  id_portfolio: number;
+  name: string;
+  description: string;
+  date_crete: Date;
+  attachments: IAttachment[];
+}
+
+export interface IProviderCategory {
+  id: number;
+  category: ICategory;
 }

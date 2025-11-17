@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
     }, {
-        tableName: 'n_provider_category',
+        tableName: 'n_provider_cateogory',
         timestamps: false,
     });
     ProviderCategory.associate = (models) => {

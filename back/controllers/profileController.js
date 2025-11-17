@@ -1,5 +1,6 @@
 const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
+const UserService = require('../services/userService');
 
 exports.createProfile = async (req, res) => {
     try {
@@ -72,3 +73,27 @@ exports.getProfile = async (req, res) => {
         return error(res, 'Error obteniendo el perfil');
     }
 };
+
+exports.updateUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { name, lastname, email, profile_image } = req.body;
+
+        const dataToUpdate = {};
+        if (name) dataToUpdate.name = name;
+        if (lastname) dataToUpdate.lastname = lastname;
+        if (email) dataToUpdate.email = email;
+        if (profile_image) dataToUpdate.profile_image = profile_image;
+
+        if (Object.keys(dataToUpdate).length === 0) {
+            return error(res, "No se proporcionaron datos para actualizar.", 400);
+        }
+        
+        const updatedUser = await UserService.updateUser(userId, dataToUpdate);
+
+        return success(res, updatedUser, "Usuario modificado correctamente");
+    } catch (e) {
+        console.error(e);
+        return error(res, e.message, 500, e);
+    }
+}

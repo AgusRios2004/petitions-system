@@ -26,12 +26,29 @@ const articleRoutes = require('./routes/articleRoutes');
 const availabilityRoutes = require('./routes/availabilityRoutes');
 const weekRoutes = require('./routes/weekRoutes');
 const hourRoutes = require('./routes/hourRotues');
+const interestRoutes = require('./routes/interestRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const imageUploadRoutes = require('./routes/imageUploadRoutes');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(helmet());
-app.use(cors());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
+
+// Servir archivos estáticos desde la carpeta 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), authRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/provider', providerRoutes);
@@ -53,8 +70,16 @@ app.use('/api/article', articleRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/weeks', weekRoutes);
 app.use('/api/hours', hourRoutes);
+app.use('/api/interests', interestRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/upload', imageUploadRoutes);
 
-// Middleware de manejo de errores (debe ser el último)
+app.use('/api/week', require('./routes/weekRoutes'));
+
+// Provider-Category routes
+app.use('/api/provider-category', require('./routes/providerCategoryRoutes'));
+
+// Middleware para manejo de errores
 app.use(errorHandler);
 
 (async () => {

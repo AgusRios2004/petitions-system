@@ -100,6 +100,8 @@ export default function PostulationDetailPage() {
   const isOwner = user?.customer?.id_customer === postulation.petition.customers.id_customer;
   const isPostulationUneditable = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4;
 
+  console.log('Postulation Data:', postulation);
+
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -115,6 +117,9 @@ export default function PostulationDetailPage() {
           <div>
             <p className="text-gray-600 text-sm">Propuesta:</p>
             <p className="text-gray-800">{postulation.proposal}</p>
+            <Link href={`/provider/${postulation.id_provider}`}>
+              <Button variant="secondary" className="mt-4">Ver Perfil del Proveedor</Button>
+            </Link>
           </div>
 
           <div>

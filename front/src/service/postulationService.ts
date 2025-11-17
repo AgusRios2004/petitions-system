@@ -80,5 +80,15 @@ export const postulationService = {
             console.error("Error: ", e);
             throw e;
         }
+    },
+
+    getPostulationsByProvider: async (providerId: string, status?: string) => {
+        try {
+            const response = await apiClient.get('/postulation', { params: { id_provider: providerId, id_state: status } });
+            return response.data.data;
+        } catch (e) {
+            console.error("Error: ", e);
+            throw e;
+        }
     }
 };

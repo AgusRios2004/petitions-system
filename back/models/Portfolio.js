@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
+        Portfolio.hasMany(models.Attachment, {
+            foreignKey: 'id_portfolio',
+            as: 'attachments' // Importante: así se llamará el campo en el JSON
+        });
     }
     return Portfolio;
 }

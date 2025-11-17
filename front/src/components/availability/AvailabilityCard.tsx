@@ -19,11 +19,12 @@ interface Availability {
 
 interface AvailabilityCardProps {
   availability: Availability;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  showControls?: boolean;
 }
 
-const AvailabilityCard: React.FC<AvailabilityCardProps> = ({ availability, onEdit, onDelete }) => {
+const AvailabilityCard: React.FC<AvailabilityCardProps> = ({ availability, onEdit, onDelete, showControls = true }) => {
   return (
     <div className="bg-gray-700 p-6 rounded-lg shadow-md flex flex-col justify-between transition-all duration-200 ease-in-out hover:bg-gray-600 hover:scale-105 max-w-xs"> 
       <div>
@@ -35,22 +36,24 @@ const AvailabilityCard: React.FC<AvailabilityCardProps> = ({ availability, onEdi
           <strong>Hora hasta: </strong> {availability.untilHour.name}
         </p>
       </div>
-      <div className="flex justify-end mt-4 space-x-2">
-        <Button 
-          onClick={() => onEdit(availability.id_availability)}
-          variant="primary"
-          size="sm"
-        >
-          Editar
-        </Button>
-        <Button 
-          onClick={() => onDelete(availability.id_availability)}
-          variant="destructive"
-          size="sm"
-        >
-          Eliminar
-        </Button>
-      </div>
+      {showControls && onEdit && onDelete && (
+        <div className="flex justify-end mt-4 space-x-2">
+          <Button 
+            onClick={() => onEdit(availability.id_availability)}
+            variant="primary"
+            size="sm"
+          >
+            Editar
+          </Button>
+          <Button 
+            onClick={() => onDelete(availability.id_availability)}
+            variant="destructive"
+            size="sm"
+          >
+            Eliminar
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

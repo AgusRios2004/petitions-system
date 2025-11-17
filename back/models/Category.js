@@ -8,25 +8,9 @@ module.exports = (sequelize, DataTypes) => {
         name: {
             type: DataTypes.STRING(100),
             allowNull: false,
-        },
-        id_user_create: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        id_user_update: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        date_create: {
-            type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
-        },
-        date_update: {
-            type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
-        },
+        }
     }, {
-        tableName: 'category',
+        tableName: 'n_category',
         timestamps: false,
     });
     
@@ -34,14 +18,6 @@ module.exports = (sequelize, DataTypes) => {
         Category.hasMany(models.Article, {
             foreignKey: 'id_category',
             as: 'articles',
-        });
-        Category.belongsTo(models.User, {
-            foreignKey: 'id_user_create',
-            as: 'createdBy',
-        });
-        Category.belongsTo(models.User, {
-            foreignKey: 'id_user_update',
-            as: 'updatedBy',
         });
         Category.hasMany(models.ProviderCategory, {
             foreignKey: 'category_id',

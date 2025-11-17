@@ -7,14 +7,17 @@ exports.getAllPostulations = async (req, res) => {
         const { id_state, id_customer, id_petition, id_provider } = req.query;
         const { is_staff, is_superuser, sub: userId } = req.user;
 
+        // A request for a provider's public history is identified by id_provider and id_state === '1' (Accepted)
+        const isPublicHistoryRequest = id_provider && id_state === '1' && !id_petition;
+
         const filter = {};
         if (id_state) filter.id_state = id_state;
         if (id_customer) filter.id_customer = id_customer;
         if (id_petition) filter.id_petition = id_petition;
         if (id_provider) filter.id_provider = id_provider;
 
-        // If user is not staff/superuser, they can only see postulations for their own petitions.
-        if (!is_staff && !is_superuser) {
+        // If user is not staff/superuser AND it's NOT a public history request, apply original security check.
+        if (!is_staff && !is_superuser && !isPublicHistoryRequest) {
             if (!id_petition) {
                 // if no petition id is provided, we can't check ownership, so return nothing
                 return success(res, []);

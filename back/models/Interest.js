@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER(11),
             allowNull: false,
         },
+        is_deleted: {
+            type: DataTypes.INTEGER(11),
+            allowNull: false,
+        },
         id_user_create: {
             type: DataTypes.INTEGER(11),
             allowNull: false,
@@ -30,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
     }, {
-        tableName: 'interest',
+        tableName: 'n_interest',
         timestamps: false,
     });
 

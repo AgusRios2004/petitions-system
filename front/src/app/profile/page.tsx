@@ -4,17 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
-interface UserProfile {
-  id_user: number;
-  name: string;
-  lastname: string;
-  email: string;
-  customer: { id_customer: number; } | null;
-  provider: { id_provider: number; } | null;
-  profile_picture_url?: string | null;
-  role: 'customer' | 'provider' | 'admin' | 'unknown';
-  is_staff?: boolean | number;
-}
+import { UserProfile } from '@/types/common'; // Importamos UserProfile desde common.ts
 
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 import ProviderOportunities from '@/components/petitions/ProviderOportunities';
@@ -22,105 +12,13 @@ import ProviderAvailability from '@/components/availability/ProviderAvailability
 
 import { useSearchParams } from 'next/navigation';
 
-// --- COMPONENTE DE PERFIL DE PROVEEDOR ---
-const ProviderProfile = ({ user }: { user: UserProfile }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'perfil-publico';
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    router.push(`/profile?tab=${tabId}`, { scroll: false });
-  };
-
-  const tabs = [
-    { id: 'perfil-publico', label: 'Mi Perfil Público' },
-    { id: 'oportunidades', label: 'Buscar Oportunidades' },
-    { id: 'postulaciones', label: 'Mis Postulaciones' },
-    { id: 'disponibilidad', label: 'Disponibilidad' },
-    { id: 'configuracion', label: 'Configuración' },
-  ];
-
-  return (
-    <div>
-      <div className="border-b border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      <div className="p-6 bg-gray-800 rounded-lg min-h-[300px]">
-        {activeTab === 'postulaciones' && user.provider ? (
-          <ProviderPostulations id_provider={user.provider.id_provider} />
-        ) : activeTab === 'oportunidades' ? (
-          <ProviderOportunities />
-        ) : activeTab === 'disponibilidad' ? (
-          <ProviderAvailability />
-        ) : (
-          <p>Contenido de la pestaña: {activeTab}</p>
-        )}
-      </div>
-    </div>
-  );
-};
+import ProviderProfile from '@/components/profile/ProviderProfile';
 
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 
-// --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
-const CustomerProfile = ({ user }: { user: UserProfile }) => {
-  const [activeTab, setActiveTab] = useState('peticiones');
+import IncompleteProfile from '@/components/profile/IncompleteProfile';
 
-  const customerTabs = [
-    { id: 'peticiones', label: 'Mis Peticiones' },
-    { id: 'informacion', label: 'Información Personal' },
-    { id: 'historial', label: 'Historial y Calificaciones' },
-  ];
-
-  return (
-    <div>
-      <div className="border-b border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {customerTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      <div className="p-6 bg-gray-800 rounded-lg min-h-[400px]">
-        {activeTab === 'peticiones' && user.customer ? (
-          <CustomerPetitions customerId={user.customer.id_customer} />
-        ) : activeTab === 'informacion' ? (
-          <p>Contenido de Información Personal...</p>
-        ) : activeTab === 'historial' ? (
-          <p>Contenido de Historial y Calificaciones...</p>
-        ) : null}
-      </div>
-    </div>
-  );
-};
+import CustomerProfile from '@/components/profile/CustomerProfile';
 
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE PERFIL ---
@@ -167,15 +65,26 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        {user.role === 'provider' ? (
-          <ProviderProfile user={user as UserProfile} />
-        ) : user.role === 'customer' ? (
-          <CustomerProfile user={user as UserProfile} />
-        ) : (
-          <p className="text-center text-gray-400 mt-10">
-            Rol desconocido o sin asignar.
-          </p>
-        )}
+        {(() => {
+          if (user.role === 'provider') {
+            // Si el rol es 'provider', nos aseguramos de que user.provider exista.
+            return user.provider 
+              ? <ProviderProfile user={user as UserProfile} /> 
+              : <IncompleteProfile role="provider" />;
+          }
+          if (user.role === 'customer') {
+            // Si el rol es 'customer', nos aseguramos de que user.customer exista.
+            return user.customer 
+              ? <CustomerProfile user={user as UserProfile} /> 
+              : <IncompleteProfile role="customer" />;
+          }
+          // Si el rol no es ninguno de los dos, mostramos el mensaje por defecto.
+          return (
+            <p className="text-center text-gray-400 mt-10">
+              Rol desconocido o sin asignar.
+            </p>
+          );
+        })()}
       </div>
     </main>
   );

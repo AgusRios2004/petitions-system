@@ -10,9 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { articleService } from '@/service/articleService';
 import { postulationService } from '@/service/postulationService';
+import { categoryService } from '@/service/categoryService';
 import toast from 'react-hot-toast';
 import { IArticle, ICategory } from '@/types/common';
-import { categoryService } from '@/service/categoryService';
 
 type FormValues = {
   id_petition: number;
@@ -55,18 +55,10 @@ export default function CreatePostulationPage() {
           categoryService.getAllCategories(),
         ]);
 
-        if (articlesRes.data) {
-          setArticles(articlesRes.data);
-          setFilteredArticles(articlesRes.data);
-        } else if (articlesRes.error) {
-          toast.error(articlesRes.error);
-        }
+        setArticles(articlesRes.data ?? []);
+        setFilteredArticles(articlesRes.data ?? []);
+        setCategories(categoriesRes);
 
-        if (categoriesRes.data) {
-          setCategories(categoriesRes.data);
-        } else if (categoriesRes.error) {
-          toast.error(categoriesRes.error);
-        }
       } catch (error: any) {
         console.error('Error fetching data:', error);
         toast.error(error.message || 'Error al cargar los datos.');
@@ -116,6 +108,8 @@ export default function CreatePostulationPage() {
     });
   };
 
+  console.log(categories)
+
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-xl mx-auto">
@@ -132,15 +126,13 @@ export default function CreatePostulationPage() {
           </div>
 
           {/* Costo total */}
-          <div>
-            <Label className="font-semibold">Costo total</Label>
             <Input
               type="number"
+              label="Costo total"
               {...register('cost', { valueAsNumber: true })}
               placeholder="Costo total de la propuesta"
               variant="white"
             />
-          </div>
 
           {/* Artículos */}
           <div>
@@ -178,9 +170,9 @@ export default function CreatePostulationPage() {
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.quantity`} className="text-sm">Cantidad</Label>
                   <Input
                     type="number"
+                    label="Cantidad"
                     {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
                     placeholder="Ej: 10"
                     variant="white"
@@ -188,9 +180,9 @@ export default function CreatePostulationPage() {
                 </div>
 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.cost`} className="text-sm">Costo</Label>
                   <Input
                     type="number"
+                    label="Costo"
                     {...register(`articles.${index}.cost`, { valueAsNumber: true })}
                     placeholder="Ej: 2500"
                     variant="white"
