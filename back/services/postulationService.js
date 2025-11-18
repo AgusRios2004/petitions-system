@@ -1,4 +1,4 @@
-const { Postulation, Inventory, sequelize, User, Provider, Petition, State } = require('../models');
+const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer } = require('../models');
 const { Op } = require('sequelize');
 
 class PostulationService {
@@ -9,7 +9,16 @@ class PostulationService {
         // ... (código original sin cambios)
         const whereClause = {};
         const includeClause = [
-            { model: Petition, as: 'petition' },
+            { 
+                model: Petition, 
+                as: 'petition',
+                include: [
+                    {
+                        model: Customer,
+                        as: 'customers' 
+                    }
+                ]
+            },
             { model: Inventory, as: 'inventories', include: ['article'] },
             { 
                 model: User, 
