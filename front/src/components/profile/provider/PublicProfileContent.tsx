@@ -292,8 +292,6 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
             "{grade.coment || 'Sin comentario escrito.'}"
           </p>
           
-          {/* SI TIENES EL NOMBRE DEL CLIENTE EN EL OBJETO GRADE */}
-          {/* <p className="text-right text-sm text-cyan-500 mt-2">- {grade.clientName || 'Cliente Anónimo'}</p> */}
         </div>
       ))}
     </div>
