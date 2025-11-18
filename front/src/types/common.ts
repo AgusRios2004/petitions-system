@@ -148,10 +148,15 @@ export interface IProvider {
   profession: Profession;
   address: IAddress; // Use the new IAddress interface
   availabilities?: IAvailability[]; // Now an array of IAvailability
+  // Ajustado para coincidir con la respuesta real de la API
   grades?: {
-    id_grade: number;
-    score: number;
-  }[]; // grades can be multiple
+    id_grade_provider: number;
+    coment: string;
+    grades: { // Objeto 'Grade' anidado
+      id_grade: number;
+      grade_number: number;
+    };
+  }[];
   portfolios?: IPortfolioItem[];
   providerCategories?: IProviderCategory[];
 }
