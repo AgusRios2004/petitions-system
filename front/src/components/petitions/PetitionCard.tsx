@@ -93,8 +93,8 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
           isOpen={isRatingModalOpen}
           onClose={() => setIsRatingModalOpen(false)}
           providerId={providerId}
-          petitionId={petition.id_petition}
           customerId={petition.id_customer}
+          ratingTarget="provider"
         />
       )}
     </Fragment>

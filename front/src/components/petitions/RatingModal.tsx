@@ -11,11 +11,11 @@ interface RatingModalProps {
   isOpen: boolean;
   onClose: () => void;
   providerId: number;
-  petitionId: number;
   customerId: number;
+  ratingTarget: 'provider' | 'customer';
 }
 
-const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, customerId }) => {
+const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, customerId, ratingTarget }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const queryClient = useQueryClient();
@@ -23,13 +23,15 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
   const { mutate, isPending } = useMutation({
     mutationFn: gradeService.createGrade,
     onSuccess: () => {
-      toast.success('Calificación enviada con éxito');
-      queryClient.invalidateQueries({ queryKey: ['petitions', customerId] });
+      toast.success('Calificación enviada con éxito.');
+      // Invalida las postulaciones para refrescar la vista y posiblemente ocultar el botón de calificar.
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
       onClose();
     },
     onError: (error) => {
-      const errorMessage = error || 'Error al enviar la calificación';
-      toast.error(`Error al enviar la calificación: ${errorMessage}`);
+      // Captura el mensaje de error específico del backend.
+      const errorMessage = (error as any).response?.data?.message || 'Ocurrió un error al enviar la calificación.';
+      toast.error(errorMessage);
     },
   });
 
@@ -53,17 +55,26 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       colorId = 28;
     }
 
-    mutate({
-      id_provider: providerId,
-      id_customer: customerId,
+    // Construimos el payload dinámicamente según a quién se califica.
+    const payload: any = {
       grade_number: rating,
       id_color: colorId,
       comment,
-    });
+    };
+
+    if (ratingTarget === 'provider') {
+      // Cliente califica a Proveedor: Se necesita el ID del proveedor calificado y el del cliente autor.
+      payload.id_provider = providerId;
+    } else {
+      // Proveedor califica a Cliente: Se necesita solo el ID del cliente calificado.
+      payload.id_customer = customerId;
+    }
+
+    mutate(payload);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Calificar al Proveedor">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Calificar al ${ratingTarget === 'provider' ? 'Proveedor' : 'Cliente'}`}>
       <form onSubmit={handleSubmit}>
         <div className="p-6">
           <div className="mb-6">
@@ -71,7 +82,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
             <StarRating rating={rating} onRatingChange={setRating} />
           </div>
           <div className="mb-4">
-            <label htmlFor="comment" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="comment" className="block text-sm font-medium text-gray-300 mb-2 ">
               Comentario (Opcional)
             </label>
             <textarea
@@ -80,7 +91,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
               onChange={(e) => setComment(e.target.value)}
               rows={4}
               className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="Describe tu experiencia con el proveedor..."
+              placeholder={`Describe tu experiencia con el ${ratingTarget === 'provider' ? 'proveedor' : 'cliente'}...`}
             />
           </div>
         </div>
