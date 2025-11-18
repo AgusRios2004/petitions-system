@@ -4,7 +4,7 @@ import { FaStar } from 'react-icons/fa';
 
 interface StarRatingProps {
   rating: number;
-  onRatingChange: (rating: number) => void;
+  onRatingChange?: (rating: number) => void; // Hacemos la propiedad opcional
 }
 
 const StarRating: React.FC<StarRatingProps> = ({ rating, onRatingChange }) => {
@@ -20,11 +20,11 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, onRatingChange }) => {
               type="radio"
               name="rating"
               value={ratingValue}
-              onClick={() => onRatingChange(ratingValue)}
+              onClick={() => onRatingChange?.(ratingValue)} // Usamos optional chaining
               className="hidden"
             />
             <FaStar
-              className="cursor-pointer"
+              className={onRatingChange ? "cursor-pointer" : ""} // El cursor solo es un puntero si se puede cambiar
               color={ratingValue <= (hover || rating) ? '#ffc107' : '#e4e5e9'}
               size={30}
               onMouseEnter={() => setHover(ratingValue)}

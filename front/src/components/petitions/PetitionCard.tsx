@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
-import { useState, Fragment, useMemo } from 'react';
+import { useState, Fragment, useMemo, useEffect } from 'react';
 import RatingModal from '../../components/petitions/RatingModal'; 
+import StarRatingDisplay from '../ui/StarRatingDisplay';
 
 interface Petition {
   id_petition: number;
@@ -18,6 +19,15 @@ interface Petition {
     name: string;
   };
   id_customer: number;
+  customers: {
+    dni: string;
+    phone: string;
+    user: {
+      name: string;
+      lastname: string; // Asegúrate que el backend envíe 'lastname' y no 'last_name'
+    };
+    average_rating: number | null;
+  };
   postulations: {
     id_provider: number;
     states: {
@@ -30,8 +40,11 @@ interface PetitionCardProps {
   petition: Petition;
 }
 
+
 const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
+  console.log('PetitionCardProps:', petition)
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [customerRating, setCustomerRating] = useState<number | null>(null);
 
   const creationDate = new Date(petition.date_create).toLocaleDateString();
   const sinceDate = new Date(petition.date_since).toLocaleDateString();
@@ -44,12 +57,22 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
     return acceptedPostulation?.id_provider;
   }, [petition.postulations]);
 
-  console.log('PetitionCard Props:', petition)
+  useEffect(() => {
+    if (petition.customers && petition.customers.average_rating !== undefined) {
+      // El backend devuelve el rating como un string, lo convertimos a número.
+      const rating = petition.customers.average_rating ? parseFloat(petition.customers.average_rating as any) : null;
+      setCustomerRating(rating);
+    }
+  }, [petition.customers]);
 
   return (
     <Fragment>
       <div className="group relative rounded-xl border border-white/10 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col justify-between h-full">
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-white">{petition.customers?.user?.name} {petition.customers?.user?.lastname}</h3>
+            {customerRating !== null && customerRating > 0 && <StarRatingDisplay rating={customerRating} size={18} />}
+          </div>
           <div className="flex justify-between items-start mb-3">
             <span className="text-sm font-medium text-gray-400">
               {petition.typePetitions?.name || 'Sin Categoría'}
