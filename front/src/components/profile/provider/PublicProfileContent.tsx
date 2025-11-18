@@ -272,6 +272,31 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
             </div>
           </div>
         )}
+        <div className="space-y-4">
+      {provider.grades && provider.grades.length > 0 && provider.grades.map((grade, index) => (
+        <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-600">
+          <div className="flex justify-between mb-2">
+            <div className="flex items-center gap-1 text-yellow-400">
+              {[...Array(5)].map((_, i) => (
+                <FiStar key={i} size={14} fill={i < grade.grades.grade_number ? "currentColor" : "none"} />
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">
+              {/* Si tienes fecha en el grade, úsala aquí: new Date(grade.createdAt).toLocaleDateString() */}
+              Reseña verificada
+            </span>
+          </div>
+          
+          {/* EL COMENTARIO (Lo más importante) */}
+          <p className="text-gray-200 italic">
+            "{grade.coment || 'Sin comentario escrito.'}"
+          </p>
+          
+          {/* SI TIENES EL NOMBRE DEL CLIENTE EN EL OBJETO GRADE */}
+          {/* <p className="text-right text-sm text-cyan-500 mt-2">- {grade.clientName || 'Cliente Anónimo'}</p> */}
+        </div>
+      ))}
+    </div>
 
         <div className="mt-8">
           <Button

@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import StarRating from '@/components/ui/StarRating'; // Asumimos que este componente existe
-import { gradeService } from '@/service/gradeService'; // Asumimos que este servicio existe
+import StarRating from '@/components/ui/StarRating';
+import { gradeService } from '@/service/gradeService';
 import toast from 'react-hot-toast';
 
 interface RatingModalProps {
@@ -12,10 +12,10 @@ interface RatingModalProps {
   onClose: () => void;
   providerId: number;
   petitionId: number;
-  customerId: number; // Necesitamos el ID del cliente
+  customerId: number;
 }
 
-const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, petitionId, customerId }) => {
+const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, customerId }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const queryClient = useQueryClient();
@@ -28,7 +28,8 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       onClose();
     },
     onError: (error) => {
-      toast.error(`Error al enviar la calificación: ${error.message}`);
+      const errorMessage = error || 'Error al enviar la calificación';
+      toast.error(`Error al enviar la calificación: ${errorMessage}`);
     },
   });
 
@@ -39,9 +40,6 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       return;
     }
 
-    // Lógica para determinar el id_color basado en la calificación.
-    // Asumimos: 1=Malo (rojo), 2=Regular (amarillo), 3=Bueno (verde)
-    // ¡Ajusta estos IDs según los valores que tengas en tu base de datos!
     let colorId;
     if (rating == 1) {
       colorId = 1;
