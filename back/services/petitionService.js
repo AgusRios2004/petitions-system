@@ -1,4 +1,4 @@
-const { Petition, Customer, sequelize, Postulation, State } = require('../models');
+const { Petition, Customer, sequelize, Postulation, State, User, Grade, GradeCustomer } = require('../models');
 const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
 const { Op } = require('sequelize');
 
@@ -17,7 +17,31 @@ class PetitionService {
 
         return await Petition.findAndCountAll({
             where,
-            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider', {
+            include: [
+                'attachments',
+                {
+                    model: Customer,
+                    as: 'customers',
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['name', 'lastname'] // Traemos solo lo necesario
+                        }
+                    ],
+                    attributes: {
+                        include: [
+                            [
+                                sequelize.literal(`(SELECT AVG(g.grade_number) FROM grade AS g JOIN grade_customer AS gc ON g.id_grade = gc.id_grade WHERE gc.id_customer = \`customers\`.\`id_customer\`)`),
+                                'average_rating'
+                            ]
+                        ]
+                    }
+                },
+                'typePetitions', 
+                'states', 
+                'profession', 
+                'typeProvider', {
                 model: Postulation,
                 as: 'postulations',
                 include : [{
