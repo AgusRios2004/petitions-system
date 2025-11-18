@@ -277,8 +277,10 @@ export interface IProviderCategory {
 export interface IGradeForm {
   id_provider?: number;
   id_customer?: number;
-  commetn: string;
+  comment: string;
   grade_number: number;
+  id_user_create?: number;
+  id_color?: number;
 };
 
 export interface IGrade {

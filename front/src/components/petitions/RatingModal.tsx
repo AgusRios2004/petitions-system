@@ -38,11 +38,28 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       toast.error('Por favor, selecciona una calificación');
       return;
     }
+
+    // Lógica para determinar el id_color basado en la calificación.
+    // Asumimos: 1=Malo (rojo), 2=Regular (amarillo), 3=Bueno (verde)
+    // ¡Ajusta estos IDs según los valores que tengas en tu base de datos!
+    let colorId;
+    if (rating == 1) {
+      colorId = 1;
+    } else if (rating === 2) {
+      colorId = 2;
+    } else if (rating === 3){
+      colorId = 3;
+    } else if (rating === 4){
+      colorId = 31;
+    } else {
+      colorId = 28;
+    }
+
     mutate({
-      providerId,
-      customerId,
-      petitionId, // Podrías querer asociar la calificación a la petición
-      rating,
+      id_provider: providerId,
+      id_customer: customerId,
+      grade_number: rating,
+      id_color: colorId,
       comment,
     });
   };
