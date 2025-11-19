@@ -1,4 +1,5 @@
 const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer } = require('../models');
+const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
 
 class PostulationService {
@@ -216,6 +217,20 @@ class PostulationService {
                 id_state: 1, // Asumiendo 1 = 'Cerrada' o 'Asignada' para la petición
                 id_user_update: userId,
                 date_update: new Date(),
+            }, {transaction: t});
+
+            await notificationService.createNotification({
+                id_user: postulation.id_user_create,
+                title: 'Postulación aceptada',
+                message: `El cliente aceptó tu presupuesto para "${petition.title}".`,
+                notification_type: 'SUCCESS',
+                settingKey: 'postulation_accepted',
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: petition.id_petition,
+                metadata: {
+                    descriptionPetition: petition.description,
+                    descriptionPostulation: postulation.description
+                }
             }, {transaction: t});
 
             await t.commit()
