@@ -40,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {children}
                 </div>
             </ThemeRegistry>
+            <div id="portal-root"></div>
           </AuthProvider>
         </QueryProvider>
       </body>

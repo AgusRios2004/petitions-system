@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiBriefcase, FiTag, FiMapPin, FiCalendar, FiClock, FiGrid, FiFolder, FiStar, FiFileText, FiLink, FiDownload } from 'react-icons/fi';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { portfolioService } from '@/service/portfolioService';
 import PortfolioCard from '@/components/portfolio/PortfolioCard';
 import { ProviderCategoriesManager } from './ProviderCategoriesManager';
+import StarRatingDisplay from '@/components/ui/StarRatingDisplay';
 
 interface PublicProfileContentProps {
   providerId: number;
@@ -60,6 +61,23 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
     }
   };
 
+  const averageRating = useMemo(() => {
+    if (!provider?.grades || provider.grades.length === 0) {
+      return 0;
+    }
+    const total = provider.grades.reduce((acc, grade) => acc + grade.grades.grade_number, 0);
+    const avg = total / provider.grades.length;
+    return Math.round(avg * 10) / 10; // Redondea a un decimal
+  }, [provider?.grades]);
+
+  const handleImageUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+  };
+
+  const filteredAvailabilities = provider?.availabilities?.filter(
+    (availability) => !selectedDay || availability.week.name.toLowerCase() === selectedDay.toLowerCase()
+  );
+
   if (isLoading) {
     return <div>Cargando perfil del proveedor...</div>;
   }
@@ -71,18 +89,6 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
   if (!provider) {
     return <div>No se encontró el perfil del proveedor.</div>;
   }
-
-  const handleImageUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
-  };
-  
-  console.log(provider.providerCategories)
-
-  const filteredAvailabilities = selectedDay
-    ? provider.availabilities?.filter(
-        (availability) => availability.week.name.toLowerCase() === selectedDay.toLowerCase()
-      )
-    : provider.availabilities;
 
   console.log(provider)
 
@@ -257,13 +263,38 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               <FiStar className="mr-3 text-blue-400" size={24} />
               Calificaciones
             </h2>
-            {provider.grades.map((grade) => (
-              <InfoRow key={grade.id_grade} icon={FiStar} label="Puntuación">
-                <span className="text-yellow-400">{grade.score}</span>
-              </InfoRow>
-            ))}
+            <div className="flex items-center gap-4 mb-6 p-4 bg-gray-800/50 rounded-lg">
+              <StarRatingDisplay rating={averageRating} size={28} />
+              <div>
+                <p className="text-2xl font-bold text-white">{averageRating} de 5</p>
+                <p className="text-sm text-gray-400">Basado en {provider.grades.length} calificación(es)</p>
+              </div>
+            </div>
           </div>
         )}
+        <div className="space-y-4">
+      {provider.grades && provider.grades.length > 0 && provider.grades.map((grade, index) => (
+        <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-600">
+          <div className="flex justify-between mb-2">
+            <div className="flex items-center gap-1 text-yellow-400">
+              {[...Array(5)].map((_, i) => (
+                <FiStar key={i} size={14} fill={i < grade.grades.grade_number ? "currentColor" : "none"} />
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">
+              {/* Si tienes fecha en el grade, úsala aquí: new Date(grade.createdAt).toLocaleDateString() */}
+              Reseña verificada
+            </span>
+          </div>
+          
+          {/* EL COMENTARIO (Lo más importante) */}
+          <p className="text-gray-200 italic">
+            "{grade.coment || 'Sin comentario escrito.'}"
+          </p>
+          
+        </div>
+      ))}
+    </div>
 
         <div className="mt-8">
           <Button

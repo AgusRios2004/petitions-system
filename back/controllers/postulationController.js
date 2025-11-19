@@ -26,7 +26,7 @@ exports.getAllPostulations = async (req, res) => {
             const petition = await Petition.findByPk(id_petition, {
                 include: [{
                     model: Customer,
-                    as: 'customers'
+                    as: 'customers',
                 }]
             });
 

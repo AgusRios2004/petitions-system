@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { ICustomer, ApiResponse, ProfileFormData } from "@/types/common";
+import { ICustomer, ApiResponse, ProfileFormData, UpdateCustomerPayload } from "@/types/common";
 import axios from "axios";
 
 const getCustomerById = async (customerId: number): Promise<ICustomer> => {

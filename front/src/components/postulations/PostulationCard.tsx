@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
 import { IPostulation } from '@/types/common';
+import RatingModal from '../petitions/RatingModal'; // Asegúrate que la ruta sea correcta
+import { useAuth } from '@/context/AuthContext';
 
 interface PostulationCardProps {
   postulation: IPostulation;
@@ -10,7 +12,11 @@ interface PostulationCardProps {
 }
 
 const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) => {
+  const { user } = useAuth();
+  const [isRatingModalOpen, setRatingModalOpen] = useState(false);
   const isPostulationInactive = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4 || postulation.states.id_state === 6;
+
+  console.log('PostulationCard Props:', postulation)
 
   return (
     <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
@@ -48,12 +54,37 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
             </Link>
         )}
         <Link href={`/postulation/${postulation.id_postulation}`}>
-          <Button variant='secondary' fullWidth={false} >Ver detalles</Button>
+          <Button variant='secondary' fullWidth={false}>Ver detalles</Button>
         </Link>
+
+        {role === 'provider' && postulation.winner && user?.provider && (
+          <Button variant='primary' fullWidth={false} onClick={() => setRatingModalOpen(true)}>
+            Calificar Cliente
+          </Button>
+        )}
       </div>
       <div className="text-right text-xs text-gray-400 mt-4">
         Postulado el: {new Date(postulation.date_create).toLocaleDateString()}
       </div>
+
+      {/* Renderiza el modal si está abierto, ahora es más flexible */}
+      {isRatingModalOpen && (
+        <RatingModal
+          isOpen={isRatingModalOpen}
+          onClose={() => setRatingModalOpen(false)}
+          // El proveedor a calificar es quien creó la postulación.
+          providerId={postulation.createdBy.provider!.id_provider} 
+          // El cliente a calificar es quien creó la petición original.
+          // Se usa el 'user' logueado si es el cliente quien califica, o se extrae de la petición si es el proveedor.
+          customerId={
+            role === 'customer' 
+              ? user!.customer!.id_customer 
+              : postulation.petition!.customers.id_customer
+          }
+          // El objetivo de la calificación depende del rol del usuario actual.
+          ratingTarget={role === 'customer' ? 'provider' : 'customer'}
+        />
+      )}
     </div>
   );
 };

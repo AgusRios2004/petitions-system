@@ -31,6 +31,7 @@ const portfolioRoutes = require('./routes/portfolioRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const imageUploadRoutes = require('./routes/imageUploadRoutes');
 const path = require('path');
+const gradeRoutes = require('./routes/gradeRoutes');
 
 const app = express();
 app.use(express.json());
@@ -73,6 +74,7 @@ app.use('/api/hours', hourRoutes);
 app.use('/api/interests', interestRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/upload', imageUploadRoutes);
+app.use('/api/grade', gradeRoutes);
 
 app.use('/api/week', require('./routes/weekRoutes'));
 
