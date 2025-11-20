@@ -1,4 +1,5 @@
-const { Notification, NotificationSettings } = require('../models');
+const { Notification, NotificationSettings, sequelize, User, Provider } = require('../models');
+const { where, Op} = require('sequelize');
 
 class NotificationService {
     async createNotification(dataNotification) {
@@ -63,7 +64,7 @@ class NotificationService {
     async markRead(id_user, id_notification){
         try {
             const notification = await Notification.update(
-                {is_read: true, create_at: new Date()},
+                {is_read: true, read_at: new Date()},
                 {where: {id_user: id_user, id: id_notification}},
             );
 
@@ -77,7 +78,7 @@ class NotificationService {
     async markAllRead(id_user){
         try {
             const notifications = await Notification.update(
-                {is_read: true, create_at: new Date()},
+                {is_read: true, read_at: new Date()},
                 {where: {id_user: id_user }},
             );
 
@@ -85,6 +86,53 @@ class NotificationService {
         } catch (e) {
             console.log("Error: ", e)
             throw e;
+        }
+    }
+
+    async notificationMatchingProvider(petition){
+        try {
+            const matchingProviders = await Provider.findAll({
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id_user'],
+                    },
+                ],
+                where: {
+                    [Op.and]: [
+                        sequelize.literal(`
+                            EXISTS (
+                                SELECT 1 
+                                FROM n_provider_cateogory pc
+                                JOIN n_interest i ON i.id_category = pc.category_id
+                                WHERE i.id_customer = ${sequelize.escape(petition.id_customer)}
+                                AND pc.provider_id = \`Provider\`.\`id_provider\`
+                            )
+                        `)
+                    ]
+                }
+            });
+
+            if (!matchingProviders || matchingProviders.length === 0) return null;
+
+            const notificationData = matchingProviders.map(provider => ({
+                id_user: provider.user.id_user,
+                title: "Nueva opostunidad laboral",
+                message: `Un proveedor hizo una petición con una categoría que manejas: ${petition.description.substring(0,30)}`,
+                notification_type: "petition_created",
+                related_petition_id: petition.id_petition,
+                is_read: false,
+                create_at: new Date(),
+                metadata: {
+                    id_provider: provider.id_provider,
+                    description: petition.description,
+                }
+            }));
+
+            await Notification.bulkCreate(notificationData)
+        } catch (e) {
+            console.log("Error: ", e);
         }
     }
 }

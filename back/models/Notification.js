@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
         },
+        read_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
         related_postulation_id: {
             type: DataTypes.INTEGER,
             allowNull: true,
