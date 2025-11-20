@@ -1,4 +1,4 @@
-const { Petition, Customer, sequelize, Postulation, State, User, Grade, GradeCustomer } = require('../models');
+const { Petition, Customer, sequelize, Postulation, State, User, ProviderCategory, Interest } = require('../models');
 const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
 const { Op } = require('sequelize');
 
@@ -6,53 +6,83 @@ class PetitionService {
     
     // ... (todos los métodos GET que ya tenías, sin cambios)
     async getPetitions(filter = {}, options = {}) {
+        const { providerId, ...restOfFilter } = filter;
         const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
         const offset = (page - 1) * limit;
 
-        const where = { ...filter };
+        // 1. Configuración base del filtro
+        const where = { ...restOfFilter };
 
+        // Filtro por descripción (si existe)
         if (where.description) {
             where.description = { [Op.like]: `%${where.description}%` };
         }
 
+        if (providerId) {
+            const matchesInterestsQuery = sequelize.literal(`
+                EXISTS (
+                    SELECT 1
+                    FROM n_interest AS i
+                    INNER JOIN n_provider_cateogory AS pc ON pc.category_id = i.id_category
+                    WHERE i.id_customer = \`Petition\`.\`id_customer\`  -- Conecta con la petición actual
+                    AND pc.provider_id = ${sequelize.escape(providerId)} 
+                )
+            `);
+
+            // Lo agregamos al WHERE asegurando que conviva con otros filtros
+            where[Op.and] = [
+                ...(where[Op.and] || []),
+                matchesInterestsQuery
+            ];
+        }
+
+        // 3. Ejecutamos la consulta trayendo TODOS los datos (Includes)
         return await Petition.findAndCountAll({
-            where,
+            where, // Aquí va el filtro poderoso
+            limit,
+            offset,
+            order: [[sortBy, order]],
+            distinct: true, // Importante para que el count sea correcto con tantos includes
             include: [
-                'attachments',
+                'attachments', // Tus adjuntos
                 {
                     model: Customer,
-                    as: 'customers',
+                    as: 'customers', // OJO: Revisa si tu alias es 'customers' o 'customer' en el modelo
                     include: [
                         {
                             model: User,
                             as: 'user',
-                            attributes: ['name', 'lastname'] // Traemos solo lo necesario
+                            attributes: ['name', 'lastname', 'profile_image'] 
                         }
                     ],
                     attributes: {
                         include: [
                             [
-                                sequelize.literal(`(SELECT AVG(g.grade_number) FROM grade AS g JOIN grade_customer AS gc ON g.id_grade = gc.id_grade WHERE gc.id_customer = \`customers\`.\`id_customer\`)`),
+                                sequelize.literal(`(
+                                    SELECT COALESCE(AVG(g.grade_number), 0) 
+                                    FROM grade AS g 
+                                    JOIN grade_customer AS gc ON g.id_grade = gc.id_grade 
+                                    WHERE gc.id_customer = \`customers\`.\`id_customer\`
+                                )`),
                                 'average_rating'
                             ]
                         ]
                     }
                 },
-                'typePetitions', 
-                'states', 
-                'profession', 
-                'typeProvider', {
-                model: Postulation,
-                as: 'postulations',
-                include : [{
-                    model: State,
-                    as: 'states',
-                }]
-            }],
-            limit,
-            offset,
-            order: [[sortBy, order]]
-        })
+                'typePetitions',
+                'states',
+                'profession',
+                'typeProvider',
+                {
+                    model: Postulation,
+                    as: 'postulations',
+                    include: [{
+                        model: State,
+                        as: 'states',
+                    }]
+                }
+            ]
+        });
     }
 
     async getPetitionById(id) {
