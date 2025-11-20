@@ -136,6 +136,28 @@ class PostulationService {
             }
 
             await t.commit();
+
+            try {
+                await notificationService.createNotification({
+                    id_user: petition.id_user_create,
+                    title: "Nueva Postulación Recibida",
+                    message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
+                    notification_type: "POSTULATION_CREATED",
+                    settingKey: "postulation_created",
+                    related_postulation_id: newPostulation.id_postulation,
+                    related_petition_id: petition.id_petition,
+                    metadata: {
+                        id_customer: petition.id_customer,
+                        description: petition.description,
+                        id_provider: provider.id_provider,
+                        proposal: proposal
+                    },
+                });
+            } catch (notifyError) {
+                // Capturamos error silenciosamente para no fallar el request si la notificación falla
+                console.error("Error enviando notificación:", notifyError);
+            }
+            
             return await this.getPostulationById(newPostulation.id_postulation);
         } catch (e) {
             await t.rollback();
@@ -266,6 +288,20 @@ class PostulationService {
             throw error;
         }
 
+        notificationService.createNotification({
+            id_user: postulation.id_user_create,
+            title: 'Postulación rechazada',
+            message: 'Postulación rechazada por el cliente.',
+            notification_type: 'WARNING',
+            settingKey: 'postulation_rejected',
+            related_postulation_id: postulation.id_postulation,
+            related_petition_id: postulation.id_petition,
+            metadata: {
+            id_provider: postulation.id_provider,
+            proposal: postulation.proposal,
+            }
+        })
+
         return await postulation.update({
             winner: false,
             id_state: 2,
@@ -294,6 +330,20 @@ class PostulationService {
             throw error;
         }
 
+        notificationService.createNotification({
+            id_user: postulation.id_user_create,
+            title: 'Postulación retirada',
+            message: 'Postulación retirada por el proveedor.',
+            notification_type: 'INFO',
+            settingKey: 'postulation_state_changed',
+            related_postulation_id: postulation.id_postulation,
+            related_petition_id: postulation.id_petition,
+            metadata: {
+                id_provider: postulation.id_provider,
+                proposal: postulation.proposal,
+            },
+        });
+
         // LÓGICA CORRECTA:
         return await postulation.update({
             id_state: 4, // 4 = dado de baja / retirado
@@ -306,21 +356,69 @@ class PostulationService {
      * [NUEVO] Cambia el estado de todas las postulaciones pendientes de una petición a "cancelada".
      * Este método está diseñado para ser llamado por petitionService durante una transacción.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction) {
-        return await Postulation.update(
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6) {
+        // 1. Buscamos a los afectados (dentro de la transacción para asegurar consistencia de lectura)
+        const postulationsToCancel = await Postulation.findAll({
+            attributes: ['id_user_create'],
+            where: {
+                id_petition: petitionId,
+                id_state: 3 // Pendientes
+            },
+            transaction
+        });
+
+        // 2. Actualizamos el estado (dentro de la transacción)
+        const updateResult = await Postulation.update(
             {
-                id_state: 6, // 6 = cancelada
+                id_state: newState, // Usamos el estado dinámico (5 o 6)
                 id_user_update: userId,
                 date_update: new Date(),
             },
             {
                 where: {
                     id_petition: petitionId,
-                    id_state: 3 // Solo se cancelan las que están 'pendientes'
+                    id_state: 3
                 },
                 transaction
             }
         );
+
+        // 3. Notificaciones (SIN Transacción, "Fire & Forget")
+        if (postulationsToCancel.length > 0) {
+            
+            // Definimos el mensaje según lo que estemos haciendo
+            const isRejection = newState === 2; // Asumiendo 5 = Rechazado
+            
+            const notifTitle = isRejection 
+                ? "Postulación Cerrada" 
+                : "Petición Cancelada";
+            
+            const notifMessage = isRejection
+                ? "El cliente ha seleccionado a otro profesional para este trabajo. Gracias por tu tiempo."
+                : "La petición a la que te postulaste ha sido cancelada por el cliente.";
+
+            const notifType = isRejection 
+                ? "POSTULATION_REJECTED" 
+                : "POSTULATION_CANCELLED";
+
+            const notificationsData = postulationsToCancel.map(p => ({
+                id_user: p.id_user_create,
+                title: notifTitle,
+                message: notifMessage,
+                notification_type: notifType,
+                settingKey: 'postulation_state_changed',
+                related_petition_id: petitionId,
+                is_read: false,
+                created_at: new Date()
+            }));
+
+            // Llamamos al servicio SIN pasarle la 'transaction'.
+            // Esto cumple tu requisito de no vincularlo al commit de la BD.
+            // (Nota: Asegúrate de que tu método bulkCreate en el servicio acepte solo 1 argumento si no le pasas options)
+            notificationService.bulkCreate(notificationsData).catch(e => console.error("Error enviando notificaciones masivas:", e));
+        }
+
+        return updateResult;
     }
 }
 

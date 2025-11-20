@@ -1,13 +1,21 @@
-const { Grade, GradeProvider, GradeCustomer, sequelize } = require('../models');
+const { Grade, GradeProvider, GradeCustomer, sequelize, Provider, Customer } = require('../models');
+const notificationService = require('../services/notificationService');
 
 const createGrade = async (gradeData) => {
   const t = await sequelize.transaction();
   try {
+    let targetUserId = null;
+    let gradeId = null;
+
     const { id_customer, id_provider, grade_number, comment, id_user_create, id_color } = gradeData;
 
     // Escenario 1: Un cliente está calificando a un PROVEEDOR.
     // Se identifica porque se reciben tanto el ID del proveedor (calificado) como el del cliente (autor).
     if (id_provider) {
+      const provider = await Provider.findByPk(id_provider, { transaction: t });
+      if(!provider) return new Error('Proveedor no encontrado');
+      targetUserId = provider.user_id;
+      
       // 1.1. Validar que este cliente no haya calificado ya a este proveedor.
       const existingGrade = await Grade.findOne({
         where: { id_user_create: id_user_create }, // El autor es el usuario logueado
@@ -47,6 +55,10 @@ const createGrade = async (gradeData) => {
     // Escenario 2: Un proveedor está calificando a un CLIENTE.
     // Se identifica porque se recibe el ID del cliente pero no el del proveedor (el proveedor es el autor).
     } else if (id_customer) {
+      const customer = await Customer.findByPk(id_customer, { transaction: t });
+      if(!customer) return new Error('Cliente no encontrado');
+      targetUserId = customer.user_id;
+
       // 2.1. Validar que este proveedor no haya calificado ya a este cliente.
       const existingGrade = await Grade.findOne({
         where: { id_user_create: id_user_create }, // El autor es el usuario logueado (proveedor)

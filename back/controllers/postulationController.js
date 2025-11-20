@@ -1,6 +1,7 @@
 const service = require('../services/postulationService');
 const { error, success } = require('../middlewares/response');
 const { Petition, Customer } = require('../models');
+const notificationService = require('../services/notificationService');
 
 exports.getAllPostulations = async (req, res) => {
     try {

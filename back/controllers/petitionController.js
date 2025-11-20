@@ -1,5 +1,6 @@
 const service = require('../services/petitionService');
 const { error, success } = require('../middlewares/response');
+const notificationService = require('../services/notificationService');
 
 exports.getPetitions = async (req, res) => {
     try {
@@ -111,6 +112,8 @@ exports.createPetition = async (req, res) => {
             id_user_update: req.user.sub,
             is_deleted: false,
         });
+
+        notificationService.notificationMatchingProvider(petition);
 
         return success(res, petition, 'Petición creada correctamente', 201);
     } catch (e) {
