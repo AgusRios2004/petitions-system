@@ -31,6 +31,7 @@ class NotificationService {
             return null;
         }
     }
+ 
     async getNotifications(id_user, limit = 20, offset = 0){
         try {
             const notifications = await Notification.findAll({
@@ -136,43 +137,98 @@ class NotificationService {
         }
     }
 
-    async notificationRejectProviders(id_petition, postulation){
+    /**
+     * Notifica a los proveedores que NO fueron elegidos.
+     * @param {number} id_petition - El ID de la petición que se cerró.
+     * @param {number} acceptedPostulationId - El ID de la postulación ganadora (para excluirla).
+     */
+    async notificationRejectProviders(id_petition, acceptedPostulationId) {
         try {
+            // 1. LÓGICA CLAVE: Buscar a los "perdedores"
+            // Traduce a: "Dame todas las postulaciones de esta petición DONDE el ID NO SEA el del ganador"
             const rejectedPostulations = await Postulation.findAll({
                 where: {
-                    id_petition: petitionId,
-                    id_postulation: { [Op.ne]: acceptedPostulationId } // Op.ne = Not Equal
+                    id_petition: id_petition,
+                    id_postulation: { [Op.ne]: acceptedPostulationId }
                 },
                 include: [{
                     model: Provider,
                     as: 'provider',
-                    include: [{ model: User, as: 'user', attributes: ['id_user'] }]
+                    include: [{ 
+                        model: User, 
+                        as: 'user', 
+                        attributes: ['id_user'] // Solo necesitamos el ID para notificar
+                    }]
                 }]
             });
             
-            if(rejectedPostulations.length === 0) return null;
+            // Si no hay perdedores (ej: solo se postuló uno y ganó), no hacemos nada.
+            if (!rejectedPostulations || rejectedPostulations.length === 0) return null;
 
-            const notificationData = rejectedPostulations.map(postulation => ({
-                id_user: postulation.provider.user.id_user,
-                title: "Postulación rechazada",
-                message: "Una postulación ha sido aceptada antes que la tuya",
-                notification_type: "petition_rejected",
-                related_postulation_id: postulation.id_postulation,
+            console.log(`Encontrados ${rejectedPostulations.length} proveedores para notificar rechazo.`);
+
+            // 2. Mapear los datos para la notificación
+            const notificationData = rejectedPostulations.map(post => ({
+                id_user: post.provider.user.id_user, // El destinatario
+                title: "Postulación cerrada",
+                message: "El cliente ha aceptado otra propuesta para este trabajo. Gracias por tu interés.",
+                notification_type: "postulation_rejected",
+                related_postulation_id: post.id_postulation,
                 related_petition_id: id_petition,
                 is_read: false,
-                create_at: new Date(),
+                creat_at: new Date(), // O create_at según tu BD
                 metadata: {
-                    id_provider: postulation.provider.id_provider,
-                    description: postulation.description,
+                    id_provider: post.provider.id_provider,
+                    // Usamos un texto genérico o la propuesta si existe
+                    info: "Tu postulación no fue seleccionada."
                 }
             }));
 
-            await Notification.bulkCreate(notificationData)
+            // 3. Inserción Masiva
+            await Notification.bulkCreate(notificationData);
     
         } catch (e) {
-            console.error("Error: ", e);
+            console.error("Error en notificationRejectProviders: ", e);
+            // No lanzamos error para no afectar el flujo principal
         }
     }
+    
+    /**
+     * Notifica a los proveedores que su postulación fue cancelada porque la petición se cerró.
+     * @param {number} petitionId - ID de la petición cancelada.
+     * @param {Array} affectedPostulations - Array de objetos con { id_user_create }.
+     */
+    async notifyPetitionCancelled(petitionId, affectedPostulations) {
+        try {
+            // 1. Validación básica: Si no hay nadie a quien avisar, salimos.
+            if (!affectedPostulations || affectedPostulations.length === 0) return;
+
+            console.log(`Generando notificaciones de cancelación para ${affectedPostulations.length} proveedores...`);
+
+            // 2. Preparamos los datos masivos
+            const notificationsData = affectedPostulations.map(postulation => ({
+                id_user: postulation.id_user_create,
+                title: "Petición Cancelada",
+                message: "El cliente ha cancelado la petición a la que te postulaste. Tu postulación ha sido cerrada.",
+                notification_type: "postulation_canceled",
+                settingKey: "postulation_state_changed",
+                related_petition_id: petitionId,
+                is_read: false,
+                created_at: new Date(), 
+                metadata: {
+                    reason: "Petition closed by client"
+                }
+            }));
+
+            // 3. Inserción Masiva (Fire & Forget)
+            await Notification.bulkCreate(notificationsData);
+            
+        } catch (e) {
+            console.error("Error en notifyPetitionCancelled:", e);
+            // No lanzamos error para no afectar la transacción principal de cancelación
+        }
+    }
+    
 }
 
 module.exports = new NotificationService();

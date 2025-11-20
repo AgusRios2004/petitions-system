@@ -137,12 +137,12 @@ class PetitionService {
             }
 
             await petition.update({
-                id_state: 5,
+                id_state: 6,
                 id_user_update: userId,
                 date_update: new Date()
             }, { transaction: t });
 
-            await postulationService.cancelPostulationsForPetition(petitionId, userId, t);
+            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6);
 
             await t.commit();
             return this.getPetitionById(petitionId);

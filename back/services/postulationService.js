@@ -255,7 +255,29 @@ class PostulationService {
                 }
             }, {transaction: t});
 
+            await this.cancelPostulationsForPetition(
+                petition.id_petition, // ID de la petición
+                userId,               // ID del cliente que acepta
+                t,                    // Transacción
+                2,
+                postulation.id_postulation // ID del Ganador (para no borrarlo)
+            );
+
             await t.commit()
+
+            notificationService.createNotification({
+                id_user: postulation.id_user_create, // El usuario del proveedor ganador
+                title: "¡Postulación Aceptada!",
+                message: `¡Felicidades! El cliente ha aceptado tu presupuesto para el trabajo: "${petition.description.substring(0, 30)}..."`,
+                notification_type: "postulation_accepted", // Tipo para que el front muestre ícono verde/festejo
+                settingKey: "postulation_accepted",        // Revisa la config del usuario
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: petition.id_petition,
+                metadata: {
+                    status: "winner",
+                    petition_title: petition.title || petition.description
+                }
+            }).catch(err => console.error("Error notificando al ganador:", err));
 
             return await this.getPostulationById(id);
         } catch (e) {
@@ -353,73 +375,61 @@ class PostulationService {
     }
 
     /**
-     * [NUEVO] Cambia el estado de todas las postulaciones pendientes de una petición a "cancelada".
-     * Este método está diseñado para ser llamado por petitionService durante una transacción.
+     * Cancela o Rechaza postulaciones masivamente.
+     * @param {number} petitionId 
+     * @param {number} userId 
+     * @param {object} transaction 
+     * @param {number} newState - 6 (Cancelada) o 5 (Rechazada)
+     * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6) {
-        // 1. Buscamos a los afectados (dentro de la transacción para asegurar consistencia de lectura)
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null) {
+        
+        // A. Configurar el filtro (Excluir ganador si existe)
+        const whereCondition = {
+            id_petition: petitionId,
+            id_state: 3 // Pendientes
+        };
+
+        if (winnerPostulationId) {
+            whereCondition.id_postulation = { [Op.ne]: winnerPostulationId }; // Op.ne = Not Equal
+        }
+
+        // B. Buscar afectados
         const postulationsToCancel = await Postulation.findAll({
-            attributes: ['id_user_create'],
-            where: {
-                id_petition: petitionId,
-                id_state: 3 // Pendientes
-            },
+            attributes: ['id_user_create'], // Solo necesitamos el ID
+            where: whereCondition,
             transaction
         });
 
-        // 2. Actualizamos el estado (dentro de la transacción)
+        // C. Actualizar estado
         const updateResult = await Postulation.update(
             {
-                id_state: newState, // Usamos el estado dinámico (5 o 6)
+                id_state: newState,
                 id_user_update: userId,
                 date_update: new Date(),
             },
             {
-                where: {
-                    id_petition: petitionId,
-                    id_state: 3
-                },
+                where: whereCondition,
                 transaction
             }
         );
 
-        // 3. Notificaciones (SIN Transacción, "Fire & Forget")
+        // D. Notificaciones
         if (postulationsToCancel.length > 0) {
-            
-            // Definimos el mensaje según lo que estemos haciendo
-            const isRejection = newState === 2; // Asumiendo 5 = Rechazado
-            
-            const notifTitle = isRejection 
-                ? "Postulación Cerrada" 
-                : "Petición Cancelada";
-            
-            const notifMessage = isRejection
-                ? "El cliente ha seleccionado a otro profesional para este trabajo. Gracias por tu tiempo."
-                : "La petición a la que te postulaste ha sido cancelada por el cliente.";
-
-            const notifType = isRejection 
-                ? "POSTULATION_REJECTED" 
-                : "POSTULATION_CANCELLED";
-
-            const notificationsData = postulationsToCancel.map(p => ({
-                id_user: p.id_user_create,
-                title: notifTitle,
-                message: notifMessage,
-                notification_type: notifType,
-                settingKey: 'postulation_state_changed',
-                related_petition_id: petitionId,
-                is_read: false,
-                created_at: new Date()
-            }));
-
-            // Llamamos al servicio SIN pasarle la 'transaction'.
-            // Esto cumple tu requisito de no vincularlo al commit de la BD.
-            // (Nota: Asegúrate de que tu método bulkCreate en el servicio acepte solo 1 argumento si no le pasas options)
-            notificationService.bulkCreate(notificationsData).catch(e => console.error("Error enviando notificaciones masivas:", e));
+            if (newState === 6) {
+                // Cancelación total
+                notificationService.notifyPetitionCancelled(petitionId, postulationsToCancel)
+                    .catch(e => console.error("Error notifyPetitionCancelled:", e));
+            } 
+            else if (newState === 5) {
+                notificationService.notificationRejectProviders(petitionId, postulationsToCancel)
+                     .catch(e => console.error("Error notifyPostulationsRejected:", e));
+            }
         }
 
         return updateResult;
     }
+
 }
 
 module.exports = new PostulationService();
