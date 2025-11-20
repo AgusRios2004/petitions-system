@@ -241,6 +241,8 @@ class PostulationService {
                 date_update: new Date(),
             }, {transaction: t});
 
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, postulation.id_postulation);
+
             await notificationService.createNotification({
                 id_user: postulation.id_user_create,
                 title: 'Postulación aceptada',
@@ -254,14 +256,6 @@ class PostulationService {
                     descriptionPostulation: postulation.description
                 }
             }, {transaction: t});
-
-            await this.cancelPostulationsForPetition(
-                petition.id_petition, // ID de la petición
-                userId,               // ID del cliente que acepta
-                t,                    // Transacción
-                2,
-                postulation.id_postulation // ID del Ganador (para no borrarlo)
-            );
 
             await t.commit()
 
@@ -391,7 +385,7 @@ class PostulationService {
         };
 
         if (winnerPostulationId) {
-            whereCondition.id_postulation = { [Op.ne]: winnerPostulationId }; // Op.ne = Not Equal
+            whereCondition.id_postulation = { [Op.ne]: winnerPostulationId };
         }
 
         // B. Buscar afectados
