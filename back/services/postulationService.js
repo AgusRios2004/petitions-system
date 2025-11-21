@@ -79,10 +79,8 @@ class PostulationService {
 
     // --- MÉTODOS DE ESCRITURA (REFACTORIZADOS Y CORREGIDOS) ---
 
-    async createPostulation(data, userId, app) { // 1. Recibimos 'app' para acceder a io
-        // --- DEPURACIÓN 2: Verificando si 'app' llega al servicio ---
-        console.log(`[DEBUG] postulationService: Iniciando createPostulation. ¿Llegó app? ${!!app}`);
-
+    async createPostulation(data, userId, eventBus) { // Ya no recibe 'app', sino 'eventBus'
+        
         // ... (código original sin cambios, ya era robusto)
         const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
@@ -142,23 +140,18 @@ class PostulationService {
 
             await t.commit();
 
-            // --- LÓGICA DE SOCKET.IO ---
-            if (app) {
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
+            // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
+            if (eventBus) {
                 const targetUserId = petition.id_user_create; // El ID del cliente que creó la petición
+                const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
 
-                const targetSocketId = userSocketMap.get(targetUserId);
-
-                if (targetSocketId) {
-                    // --- DEPURACIÓN 4: Confirmando que se va a emitir el evento ---
-                    const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
-                    io.to(targetSocketId).emit('new_postulation', postulationWithDetails);
-                } else {
-                    console.log(`[DEBUG] postulationService: FALLO. No se encontró un socket activo para el usuario con ID: ${targetUserId}. El cliente no está conectado o no está en el mapa.`);
-                }
+                // El servicio solo "anuncia" que algo pasó. No sabe nada de sockets.
+                eventBus.emit('postulation:created', {
+                    postulation: postulationWithDetails,
+                    targetUserId: targetUserId
+                });
             }
-            // --- FIN DE LÓGICA DE SOCKET.IO ---
+            // --- FIN DE LÓGICA DE EVENTOS ---
 
             try {
                 await notificationService.createNotification({
@@ -233,7 +226,7 @@ class PostulationService {
         }
     }
 
-    async acceptPostulation(id, userId, app) {
+    async acceptPostulation(id, userId, eventBus) {
         // ... (código original sin cambios, la lógica es correcta para aceptar)
         const t = await sequelize.transaction();
         try {
@@ -267,24 +260,21 @@ class PostulationService {
             // --- CORRECCIÓN ---
             // Llamamos a la función auxiliar con los parámetros correctos:
             // newState = 5 (Rechazada), y pasamos el ID del ganador para excluirlo.
-            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 2, postulation.id_postulation, app);
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 2, postulation.id_postulation, eventBus);
 
             await t.commit()
 
-            if (app){
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
-
+            if (eventBus){
                 const targetUserId = postulation.id_user_create;
-                const targetSocketId = userSocketMap.get(targetUserId);
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation);
 
-                if (targetSocketId) {
-                    console.log(`[DEBUG] Emitiendo 'postulation_accepted' al proveedor ${targetUserId}`);
-                    const updatePostulation = await this.getPostulationById(postulation.id_postulation);
-                    io.to(targetSocketId).emit('postulation_accepted', updatePostulation);
-                } else {
-                    console.log(`[DEBUG] FALLO. Proveedor ${targetUserId} no conectado para recibir notificación de aceptación.`);
-                }
+                // Anunciamos que la postulación fue aceptada
+                eventBus.emit('postulation:accepted', {
+                    postulation: updatedPostulation,
+                    targetUserId: targetUserId
+                });
+
+                // El notificationService también podría usar el eventBus para notificar a los rechazados
             }
 
             // Notificación persistente (para la "campanita") - Se ejecuta después del commit
@@ -316,7 +306,7 @@ class PostulationService {
      * [CORREGIDO] Rechaza una postulación. Solo el cliente dueño de la petición puede hacerlo.
      * No afecta el estado de la petición.
      */
-    async rejectPostulation(postulationId, userId, app) {
+    async rejectPostulation(postulationId, userId, eventBus) {
         try {
             const postulation = await Postulation.findByPk(postulationId, {
                 include: [{ model: Petition, as: 'petition' }]
@@ -335,21 +325,13 @@ class PostulationService {
                 throw error;
             }
     
-            if(app) {
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
-    
+            if(eventBus) {
                 const targetUserId = postulation.id_user_create;
-                const targetSocketId = userSocketMap.get(targetUserId);
-    
-                if (targetSocketId) {
-                    io.to(targetSocketId).emit('postulation_rejected',{
-                        id_postulation: postulation.id_postulation,
-                        id_petition: postulation.id_petition,
-                        title: 'Postulación rechazada',
-                        message: 'El cliente ha decidido no continuar con esta propuesta.'
-                    });
-                }
+                // Anunciamos que la postulación fue rechazada
+                eventBus.emit('postulation:rejected', {
+                    postulation: postulation,
+                    targetUserId: targetUserId
+                });
             }
     
             notificationService.createNotification({
@@ -383,7 +365,7 @@ class PostulationService {
      * Un proveedor retira ("se da de baja") de su propia postulación.
      * No afecta el estado de la petición.
      */
-    async withdrawPostulation(postulationId, userId, app) {
+    async withdrawPostulation(postulationId, userId, eventBus) {
         const postulation = await Postulation.findByPk(postulationId, {
             include: {model: Petition, as: 'petition'}
         });
@@ -401,22 +383,13 @@ class PostulationService {
             throw error;
         }
 
-        if(app) {
-            const io = app.get('io');
-            const userSocketMap = app.get('userSocketMap');
-
-            const targetSocketId = userSocketMap.get(targetUserId);
+        if(eventBus) {
             const targetUserId = postulation.petition.id_user_create;
-
-            if(targetSocketId) {
-                
-                io.to(targetSocketId).emit('postulation_withdrawn', {
-                    title: "Postulación retirada",
-                    message: `El proveedor ha retirado su propuesta para "${postulation.petition.title || 'tu petición'}".`,
-                    id_petition: postulation.id_petition,
-                    id_postulation: postulation.id_postulation,
-                });
-            }
+            // Anunciamos que la postulación fue retirada
+            eventBus.emit('postulation:withdrawn', {
+                postulation: postulation,
+                targetUserId: targetUserId
+            });
         }
 
         notificationService.createNotification({
@@ -449,7 +422,7 @@ class PostulationService {
      * @param {number} newState - 6 (Cancelada) o 5 (Rechazada)
      * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null, app) {
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null, eventBus) {
         
         // A. Configurar el filtro (Excluir ganador si existe)
         const whereCondition = {
@@ -485,13 +458,13 @@ class PostulationService {
         if (postulationsToCancel.length > 0) {
             if (newState === 6) {
                 // Cancelación total
-                notificationService.notifyPetitionCancelled(petitionId, postulationsToCancel, app)
+                notificationService.notifyPetitionCancelled(petitionId, postulationsToCancel, eventBus) // Pasamos eventBus
                     .catch(e => console.error("Error notifyPetitionCancelled:", e));
             }
             // CORRECCIÓN: Usamos el estado 2 (Rechazada) y pasamos 'app'
             else if (newState === 2) {
-                // Pasamos 'app' a la función que notifica a los proveedores rechazados
-                notificationService.notificationRejectProviders(petitionId, winnerPostulationId, app)
+                // Pasamos 'eventBus' a la función que notifica a los proveedores rechazados
+                notificationService.notificationRejectProviders(petitionId, winnerPostulationId, eventBus)
                     .catch(e => console.error("Error notifyPostulationsRejected:", e));
             }
         }

@@ -113,7 +113,9 @@ exports.createPetition = async (req, res) => {
             is_deleted: false,
         });
 
-        notificationService.notificationMatchingProvider(petition, req.app);
+        // Pasamos el eventBus en lugar de toda la app
+        const eventBus = req.app.get('eventBus');
+        notificationService.notificationMatchingProvider(petition, eventBus);
 
         return success(res, petition, 'Petición creada correctamente', 201);
     } catch (e) {
@@ -158,8 +160,9 @@ exports.cancelPetition = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.sub; // O req.user.id, dependiendo de cómo esté en tu token
+        const eventBus = req.app.get('eventBus');
 
-        const petition = await service.cancelPetition(Number(id), userId, req.app);
+        const petition = await service.cancelPetition(Number(id), userId, eventBus);
         
         return success(res, petition, 'Petición y postulaciones asociadas canceladas correctamente.');
 

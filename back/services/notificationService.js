@@ -91,7 +91,7 @@ class NotificationService {
         }
     }
 
-    async notificationMatchingProvider(petition, app){
+    async notificationMatchingProvider(petition, eventBus){
         try {
             const matchingProviders = await Provider.findAll({
                 include: [
@@ -118,23 +118,12 @@ class NotificationService {
 
             if (!matchingProviders || matchingProviders.length === 0) return null;
 
-            if(app) {
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
-                
-                matchingProviders.forEach(prov => {
-                    const targetSocketId = userSocketMap.get(prov.user.id_user);
-                    const targetUserId = prov.user.id_user;
-                    if(targetSocketId) {
-                        io.to(targetSocketId).emit('new_petition', {
-                            title: "Nueva opostunidad laboral",
-                            message: "Nueva petición en tus categorías de intereses",
-                            id_petition: petition.id_petition,
-                            notification_type: 'petition_created'
-                        })
-                    }
-
-                })
+            // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
+            if (eventBus) {
+                eventBus.emit('notification:new-petition-match', {
+                    petition: petition,
+                    matchingProviders: matchingProviders
+                });
             }
 
             const notificationData = matchingProviders.map(provider => ({
@@ -162,7 +151,7 @@ class NotificationService {
      * @param {number} id_petition - El ID de la petición que se cerró.
      * @param {number} acceptedPostulationId - El ID de la postulación ganadora (para excluirla).
      */
-    async notificationRejectProviders(id_petition, acceptedPostulationId, app) { // 1. Recibimos 'app'
+    async notificationRejectProviders(id_petition, acceptedPostulationId, eventBus) {
         try {
             // 1. LÓGICA CLAVE: Buscar a los "perdedores"
             // Traduce a: "Dame todas las postulaciones de esta petición DONDE el ID NO SEA el del ganador"
@@ -188,25 +177,13 @@ class NotificationService {
             console.log(`Encontrados ${rejectedPostulations.length} proveedores para notificar rechazo.`);
 
             // --- 2. LÓGICA DE SOCKETS EN TIEMPO REAL ---
-            if (app) {
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
-
-                rejectedPostulations.forEach(post => {
-                    const targetUserId = post.provider.user.id_user;
-                    const targetSocketId = userSocketMap.get(targetUserId);
-                    if (targetSocketId) {
-                        console.log(`[DEBUG] Emitiendo 'postulation_rejected' al proveedor ${targetUserId}`);
-                        io.to(targetSocketId).emit('postulation_rejected', {
-                            message: "Tu postulación no fue seleccionada esta vez.",
-                            petition_id: id_petition,
-                            postulation_id: post.id_postulation
-                        });
-                    }
+            if (eventBus) {
+                eventBus.emit('notification:postulations-rejected', {
+                    rejectedPostulations: rejectedPostulations
                 });
             }
 
-            // 2. Mapear los datos para la notificación
+            // 3. Mapear los datos para la notificación persistente
             const notificationData = rejectedPostulations.map(post => ({
                 id_user: post.provider.user.id_user, // El destinatario
                 title: "Postulación cerrada",
@@ -223,7 +200,7 @@ class NotificationService {
                 }
             }));
 
-            // 3. Inserción Masiva
+            // 4. Inserción Masiva
             await Notification.bulkCreate(notificationData);
     
         } catch (e) {
@@ -237,29 +214,17 @@ class NotificationService {
      * @param {number} petitionId - ID de la petición cancelada.
      * @param {Array} affectedPostulations - Array de objetos con { id_user_create }.
      */
-    async notifyPetitionCancelled(petitionId, affectedPostulations, app) {
+    async notifyPetitionCancelled(petitionId, affectedPostulations, eventBus) {
         try {
             // 1. Validación básica: Si no hay nadie a quien avisar, salimos.
             if (!affectedPostulations || affectedPostulations.length === 0) return;
 
             console.log(`Generando notificaciones de cancelación para ${affectedPostulations.length} proveedores...`);
 
-            if(app) {
-                const io = app.get('io');
-                const userSocketMap = app.get('userSocketMap');
-
-                affectedPostulations.forEach(post => {
-                    const targetSocketId = userSocketMap.get(post.id_user_create);
-                    const targetUserId = post.id_user_create;
-                    if (targetSocketId) {
-                        console.log(`[DEBUG] Emitiendo 'postulation_canceled' al proveedor ${targetUserId}`);
-                        io.to(targetSocketId).emit('postulation_cancelled', {
-                            title: "Postulación cancelada",
-                            message: "Postulación cancelada porque se canceló la petición",
-                            id_petition: petitionId,
-                            id_postulation: post.id_postulation
-                        });
-                    }
+            if(eventBus) {
+                eventBus.emit('notification:petition-cancelled', {
+                    petitionId: petitionId,
+                    affectedPostulations: affectedPostulations
                 });
             }
 

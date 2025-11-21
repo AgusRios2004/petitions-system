@@ -119,7 +119,7 @@ class PetitionService {
      * @param {number} userId - El ID del usuario (cliente) que realiza la acción.
      * @returns {Promise<Petition>} - La petición actualizada.
      */
-    async cancelPetition(petitionId, userId, app) {
+    async cancelPetition(petitionId, userId, eventBus) {
         const t = await sequelize.transaction();
         try {
             const petition = await Petition.findByPk(petitionId, { transaction: t });
@@ -142,7 +142,8 @@ class PetitionService {
                 date_update: new Date()
             }, { transaction: t });
 
-            postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, app);
+            // Pasamos el eventBus en lugar de app
+            postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, null, eventBus);
 
             await t.commit();
             return this.getPetitionById(petitionId);

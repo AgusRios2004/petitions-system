@@ -2,7 +2,10 @@ const app = require("./app");
 const PORT = process.env.PORT || 3000;
 const http = require("http");
 const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); // <-- Importa el manejador de sockets
+const notificationSocketHandler = require('./sockets/notificationHandler');
+const postulationSocketHandler = require('./sockets/postulationHandler');
+const EventEmitter = require('events'); // <-- Corrección de tipeo: EventEmitter
 
 // 1. Creamos un servidor HTTP nativo de Node, usando la app de Express para manejar las rutas.
 const server = http.createServer(app);
@@ -17,10 +20,12 @@ const io = new Server(server, {
 
 // 3. Mapa para rastrear usuarios conectados: { userId: socketId }
 const userSocketMap = new Map();
+const eventBus = new EventEmitter();
 
 // 4. Inyectamos 'io' y 'userSocketMap' en la app de Express para que los servicios puedan usarlos.
 app.set("io", io);
 app.set("userSocketMap", userSocketMap);
+app.set('eventBus', eventBus);
 
 // 5. Middleware de autenticación para Sockets
 io.use((socket, next) => {
@@ -48,6 +53,10 @@ io.on("connection", (socket) => {
     userSocketMap.delete(socket.userId);
   });
 });
+
+// 6. Inicializamos nuestros manejadores de eventos de socket después de configurar todo
+postulationSocketHandler.initialize(app);
+notificationSocketHandler.initialize(app);
 
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

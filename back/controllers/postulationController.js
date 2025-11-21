@@ -63,8 +63,8 @@ exports.getPostulationById = async (req, res) => {
 exports.createPostulation = async (req, res) => {
     try {
         const userId = req.user.sub;
-        // Ahora pasamos req.app como tercer argumento al servicio.
-        const postulation = await service.createPostulation(req.body, userId, req.app);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.createPostulation(req.body, userId, eventBus);
         return success(res, postulation, 201);
     } catch (e) {
         return error(res, e.message, e.statusCode || 500);
@@ -104,7 +104,8 @@ exports.winnerPostulation = async (req, res) => {
 
 exports.acceptPostulation = async (req, res) => {
     try {
-        const postulation = await service.acceptPostulation(req.params.id, req.user.sub, req.app);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.acceptPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -115,7 +116,8 @@ exports.acceptPostulation = async (req, res) => {
 
 exports.rejectPostulation = async (req, res) => {
     try {
-        const postulation = await service.rejectPostulation(req.params.id, req.user.sub, req.app);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.rejectPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -126,7 +128,8 @@ exports.rejectPostulation = async (req, res) => {
 
 exports.withdrawPostulation = async (req, res) => {
     try {
-        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub, req.app);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
