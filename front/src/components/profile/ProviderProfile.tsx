@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UserProfile } from '@/types/common'; // Asumiendo que UserProfile está en common.ts
 
@@ -23,6 +24,33 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  useEffect(() => {
+    // --- LÓGICA DE CONEXIÓN DE SOCKET ---
+    const token = localStorage.getItem('accessToken');
+    console.log('Intentando conectar socket. Token encontrado:', !!token); // <-- Añadido para depurar
+    if (!token) return; // No intentar conectar si no hay token
+
+    // Conecta al backend, enviando el token para la autenticación
+    const socket: Socket = io('http://localhost:3000', {
+      auth: {
+        token: token,
+      },
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Conectado al servidor de sockets con ID:', socket.id);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Desconectado del servidor de sockets.');
+    });
+
+    // Limpieza: desconectar el socket cuando el componente se desmonte
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
