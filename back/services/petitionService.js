@@ -119,7 +119,7 @@ class PetitionService {
      * @param {number} userId - El ID del usuario (cliente) que realiza la acción.
      * @returns {Promise<Petition>} - La petición actualizada.
      */
-    async cancelPetition(petitionId, userId) {
+    async cancelPetition(petitionId, userId, app) {
         const t = await sequelize.transaction();
         try {
             const petition = await Petition.findByPk(petitionId, { transaction: t });
@@ -142,7 +142,7 @@ class PetitionService {
                 date_update: new Date()
             }, { transaction: t });
 
-            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6);
+            postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, app);
 
             await t.commit();
             return this.getPetitionById(petitionId);

@@ -62,16 +62,10 @@ exports.getPostulationById = async (req, res) => {
 
 exports.createPostulation = async (req, res) => {
     try {
-        // Se extrae el ID del usuario desde el token JWT (req.user.sub)
         const userId = req.user.sub;
-
-        // --- DEPURACIÓN 1: Verificando que req.app existe antes de llamar al servicio ---
-        console.log('[DEBUG] postulationController: ¿Existe req.app?', !!req.app);
-
-        // --- CAMBIO CLAVE ---
         // Ahora pasamos req.app como tercer argumento al servicio.
         const postulation = await service.createPostulation(req.body, userId, req.app);
-        return success(res, postulation, 201); // El servicio ya devuelve la postulación detallada
+        return success(res, postulation, 201);
     } catch (e) {
         return error(res, e.message, e.statusCode || 500);
     }
@@ -110,7 +104,7 @@ exports.winnerPostulation = async (req, res) => {
 
 exports.acceptPostulation = async (req, res) => {
     try {
-        const postulation = await service.acceptPostulation(req.params.id, req.user.sub);
+        const postulation = await service.acceptPostulation(req.params.id, req.user.sub, req.app);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -121,7 +115,7 @@ exports.acceptPostulation = async (req, res) => {
 
 exports.rejectPostulation = async (req, res) => {
     try {
-        const postulation = await service.rejectPostulation(req.params.id, req.user.sub);
+        const postulation = await service.rejectPostulation(req.params.id, req.user.sub, req.app);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -132,7 +126,7 @@ exports.rejectPostulation = async (req, res) => {
 
 exports.withdrawPostulation = async (req, res) => {
     try {
-        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub);
+        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub, req.app);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
