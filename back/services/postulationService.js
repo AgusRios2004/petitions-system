@@ -77,7 +77,10 @@ class PostulationService {
 
     // --- MÉTODOS DE ESCRITURA (REFACTORIZADOS Y CORREGIDOS) ---
 
-    async createPostulation(data, userId) {
+    async createPostulation(data, userId, app) { // 1. Recibimos 'app' para acceder a io
+        // --- DEPURACIÓN 2: Verificando si 'app' llega al servicio ---
+        console.log(`[DEBUG] postulationService: Iniciando createPostulation. ¿Llegó app? ${!!app}`);
+
         // ... (código original sin cambios, ya era robusto)
         const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
@@ -136,6 +139,31 @@ class PostulationService {
             }
 
             await t.commit();
+
+            // --- LÓGICA DE SOCKET.IO ---
+            if (app) {
+                console.log('[DEBUG] postulationService: Entrando al bloque de lógica de Socket.IO.');
+                const io = app.get('io');
+                const userSocketMap = app.get('userSocketMap');
+                const targetUserId = petition.id_user_create; // El ID del cliente que creó la petición
+
+                // --- DEPURACIÓN 3: Verificando el mapa de usuarios y el destinatario ---
+                console.log('[DEBUG] postulationService: Mapa de sockets actual:', userSocketMap);
+                console.log(`[DEBUG] postulationService: Intentando encontrar socket para el usuario (cliente) con ID: ${targetUserId}`);
+
+                const targetSocketId = userSocketMap.get(targetUserId);
+
+                if (targetSocketId) {
+                    // --- DEPURACIÓN 4: Confirmando que se va a emitir el evento ---
+                    console.log(`[DEBUG] postulationService: ¡ÉXITO! Socket encontrado: ${targetSocketId}. Emitiendo evento 'new_postulation'.`);
+                    const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
+                    io.to(targetSocketId).emit('new_postulation', postulationWithDetails);
+                } else {
+                    // --- DEPURACIÓN 5: El punto más probable de fallo ---
+                    console.log(`[DEBUG] postulationService: FALLO. No se encontró un socket activo para el usuario con ID: ${targetUserId}. El cliente no está conectado o no está en el mapa.`);
+                }
+            }
+            // --- FIN DE LÓGICA DE SOCKET.IO ---
 
             try {
                 await notificationService.createNotification({

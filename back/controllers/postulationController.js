@@ -62,8 +62,16 @@ exports.getPostulationById = async (req, res) => {
 
 exports.createPostulation = async (req, res) => {
     try {
-        const postulation = await service.createPostulation(req.body, req.user.sub);
-        return success(res, postulation, 201);
+        // Se extrae el ID del usuario desde el token JWT (req.user.sub)
+        const userId = req.user.sub;
+
+        // --- DEPURACIÓN 1: Verificando que req.app existe antes de llamar al servicio ---
+        console.log('[DEBUG] postulationController: ¿Existe req.app?', !!req.app);
+
+        // --- CAMBIO CLAVE ---
+        // Ahora pasamos req.app como tercer argumento al servicio.
+        const postulation = await service.createPostulation(req.body, userId, req.app);
+        return success(res, postulation, 201); // El servicio ya devuelve la postulación detallada
     } catch (e) {
         return error(res, e.message, e.statusCode || 500);
     }
