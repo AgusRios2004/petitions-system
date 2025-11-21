@@ -57,14 +57,6 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
       console.log('❌ Desconectado del servidor de sockets.');
     });
 
-    // --- 3. ESCUCHAMOS EVENTOS DEL SERVIDOR ---
-    socket.on('new_postulation', (postulation: IPostulation) => {
-      console.log('EVENTO RECIBIDO: new_postulation', postulation);
-      toast.success(
-        `¡Nueva postulación! Un proveedor ha ofertado $${postulation.cost} para tu petición.`
-      );
-    });
-
     // Limpieza: desconectar el socket cuando el componente se desmonte
     return () => {
       socket.disconnect();

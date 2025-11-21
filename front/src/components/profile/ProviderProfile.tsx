@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
+import toast, { Toaster } from 'react-hot-toast'; // Ya lo tienes, perfecto
 import { useRouter, useSearchParams } from 'next/navigation';
-import { UserProfile } from '@/types/common'; // Asumiendo que UserProfile está en common.ts
+import { UserProfile, IPostulation } from '@/types/common'; // 1. Importamos IPostulation
 
 // Importaciones de componentes existentes
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
@@ -46,11 +47,57 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
       console.log('❌ Desconectado del servidor de sockets.');
     });
 
+    // --- CENTRO DE NOTIFICACIONES EN TIEMPO REAL ---
+
+    // Evento para: Clientes
+    socket.on('new_postulation', (postulation: IPostulation) => {
+      console.log('EVENTO RECIBIDO: new_postulation', postulation);
+      toast.success(
+        `¡Nueva postulación! Un proveedor ha ofertado $${postulation.cost} para tu petición.`
+      );
+    });
+
+    socket.on('postulation_withdrawn', (data: { message: string, petition_id: number }) => {
+      console.log('EVENTO RECIBIDO: postulation_withdrawn', data);
+      toast.success(data.message || 'Un proveedor ha retirado su postulación.');
+    });
+
+    // Eventos para: Proveedores
+    socket.on('postulation_accepted', (postulation: IPostulation) => {
+      console.log('EVENTO RECIBIDO: postulation_accepted', postulation);
+      toast.success(
+        `¡Felicidades! Tu postulación para "${postulation.petition.description.substring(0, 20)}..." ha sido aceptada.`,
+        { icon: '🎉' }
+      );
+      // Opcional: Aquí podrías invalidar queries de React-Query para refrescar la lista de postulaciones
+    });
+
+    socket.on('postulation_rejected', (data: { message: string, petition_id: number }) => {
+      console.log('EVENTO RECIBIDO: postulation_rejected', data);
+      toast.error(
+        `Tu postulación no fue seleccionada esta vez. ¡Sigue intentando!`,
+        { icon: '😕' }
+      );
+      // Opcional: Aquí también podrías invalidar la query de postulaciones
+    });
+
+    socket.on('petition_cancelled', (data: { message: string, petition_id: number }) => {
+      console.log('EVENTO RECIBIDO: petition_cancelled', data);
+      toast.error(data.message || 'Una petición a la que te postulaste fue cancelada.');
+    });
+
+    socket.on('new_opportunity', (data: { message: string, petition_id: number }) => {
+      console.log('EVENTO RECIBIDO: new_opportunity', data);
+      toast.success(data.message || '¡Nueva oportunidad de trabajo disponible!', { icon: '✨' });
+    });
+
+
     // Limpieza: desconectar el socket cuando el componente se desmonte
     return () => {
       socket.disconnect();
     };
   }, []);
+
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -67,6 +114,10 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
 
   return (
     <div>
+      <Toaster
+        position="top-right"
+        toastOptions={{ className: 'bg-gray-700 text-white' }}
+      />
       <div className="border-b border-gray-700 mb-6">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
           {tabs.map((tab) => (
