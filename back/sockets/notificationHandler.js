@@ -5,7 +5,6 @@ function initialize(app) {
     // Escucha cuando hay una nueva petición que matchea con proveedores
     eventBus.on('notification:new-petition-match', ({ petition, matchingProviders }) => {
         if (!matchingProviders || matchingProviders.length === 0) return;
-
         matchingProviders.forEach(provider => {
             const targetUserId = provider.user.id_user;
             const targetSocketId = userSocketMap.get(targetUserId);

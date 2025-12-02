@@ -257,13 +257,14 @@ class PostulationService {
                 date_update: new Date(),
             }, {transaction: t});
 
-            // --- CORRECCIÓN ---
-            // Llamamos a la función auxiliar con los parámetros correctos:
-            // newState = 5 (Rechazada), y pasamos el ID del ganador para excluirlo.
-            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 2, postulation.id_postulation, eventBus);
+            // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
+            // La notificación se hará DESPUÉS del commit.
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 5, postulation.id_postulation); // Se asume 5 = No seleccionada
 
-            await t.commit()
+            await t.commit();
 
+            // --- LÓGICA DE NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
+            // Ahora que la transacción fue exitosa, notificamos a los rechazados.
             if (eventBus){
                 const targetUserId = postulation.id_user_create;
                 const updatedPostulation = await this.getPostulationById(postulation.id_postulation);
@@ -274,7 +275,9 @@ class PostulationService {
                     targetUserId: targetUserId
                 });
 
-                // El notificationService también podría usar el eventBus para notificar a los rechazados
+                // Notificamos a los proveedores rechazados.
+                this.notifyRejectedProviders(petition.id_petition, postulation.id_postulation, eventBus)
+                    .catch(e => console.error("Error en notificationRejectProviders:", e));
             }
 
             // Notificación persistente (para la "campanita") - Se ejecuta después del commit
@@ -307,54 +310,62 @@ class PostulationService {
      * No afecta el estado de la petición.
      */
     async rejectPostulation(postulationId, userId, eventBus) {
+        const t = await sequelize.transaction();
         try {
             const postulation = await Postulation.findByPk(postulationId, {
-                include: [{ model: Petition, as: 'petition' }]
+                include: [{ model: Petition, as: 'petition' }],
+                transaction: t
             });
     
             if (!postulation) {
                 const error = new Error("Postulación no encontrada.");
                 error.statusCode = 404;
+                await t.rollback();
                 throw error;
             }
     
-            const petitionOwner = await postulation.petition.getCustomers();
+            const petitionOwner = await postulation.petition.getCustomers({ transaction: t });
             if (petitionOwner.user_id !== userId) {
                 const error = new Error("No tienes permiso para rechazar esta postulación.");
                 error.statusCode = 403;
+                await t.rollback();
                 throw error;
             }
     
+            await postulation.update({
+                winner: false,
+                id_state: 2, // 2 = Rechazada
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
+
+            await t.commit();
+
+            // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
             if(eventBus) {
                 const targetUserId = postulation.id_user_create;
-                // Anunciamos que la postulación fue rechazada
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
                 eventBus.emit('postulation:rejected', {
-                    postulation: postulation,
+                    postulation: updatedPostulation,
                     targetUserId: targetUserId
                 });
             }
     
-            notificationService.createNotification({
+            // Notificación persistente (fire-and-forget)
+            notificationService.createNotification({ // No usamos await
                 id_user: postulation.id_user_create,
                 title: 'Postulación rechazada',
                 message: 'Postulación rechazada por el cliente.',
                 notification_type: 'WARNING',
                 settingKey: 'postulation_rejected',
                 related_postulation_id: postulation.id_postulation,
-                related_petition_id: postulation.id_petition,
-                metadata: {
-                    id_provider: postulation.id_provider,
-                    proposal: postulation.proposal,
-                }
-            });
+                related_petition_id: postulation.id_petition
+            }).catch(err => console.error("Error creando notificación de rechazo:", err));
     
-            return await postulation.update({
-                winner: false,
-                id_state: 2,
-                id_user_update: userId,
-                date_update: new Date(),
-            });
+            return postulation;
+
         } catch (e) {
+            await t.rollback();
             console.error("Error en rejectPostulation:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
@@ -362,56 +373,69 @@ class PostulationService {
     }
 
     /**
-     * Un proveedor retira ("se da de baja") de su propia postulación.
+     * [CORREGIDO] Un proveedor retira ("se da de baja") de su propia postulación.
      * No afecta el estado de la petición.
      */
     async withdrawPostulation(postulationId, userId, eventBus) {
-        const postulation = await Postulation.findByPk(postulationId, {
-            include: {model: Petition, as: 'petition'}
-        });
-
-        if (!postulation) {
-            const error = new Error("Postulación no encontrada.");
-            error.statusCode = 404;
-            throw error;
-        }
-
-        const provider = await Provider.findOne({ where: { user_id: userId } });
-        if (!provider || postulation.id_provider !== provider.id_provider) {
-            const error = new Error("No tienes permiso para retirar esta postulación.");
-            error.statusCode = 403; // Forbidden
-            throw error;
-        }
-
-        if(eventBus) {
-            const targetUserId = postulation.petition.id_user_create;
-            // Anunciamos que la postulación fue retirada
-            eventBus.emit('postulation:withdrawn', {
-                postulation: postulation,
-                targetUserId: targetUserId
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(postulationId, {
+                include: {model: Petition, as: 'petition'},
+                transaction: t
             });
+
+            if (!postulation) {
+                const error = new Error("Postulación no encontrada.");
+                error.statusCode = 404;
+                await t.rollback();
+                throw error;
+            }
+
+            const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
+            if (!provider || postulation.id_provider !== provider.id_provider) {
+                const error = new Error("No tienes permiso para retirar esta postulación.");
+                error.statusCode = 403; // Forbidden
+                await t.rollback();
+                throw error;
+            }
+
+            await postulation.update({
+                id_state: 4, // 4 = dado de baja / retirado
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
+
+            await t.commit();
+
+            // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
+            if(eventBus) {
+                const targetUserId = postulation.petition.id_user_create;
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
+                eventBus.emit('postulation:withdrawn', {
+                    postulation: updatedPostulation,
+                    targetUserId: targetUserId
+                });
+            }
+
+            // Notificación persistente (fire-and-forget)
+            notificationService.createNotification({ // No usamos await
+                id_user: postulation.petition.id_user_create,
+                title: 'Postulación retirada',
+                message: 'Postulación retirada por el proveedor.',
+                notification_type: 'INFO',
+                settingKey: 'postulation_state_changed',
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: postulation.id_petition
+            }).catch(err => console.error("Error creando notificación de retiro:", err));
+
+            return postulation;
+
+        } catch (e) {
+            await t.rollback();
+            console.error("Error en withdrawPostulation:", e);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
         }
-
-        notificationService.createNotification({
-            id_user: postulation.petition.id_user_create,
-            title: 'Postulación retirada',
-            message: 'Postulación retirada por el proveedor.',
-            notification_type: 'INFO',
-            settingKey: 'postulation_state_changed',
-            related_postulation_id: postulation.id_postulation,
-            related_petition_id: postulation.id_petition,
-            metadata: {
-                id_provider: postulation.id_provider,
-                proposal: postulation.proposal,
-            },
-        });
-
-        // LÓGICA CORRECTA:
-        return await postulation.update({
-            id_state: 4, // 4 = dado de baja / retirado
-            id_user_update: userId,
-            date_update: new Date(),
-        });
     }
 
     /**
@@ -419,10 +443,10 @@ class PostulationService {
      * @param {number} petitionId 
      * @param {number} userId 
      * @param {object} transaction 
-     * @param {number} newState - 6 (Cancelada) o 5 (Rechazada)
+     * @param {number} newState - 6 (Cancelada) o 5 (No Seleccionada)
      * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null, eventBus) {
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null) {
         
         // A. Configurar el filtro (Excluir ganador si existe)
         const whereCondition = {
@@ -434,11 +458,11 @@ class PostulationService {
             whereCondition.id_postulation = { [Op.ne]: winnerPostulationId };
         }
 
-        // B. Buscar afectados
+        // B. Buscar afectados (opcional, solo si se necesita la data para algo más)
         const postulationsToCancel = await Postulation.findAll({
             attributes: ['id_user_create'], // Solo necesitamos el ID
             where: whereCondition,
-            transaction
+            transaction: transaction
         });
 
         // C. Actualizar estado
@@ -450,24 +474,11 @@ class PostulationService {
             },
             {
                 where: whereCondition,
-                transaction
+                transaction: transaction
             }
         );
 
-        // D. Notificaciones
-        if (postulationsToCancel.length > 0) {
-            if (newState === 6) {
-                // Cancelación total
-                notificationService.notifyPetitionCancelled(petitionId, postulationsToCancel, eventBus) // Pasamos eventBus
-                    .catch(e => console.error("Error notifyPetitionCancelled:", e));
-            }
-            // CORRECCIÓN: Usamos el estado 2 (Rechazada) y pasamos 'app'
-            else if (newState === 2) {
-                // Pasamos 'eventBus' a la función que notifica a los proveedores rechazados
-                notificationService.notificationRejectProviders(petitionId, winnerPostulationId, eventBus)
-                    .catch(e => console.error("Error notifyPostulationsRejected:", e));
-            }
-        }
+        // D. Notificaciones - Se eliminan de aquí para manejarlas fuera de la transacción.
 
         return updateResult;
     }
