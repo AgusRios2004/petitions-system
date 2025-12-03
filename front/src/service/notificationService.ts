@@ -1,13 +1,5 @@
 import apiClient from './apiClient'; // Asumo que tienes un cliente axios configurado en esta ruta
-
-export interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-  related_petition_id?: number;
-}
+import { Notification } from '@/types/common'
 
 export const getNotifications = async (): Promise<Notification[]> => {
   try {
