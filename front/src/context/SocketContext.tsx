@@ -14,6 +14,13 @@ interface SocketContextType {
 
 export const SocketContext = createContext<SocketContextType | null>(null);
 
+// Exportamos el hook para consumir el contexto fácilmente
+export const useSocket = () => {
+    const context = useContext(SocketContext);
+    if (!context) throw new Error('useSocket must be used within a SocketProvider');
+    return context;
+};
+
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     
     const { user } = useAuth();
@@ -49,16 +56,29 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
                     console.log("❌ Socket desconectado.");
                   });
 
-                  socket.on('new_postulation', (data) => {
-                    toast.success("¡Has recibido una nueva postulación!");
-                    queryClient.invalidateQueries({ queryKey: ['postulations', data.id_petition] });
+                  socket.on('notification', (data: { message: string }) => {
+                    toast.success(data.message);
+                    // Invalidamos la query de notificaciones para que la campanita se actualice
+                    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+                  });
+
+                  // Listeners específicos para invalidar datos de la aplicación
+                  const invalidatePostulations = (data: { id_petition?: number }) => {
+                    if (data.id_petition) {
+                      queryClient.invalidateQueries({ queryKey: ['postulations', data.id_petition] });
+                    }
+                    queryClient.invalidateQueries({ queryKey: ['postulations'] });
                     queryClient.invalidateQueries({ queryKey: ['petitions'] });
+                  };
+
+                  socket.on('new_postulation', (data: { id_petition: number }) => {
+                    toast.success("¡Has recibido una nueva postulación!");
+                    invalidatePostulations(data);
                   });
 
                   socket.on('postulation_accepted', (data) => {
                     toast.success("¡Felicidades! Tu postulación ha sido aceptada.");
-                    queryClient.invalidateQueries({ queryKey: ['postulations'] });
-                    queryClient.invalidateQueries({ queryKey: ['petitions'] });
+                    invalidatePostulations(data);
                   });
 
                   socket.on('new_petition', (data) => {
@@ -68,12 +88,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
                   
                   socket.on('postulation_rejected', (data) => {
                     toast.error('Una de tus postulaciones fue rechazada.');
-                    queryClient.invalidateQueries({ queryKey: ['postulations'] });
+                    invalidatePostulations(data);
                   });
 
                   socket.on('postulation_withdrawn', (data) => {
                     toast.error('Un proveedor ha retirado su postulación.');
-                    queryClient.invalidateQueries({ queryKey: ['postulations', data.id_petition] });
+                    invalidatePostulations(data);
                   });
                 };
 
