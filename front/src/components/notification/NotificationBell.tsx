@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, CheckCheck } from 'lucide-react';
-import { getNotifications, markAllNotificationsAsRead, Notification } from '@/service/notificationService';
-import Link from 'next/link'; // 1. Importamos el componente Link
+import { getNotifications, markAllNotificationsAsRead } from '@/service/notificationService';
+import { Notification } from '@/types/common';
 import { useSocket } from '@/context/SocketContext';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { es } from 'date-fns/locale/es';
+import NotificationItem from './NotificationItem';
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,23 +88,8 @@ export default function NotificationBell() {
             {isLoading ? (
               <p className="p-4 text-center text-sm text-gray-500">Cargando...</p>
             ) : notifications && notifications.length > 0 ? (
-              notifications.map((notif) => (
-                // 2. Envolvemos cada notificación en un Link si tiene un ID de petición relacionado
-                <Link
-                  key={notif.id}
-                  href={notif.related_petition_id ? `/dashboard/petitions/${notif.related_petition_id}` : '#'}
-                  passHref
-                  legacyBehavior>
-                  <a onClick={() => setIsOpen(false)} className={`block border-b border-gray-200 p-4 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/70 ${
-                      !notif.is_read ? 'bg-indigo-50 dark:bg-gray-700/50' : ''
-                    }`}>
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">{notif.title}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{notif.message}</p>
-                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                      {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: es })}
-                    </p>
-                  </a>
-                </Link>
+              notifications.map(notif => (
+                <NotificationItem key={notif.id} notification={notif} onClose={() => setIsOpen(false)} />
               ))
             ) : (
               <p className="p-8 text-center text-sm text-gray-500">No tienes notificaciones.</p>
