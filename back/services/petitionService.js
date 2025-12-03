@@ -59,8 +59,8 @@ class PetitionService {
                         include: [
                             [
                                 sequelize.literal(`(
-                                    SELECT COALESCE(AVG(g.grade_number), 0) 
-                                    FROM grade AS g 
+                                    SELECT COALESCE(AVG(g.grade_number), 0)
+                                    FROM \`grade\` AS g
                                     JOIN grade_customer AS gc ON g.id_grade = gc.id_grade 
                                     WHERE gc.id_customer = \`customers\`.\`id_customer\`
                                 )`),
@@ -143,7 +143,7 @@ class PetitionService {
             }, { transaction: t });
 
             // Pasamos el eventBus en lugar de app
-            postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, null, eventBus);
+            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, null, eventBus);
 
             await t.commit();
             return this.getPetitionById(petitionId);

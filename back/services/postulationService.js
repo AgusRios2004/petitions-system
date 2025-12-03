@@ -97,7 +97,10 @@ class PostulationService {
                 error.statusCode = 404;
                 throw error;
             }
-            if (petition.id_state !== 3) { // Asumiendo 3 = 'Abierta' o 'Pendiente' para la petición
+            // [CORREGIDO] Obtenemos el cliente asociado para tener su user_id
+            const customer = await petition.getCustomers({ transaction: t });
+
+            if (petition.id_state !== 3) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -142,7 +145,7 @@ class PostulationService {
 
             // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
             if (eventBus) {
-                const targetUserId = petition.id_user_create; // El ID del cliente que creó la petición
+                const targetUserId = customer.user_id; // Usamos el ID de usuario correcto del cliente
                 const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
 
                 // El servicio solo "anuncia" que algo pasó. No sabe nada de sockets.
@@ -155,7 +158,7 @@ class PostulationService {
 
             try {
                 await notificationService.createNotification({
-                    id_user: petition.id_user_create,
+                    id_user: customer.user_id, // [CORREGIDO] Usamos el ID de usuario correcto del cliente
                     title: "Nueva Postulación Recibida",
                     message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
                     notification_type: "POSTULATION_CREATED",
@@ -229,8 +232,11 @@ class PostulationService {
     async acceptPostulation(id, userId, eventBus) {
         // ... (código original sin cambios, la lógica es correcta para aceptar)
         const t = await sequelize.transaction();
+        // [CORREGIDO] Declaramos las variables fuera del try para que sean accesibles después del commit.
+        let petition;
+        let postulation; 
         try {
-            const postulation = await Postulation.findByPk(id, {transaction: t});
+            postulation = await Postulation.findByPk(id, {transaction: t});
             if(!postulation) {
                 const error = new Error("Postulación no encontrada.")
                 error.statusCode = 404; 
@@ -241,10 +247,10 @@ class PostulationService {
                 winner: true,
                 id_state: 1, // 1 = aceptada
                 id_user_update: userId,
-                data_update: new Date(),
+                date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
 
-            const petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
+            petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
             if(!petition){
                 const e = new Error("Petición no encontrada");
                 e.statusCode = 404;
@@ -262,10 +268,20 @@ class PostulationService {
             await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 5, postulation.id_postulation); // Se asume 5 = No seleccionada
 
             await t.commit();
+            // La transacción ha terminado exitosamente.
+        } catch (e) {
+            // Si algo falla ANTES del commit, hacemos rollback y lanzamos el error.
+            await t.rollback();
+            console.error("Error durante la transacción de aceptación:", e);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
+        }
 
-            // --- LÓGICA DE NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
+        // --- LÓGICA POST-TRANSACCIÓN (Notificaciones y respuesta) ---
+        // Este código se ejecuta solo si el try/catch anterior fue exitoso.
+        try {
             // Ahora que la transacción fue exitosa, notificamos a los rechazados.
-            if (eventBus){
+            if (eventBus) {
                 const targetUserId = postulation.id_user_create;
                 const updatedPostulation = await this.getPostulationById(postulation.id_postulation);
 
@@ -276,8 +292,8 @@ class PostulationService {
                 });
 
                 // Notificamos a los proveedores rechazados.
-                this.notifyRejectedProviders(petition.id_petition, postulation.id_postulation, eventBus)
-                    .catch(e => console.error("Error en notificationRejectProviders:", e));
+                // [CORREGIDO] Llamamos al método correcto desde el servicio de notificaciones.
+                notificationService.notificationRejectProviders(petition.id_petition, postulation.id_postulation, eventBus);
             }
 
             // Notificación persistente (para la "campanita") - Se ejecuta después del commit
@@ -297,11 +313,9 @@ class PostulationService {
             }).catch(err => console.error("Error notificando al ganador:", err));
 
             return await this.getPostulationById(id);
-        } catch (e) {
-            await t.rollback();
-            console.error("Error: ", e);
-            if (!e.statusCode) e.statusCode = 500;
-            throw e;
+        } catch (postCommitError) {
+            console.error("Error post-commit en acceptPostulation:", postCommitError);
+            return this.getPostulationById(id); // Intentamos devolver la data a pesar del error secundario.
         }
     }
 
