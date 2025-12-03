@@ -23,7 +23,21 @@ export default function NotificationBell() {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      const previousNotifications = queryClient.getQueryData<Notification[]>(['notifications']);
+      queryClient.setQueryData<Notification[]>(['notifications'], old =>
+        old ? old.map(n => ({ ...n, is_read: true })) : []
+      );
+      return { previousNotifications };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      toast.error('Error al marcar las notificaciones como leídas');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
@@ -99,7 +113,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:ring-gray-700">
+        <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:ring-gray-700">
           <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notificaciones</h3>
             {unreadCount > 0 && (
