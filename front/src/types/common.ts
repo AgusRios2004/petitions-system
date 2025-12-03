@@ -304,4 +304,5 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
   related_petition_id?: number;
+  related_postulation_id?: number;
 }

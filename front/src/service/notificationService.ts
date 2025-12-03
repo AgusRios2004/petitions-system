@@ -13,5 +13,14 @@ export const getNotifications = async (): Promise<Notification[]> => {
 };
 
 export const markAllNotificationsAsRead = async (): Promise<void> => {
-  await apiClient.patch('/notifications/read-all');
+  try {
+    await apiClient.patch('/notification/read-all');
+  } catch (e: any) {
+    console.error("Error marking all notifications as read: ", e);
+    throw e;
+  }
+};
+
+export const markNotificationAsRead = async (notificationId: number): Promise<void> => {
+  await apiClient.patch(`/notification/${notificationId}/read`);
 };
