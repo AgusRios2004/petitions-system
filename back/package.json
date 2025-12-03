@@ -10,7 +10,8 @@
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
     "node": "^22.18.0",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -42,7 +42,11 @@ const ProviderOportunities = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['openPetitions'],
         queryFn: async () => {
-            const params = { id_state: 3 }; // Asumiendo 3 es el ID para "Abierta"
+            const params: { id_state: number; providerId?: number } = { 
+                id_state: 3 // Asumiendo 3 es el ID para "Abierta"
+            };
+            // Añadimos el providerId a los parámetros si existe
+            if (providerId) params.providerId = providerId;
             const response = await getPetitions(params);
             return response;
         },

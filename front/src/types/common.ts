@@ -296,3 +296,13 @@ export interface IGrade {
   grade_number: number;
   date_create: string;
 };
+
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  related_petition_id?: number;
+  related_postulation_id?: number;
+}

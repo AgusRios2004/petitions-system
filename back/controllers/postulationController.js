@@ -1,6 +1,7 @@
 const service = require('../services/postulationService');
 const { error, success } = require('../middlewares/response');
 const { Petition, Customer } = require('../models');
+const notificationService = require('../services/notificationService');
 
 exports.getAllPostulations = async (req, res) => {
     try {
@@ -61,7 +62,9 @@ exports.getPostulationById = async (req, res) => {
 
 exports.createPostulation = async (req, res) => {
     try {
-        const postulation = await service.createPostulation(req.body, req.user.sub);
+        const userId = req.user.sub;
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.createPostulation(req.body, userId, eventBus);
         return success(res, postulation, 201);
     } catch (e) {
         return error(res, e.message, e.statusCode || 500);
@@ -101,7 +104,8 @@ exports.winnerPostulation = async (req, res) => {
 
 exports.acceptPostulation = async (req, res) => {
     try {
-        const postulation = await service.acceptPostulation(req.params.id, req.user.sub);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.acceptPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -112,7 +116,8 @@ exports.acceptPostulation = async (req, res) => {
 
 exports.rejectPostulation = async (req, res) => {
     try {
-        const postulation = await service.rejectPostulation(req.params.id, req.user.sub);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.rejectPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
@@ -123,7 +128,8 @@ exports.rejectPostulation = async (req, res) => {
 
 exports.withdrawPostulation = async (req, res) => {
     try {
-        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub);
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.withdrawPostulation(req.params.id, req.user.sub, eventBus);
         if(!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {

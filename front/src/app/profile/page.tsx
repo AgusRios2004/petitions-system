@@ -53,9 +53,9 @@ export default function ProfilePage() {
             Bienvenido, {user.name}
           </h1>
           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
-            {user.profile_picture_url ? (
+            {user.profile_image ? (
               <img
-                src={user.profile_picture_url}
+                src={user.profile_image}
                 alt="Foto de perfil"
                 className="w-full h-full object-cover"
               />

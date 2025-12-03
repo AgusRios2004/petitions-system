@@ -1,4 +1,7 @@
+const { title } = require('process');
+const { post } = require('../app');
 const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer } = require('../models');
+const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
 
 class PostulationService {
@@ -76,7 +79,8 @@ class PostulationService {
 
     // --- MÉTODOS DE ESCRITURA (REFACTORIZADOS Y CORREGIDOS) ---
 
-    async createPostulation(data, userId) {
+    async createPostulation(data, userId, eventBus) { // Ya no recibe 'app', sino 'eventBus'
+        
         // ... (código original sin cambios, ya era robusto)
         const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
@@ -93,7 +97,10 @@ class PostulationService {
                 error.statusCode = 404;
                 throw error;
             }
-            if (petition.id_state !== 3) { // Asumiendo 3 = 'Abierta' o 'Pendiente' para la petición
+            // [CORREGIDO] Obtenemos el cliente asociado para tener su user_id
+            const customer = await petition.getCustomers({ transaction: t });
+
+            if (petition.id_state !== 3) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -135,6 +142,41 @@ class PostulationService {
             }
 
             await t.commit();
+
+            // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
+            if (eventBus) {
+                const targetUserId = customer.user_id; // Usamos el ID de usuario correcto del cliente
+                const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
+
+                // El servicio solo "anuncia" que algo pasó. No sabe nada de sockets.
+                eventBus.emit('postulation:created', {
+                    postulation: postulationWithDetails,
+                    targetUserId: targetUserId
+                });
+            }
+            // --- FIN DE LÓGICA DE EVENTOS ---
+
+            try {
+                await notificationService.createNotification({
+                    id_user: customer.user_id, // [CORREGIDO] Usamos el ID de usuario correcto del cliente
+                    title: "Nueva Postulación Recibida",
+                    message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
+                    notification_type: "POSTULATION_CREATED",
+                    settingKey: "postulation_created",
+                    related_postulation_id: newPostulation.id_postulation,
+                    related_petition_id: petition.id_petition,
+                    metadata: {
+                        id_customer: petition.id_customer,
+                        description: petition.description,
+                        id_provider: provider.id_provider,
+                        proposal: proposal
+                    },
+                });
+            } catch (notifyError) {
+                // Capturamos error silenciosamente para no fallar el request si la notificación falla
+                console.error("Error enviando notificación:", notifyError);
+            }
+            
             return await this.getPostulationById(newPostulation.id_postulation);
         } catch (e) {
             await t.rollback();
@@ -187,11 +229,14 @@ class PostulationService {
         }
     }
 
-    async acceptPostulation(id, userId) {
+    async acceptPostulation(id, userId, eventBus) {
         // ... (código original sin cambios, la lógica es correcta para aceptar)
         const t = await sequelize.transaction();
+        // [CORREGIDO] Declaramos las variables fuera del try para que sean accesibles después del commit.
+        let petition;
+        let postulation; 
         try {
-            const postulation = await Postulation.findByPk(id, {transaction: t});
+            postulation = await Postulation.findByPk(id, {transaction: t});
             if(!postulation) {
                 const error = new Error("Postulación no encontrada.")
                 error.statusCode = 404; 
@@ -202,10 +247,10 @@ class PostulationService {
                 winner: true,
                 id_state: 1, // 1 = aceptada
                 id_user_update: userId,
-                data_update: new Date(),
+                date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
 
-            const petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
+            petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
             if(!petition){
                 const e = new Error("Petición no encontrada");
                 e.statusCode = 404;
@@ -218,14 +263,59 @@ class PostulationService {
                 date_update: new Date(),
             }, {transaction: t});
 
-            await t.commit()
+            // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
+            // La notificación se hará DESPUÉS del commit.
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 5, postulation.id_postulation); // Se asume 5 = No seleccionada
 
-            return await this.getPostulationById(id);
+            await t.commit();
+            // La transacción ha terminado exitosamente.
         } catch (e) {
+            // Si algo falla ANTES del commit, hacemos rollback y lanzamos el error.
             await t.rollback();
-            console.error("Error: ", e);
+            console.error("Error durante la transacción de aceptación:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
+        }
+
+        // --- LÓGICA POST-TRANSACCIÓN (Notificaciones y respuesta) ---
+        // Este código se ejecuta solo si el try/catch anterior fue exitoso.
+        try {
+            // Ahora que la transacción fue exitosa, notificamos a los rechazados.
+            if (eventBus) {
+                const targetUserId = postulation.id_user_create;
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation);
+
+                // Anunciamos que la postulación fue aceptada
+                eventBus.emit('postulation:accepted', {
+                    postulation: updatedPostulation,
+                    targetUserId: targetUserId
+                });
+
+                // Notificamos a los proveedores rechazados.
+                // [CORREGIDO] Llamamos al método correcto desde el servicio de notificaciones.
+                notificationService.notificationRejectProviders(petition.id_petition, postulation.id_postulation, eventBus);
+            }
+
+            // Notificación persistente (para la "campanita") - Se ejecuta después del commit
+            notificationService.createNotification({
+                id_user: postulation.id_user_create, // El usuario del proveedor ganador
+                title: "¡Postulación Aceptada!",
+                message: `¡Felicidades! El cliente ha aceptado tu presupuesto para el trabajo: "${petition.description.substring(0, 30)}..."`,
+                notification_type: "postulation_accepted", // Tipo para que el front muestre ícono verde/festejo
+                settingKey: "postulation_accepted",        // Revisa la config del usuario
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: petition.id_petition,
+                metadata: {
+                    status: "winner",
+                    petition_title: petition.title || petition.description,
+                    descriptionPostulation: postulation.proposal // Usamos 'proposal' que es más consistente
+                }
+            }).catch(err => console.error("Error notificando al ganador:", err));
+
+            return await this.getPostulationById(id);
+        } catch (postCommitError) {
+            console.error("Error post-commit en acceptPostulation:", postCommitError);
+            return this.getPostulationById(id); // Intentamos devolver la data a pesar del error secundario.
         }
     }
 
@@ -233,80 +323,180 @@ class PostulationService {
      * [CORREGIDO] Rechaza una postulación. Solo el cliente dueño de la petición puede hacerlo.
      * No afecta el estado de la petición.
      */
-    async rejectPostulation(postulationId, userId) {
-        const postulation = await Postulation.findByPk(postulationId, {
-            include: [{ model: Petition, as: 'petition' }]
-        });
+    async rejectPostulation(postulationId, userId, eventBus) {
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(postulationId, {
+                include: [{ model: Petition, as: 'petition' }],
+                transaction: t
+            });
+    
+            if (!postulation) {
+                const error = new Error("Postulación no encontrada.");
+                error.statusCode = 404;
+                await t.rollback();
+                throw error;
+            }
+    
+            const petitionOwner = await postulation.petition.getCustomers({ transaction: t });
+            if (petitionOwner.user_id !== userId) {
+                const error = new Error("No tienes permiso para rechazar esta postulación.");
+                error.statusCode = 403;
+                await t.rollback();
+                throw error;
+            }
+    
+            await postulation.update({
+                winner: false,
+                id_state: 2, // 2 = Rechazada
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
 
-        if (!postulation) {
-            const error = new Error("Postulación no encontrada.");
-            error.statusCode = 404;
-            throw error;
+            await t.commit();
+
+            // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
+            if(eventBus) {
+                const targetUserId = postulation.id_user_create;
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
+                eventBus.emit('postulation:rejected', {
+                    postulation: updatedPostulation,
+                    targetUserId: targetUserId
+                });
+            }
+    
+            // Notificación persistente (fire-and-forget)
+            notificationService.createNotification({ // No usamos await
+                id_user: postulation.id_user_create,
+                title: 'Postulación rechazada',
+                message: 'Postulación rechazada por el cliente.',
+                notification_type: 'WARNING',
+                settingKey: 'postulation_rejected',
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: postulation.id_petition
+            }).catch(err => console.error("Error creando notificación de rechazo:", err));
+    
+            return postulation;
+
+        } catch (e) {
+            await t.rollback();
+            console.error("Error en rejectPostulation:", e);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
         }
-
-        const petitionOwner = await postulation.petition.getCustomers();
-        if (petitionOwner.user_id !== userId) {
-            const error = new Error("No tienes permiso para rechazar esta postulación.");
-            error.statusCode = 403;
-            throw error;
-        }
-
-        return await postulation.update({
-            winner: false,
-            id_state: 2,
-            id_user_update: userId,
-            date_update: new Date(),
-        });
     }
 
     /**
-     * Un proveedor retira ("se da de baja") de su propia postulación.
+     * [CORREGIDO] Un proveedor retira ("se da de baja") de su propia postulación.
      * No afecta el estado de la petición.
      */
-    async withdrawPostulation(postulationId, userId) {
-        const postulation = await Postulation.findByPk(postulationId);
+    async withdrawPostulation(postulationId, userId, eventBus) {
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(postulationId, {
+                include: {model: Petition, as: 'petition'},
+                transaction: t
+            });
 
-        if (!postulation) {
-            const error = new Error("Postulación no encontrada.");
-            error.statusCode = 404;
-            throw error;
+            if (!postulation) {
+                const error = new Error("Postulación no encontrada.");
+                error.statusCode = 404;
+                await t.rollback();
+                throw error;
+            }
+
+            const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
+            if (!provider || postulation.id_provider !== provider.id_provider) {
+                const error = new Error("No tienes permiso para retirar esta postulación.");
+                error.statusCode = 403; // Forbidden
+                await t.rollback();
+                throw error;
+            }
+
+            await postulation.update({
+                id_state: 4, // 4 = dado de baja / retirado
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
+
+            await t.commit();
+
+            // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
+            if(eventBus) {
+                const targetUserId = postulation.petition.id_user_create;
+                const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
+                eventBus.emit('postulation:withdrawn', {
+                    postulation: updatedPostulation,
+                    targetUserId: targetUserId
+                });
+            }
+
+            // Notificación persistente (fire-and-forget)
+            notificationService.createNotification({ // No usamos await
+                id_user: postulation.petition.id_user_create,
+                title: 'Postulación retirada',
+                message: 'Postulación retirada por el proveedor.',
+                notification_type: 'INFO',
+                settingKey: 'postulation_state_changed',
+                related_postulation_id: postulation.id_postulation,
+                related_petition_id: postulation.id_petition
+            }).catch(err => console.error("Error creando notificación de retiro:", err));
+
+            return postulation;
+
+        } catch (e) {
+            await t.rollback();
+            console.error("Error en withdrawPostulation:", e);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
         }
-
-        const provider = await Provider.findOne({ where: { user_id: userId } });
-        if (!provider || postulation.id_provider !== provider.id_provider) {
-            const error = new Error("No tienes permiso para retirar esta postulación.");
-            error.statusCode = 403; // Forbidden
-            throw error;
-        }
-
-        // LÓGICA CORRECTA:
-        return await postulation.update({
-            id_state: 4, // 4 = dado de baja / retirado
-            id_user_update: userId,
-            date_update: new Date(),
-        });
     }
 
     /**
-     * [NUEVO] Cambia el estado de todas las postulaciones pendientes de una petición a "cancelada".
-     * Este método está diseñado para ser llamado por petitionService durante una transacción.
+     * Cancela o Rechaza postulaciones masivamente.
+     * @param {number} petitionId 
+     * @param {number} userId 
+     * @param {object} transaction 
+     * @param {number} newState - 6 (Cancelada) o 5 (No Seleccionada)
+     * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction) {
-        return await Postulation.update(
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null) {
+        
+        // A. Configurar el filtro (Excluir ganador si existe)
+        const whereCondition = {
+            id_petition: petitionId,
+            id_state: 3 // Pendientes
+        };
+
+        if (winnerPostulationId) {
+            whereCondition.id_postulation = { [Op.ne]: winnerPostulationId };
+        }
+
+        // B. Buscar afectados (opcional, solo si se necesita la data para algo más)
+        const postulationsToCancel = await Postulation.findAll({
+            attributes: ['id_user_create'], // Solo necesitamos el ID
+            where: whereCondition,
+            transaction: transaction
+        });
+
+        // C. Actualizar estado
+        const updateResult = await Postulation.update(
             {
-                id_state: 6, // 6 = cancelada
+                id_state: newState,
                 id_user_update: userId,
                 date_update: new Date(),
             },
             {
-                where: {
-                    id_petition: petitionId,
-                    id_state: 3 // Solo se cancelan las que están 'pendientes'
-                },
-                transaction
+                where: whereCondition,
+                transaction: transaction
             }
         );
+
+        // D. Notificaciones - Se eliminan de aquí para manejarlas fuera de la transacción.
+
+        return updateResult;
     }
+
 }
 
 module.exports = new PostulationService();

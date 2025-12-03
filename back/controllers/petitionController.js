@@ -1,10 +1,11 @@
 const service = require('../services/petitionService');
 const { error, success } = require('../middlewares/response');
+const notificationService = require('../services/notificationService');
 
 exports.getPetitions = async (req, res) => {
     try {
         const { 
-            id_state, id_type_petition, id_customer, id_profession, 
+            id_state, id_type_petition, id_customer, id_profession, providerId,
             id_type_provider, description, page, limit, sortBy, order 
         } = req.query;
 
@@ -15,6 +16,7 @@ exports.getPetitions = async (req, res) => {
         if (id_customer) filter.id_customer = id_customer;
         if (id_profession) filter.id_profession = id_profession;
         if (id_type_provider) filter.id_type_provider = id_type_provider;
+        if (providerId) filter.providerId = providerId; // Añadimos el nuevo filtro
         if (description) filter.description = description;
 
         // Build options object for pagination and sorting
@@ -111,6 +113,10 @@ exports.createPetition = async (req, res) => {
             is_deleted: false,
         });
 
+        // Pasamos el eventBus en lugar de toda la app
+        const eventBus = req.app.get('eventBus');
+        notificationService.notificationMatchingProvider(petition, eventBus);
+
         return success(res, petition, 'Petición creada correctamente', 201);
     } catch (e) {
         console.error('Error: ', e);
@@ -154,8 +160,9 @@ exports.cancelPetition = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.sub; // O req.user.id, dependiendo de cómo esté en tu token
+        const eventBus = req.app.get('eventBus');
 
-        const petition = await service.cancelPetition(Number(id), userId);
+        const petition = await service.cancelPetition(Number(id), userId, eventBus);
         
         return success(res, petition, 'Petición y postulaciones asociadas canceladas correctamente.');
 

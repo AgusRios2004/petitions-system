@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useQuery } from '@tanstack/react-query';
-import { UserProfile, ICustomer } from '@/types/common';
+import toast, { Toaster } from 'react-hot-toast'; // 1. Importamos toast y Toaster
+import { UserProfile, ICustomer, IPostulation } from '@/types/common'; // 2. Importamos IPostulation
 import { customerService } from '@/service/customerService';
 
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
@@ -33,6 +35,33 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     },
     enabled: !!customerId,
   });
+
+  useEffect(() => {
+    // --- LÓGICA DE CONEXIÓN DE SOCKET ---
+    const token = localStorage.getItem('accessToken');
+    console.log('Intentando conectar socket. Token encontrado:', !!token); // <-- Añadido para depurar
+    if (!token) return; // No intentar conectar si no hay token
+
+    // Conecta al backend, enviando el token para la autenticación
+    const socket: Socket = io('http://localhost:3000', {
+      auth: {
+        token: token,
+      },
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Conectado al servidor de sockets con ID:', socket.id);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Desconectado del servidor de sockets.');
+    });
+
+    // Limpieza: desconectar el socket cuando el componente se desmonte
+    return () => {
+      socket.disconnect();
+    };
+  }, []); // Se ejecuta una vez cuando el componente se monta
 
   const customerTabs = [
     { id: 'peticiones', label: 'Mis Peticiones' },
@@ -65,6 +94,10 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
 
   return (
     <div>
+      <Toaster 
+        position="top-right"
+        toastOptions={{ className: 'bg-gray-700 text-white' }}
+      />
       <div className="border-b border-gray-700 mb-6">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
           {customerTabs.map((tab) => (
