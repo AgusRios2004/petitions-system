@@ -33,14 +33,14 @@ module.exports = (sequelize, DataTypes) => {
         });
 
         // Una conversación tiene muchos Participantes.
-        Conversation.hasMany(models.Participant, {
+        Conversation.hasMany(models.ConversationParticipants, {
             foreignKey: 'conversation_id',
             as: 'participants',
         });
 
         // También puedes definir una relación Muchos a Muchos con Usuarios a través de la tabla de Participantes.
         Conversation.belongsToMany(models.User, {
-            through: models.Participant,
+            through: models.ConversationParticipants,
             foreignKey: 'conversation_id',
             otherKey: 'user_id',
             as: 'users'

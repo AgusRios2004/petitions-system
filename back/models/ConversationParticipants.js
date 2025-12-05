@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const Participant = sequelize.define('ConverstionParticipants', {
+    const ConversationParticipants = sequelize.define('ConversationParticipants', {
         id: {
             type: DataTypes.BIGINT,
             primaryKey: true,
@@ -18,13 +18,13 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
     });
 
-    Participant.associate = (models) => {
+    ConversationParticipants.associate = (models) => {
         // Un participante pertenece a una Conversación
-        Participant.belongsTo(models.Conversation, { foreignKey: 'conversation_id' });
+        ConversationParticipants.belongsTo(models.Conversation, { foreignKey: 'conversation_id' });
 
         // Un participante pertenece a un Usuario
-        Participant.belongsTo(models.User, { foreignKey: 'user_id' });
+        ConversationParticipants.belongsTo(models.User, { foreignKey: 'user_id' });
     };
 
-    return Participant;
+    return ConversationParticipants;
 };
