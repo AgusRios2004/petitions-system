@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken"); // <-- Importa el manejador de sockets
 const notificationSocketHandler = require('./sockets/notificationHandler');
 const postulationSocketHandler = require('./sockets/postulationHandler');
+const messageSocketHandler = require('./sockets/messageHandler');
 const EventEmitter = require('events'); // <-- Corrección de tipeo: EventEmitter
 
 // 1. Creamos un servidor HTTP nativo de Node, usando la app de Express para manejar las rutas.
@@ -47,6 +48,9 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log(`🟢 Usuario conectado: ${socket.userId} con socket ID: ${socket.id}`);
   userSocketMap.set(socket.userId, socket.id);
+
+  // Inicializar el manejador de sockets para mensajes
+  messageSocketHandler.initialize(io, socket);
 
   socket.on("disconnect", () => {
     console.log(`🔴 Usuario desconectado: ${socket.userId}`);
