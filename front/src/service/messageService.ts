@@ -55,9 +55,10 @@ export const createMessage = async (conversationId: number, content: string): Pr
  * @param recipientId - El ID del usuario con el que se quiere iniciar la conversación.
  * @returns Una promesa que se resuelve con los datos de la conversación.
  */
-export const startConversation = async (recipientId: number): Promise<{ id_conversation: number }> => {
+export const startConversation = async (recipientId: number, petitionId: number): Promise<{ id_conversation: number }> => {
   try {
-    const response = await api.post<{ data: { id_conversation: number } }>('/conversation/start', { recipientId });
+    // Ahora enviamos también el petitionId
+    const response = await api.post<{ data: { id_conversation: number } }>('/conversation/start', { recipientId, petitionId });
     return response.data.data;
   } catch (error) {
     console.error('Error al iniciar la conversación:', error);
