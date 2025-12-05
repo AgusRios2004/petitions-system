@@ -22,7 +22,7 @@ const getConversationsForUser = async (userId) => {
             {
                 model: User,
                 as: 'users',
-                attributes: ['id_user', 'name', 'last_name', 'profile_image'],
+                attributes: ['id_user', 'name', 'lastname', 'profile_image'],
                 through: { attributes: [] },
                 where: { id_user: { [Op.ne]: userId } }
             }
