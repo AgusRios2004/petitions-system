@@ -17,7 +17,7 @@ const initialize = (io, socket) => {
             });
 
             conversations.forEach(conv => {
-                const roomName = `conversation:${conv.id_conversation}`;
+                const roomName = `conversation:${conv.id_conversation}`; //Crea un nombre distinto para cada sala
                 socket.join(roomName);
                 console.log(`User ${socket.userId} joined room: ${roomName}`);
             });
