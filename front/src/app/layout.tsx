@@ -7,7 +7,7 @@ import { SocketProvider } from "@/context/SocketContext";
 import LogoutButton from '@/components/auth/LogoutButton';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from "@/components/notification/NotificationBell";
-import MessageList from "@/components/messajes/MessageList";
+import MessageList from "@/components/message/MessageList";
 import QueryProvider from './QueryProvider';
 
 const geistSans = Geist({

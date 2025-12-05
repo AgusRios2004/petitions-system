@@ -7,6 +7,7 @@ import { getConversations } from '@/service/messageService';
 import { IConversationPreview } from '@/types/common';
 import { useSocket } from '@/context/SocketContext';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext'; // 1. Importa el hook de autenticación
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -15,6 +16,7 @@ export default function MessageList() {
   const panelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
+  const { user } = useAuth(); // 2. Obtén los datos del usuario logueado
 
   const { data: conversations, isLoading } = useQuery<IConversationPreview[]>({
     queryKey: ['conversations'],
@@ -86,12 +88,17 @@ export default function MessageList() {
                 <Loader2 className="animate-spin text-gray-500" />
               </div>
             ) : conversations && conversations.length > 0 ? (
-              conversations.map(convo => (
-                <Link key={convo.id_conversation} href={`/messages/${convo.id_conversation}`} onClick={() => setIsOpen(false)}>
+              conversations.map(convo => {
+                // 3. Encuentra al otro participante en la conversación
+                const otherUser = convo.users.find(u => u.id_user !== user?.id_user);
+                if (!otherUser) return null; // No renderizar si algo sale mal
+
+                return (
+                <Link key={convo.id_conversation} href={`/message/${convo.id_conversation}`} onClick={() => setIsOpen(false)} >
                   <div className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b dark:border-gray-700">
-                    <img src={convo.users[0].profile_image || '/default-avatar.png'} alt="avatar" className="h-10 w-10 rounded-full object-cover" />
+                    <img src={otherUser.profile_image || '/default-avatar.png'} alt="avatar" className="h-10 w-10 rounded-full object-cover" />
                     <div className="flex-1 overflow-hidden">
-                      <p className="font-semibold text-sm truncate dark:text-white">{convo.users[0].name} {convo.users[0].lastname}</p>
+                      <p className="font-semibold text-sm truncate dark:text-white">{otherUser.name} {otherUser.lastname}</p>
                       <p className="text-sm text-gray-500 truncate dark:text-gray-400">{convo.last_message_content}</p>
                     </div>
                     {convo.last_message_date && (
@@ -100,8 +107,8 @@ export default function MessageList() {
                        </p>
                     )}
                   </div>
-                </Link>
-              ))
+                </Link>)
+              })
             ) : (
               <p className="p-8 text-center text-sm text-gray-500">No tienes conversaciones.</p>
             )}
