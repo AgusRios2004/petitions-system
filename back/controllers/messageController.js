@@ -51,3 +51,24 @@ exports.createMessage = async (req, res, next) => {
         next(e);
     }
 }
+
+/**
+ * Inicia una conversación con otro usuario.
+ * Busca si ya existe una conversación entre el usuario autenticado y el `recipientId`.
+ * Si no existe, la crea. Devuelve los datos de la conversación.
+ */
+exports.startConversation = async (req, res, next) => {
+    try {
+        const senderId = req.user.sub;
+        const { recipientId } = req.body;
+
+        if (!recipientId || senderId === recipientId) {
+            return error(res, "Se requiere un ID de destinatario válido y distinto al remitente.", "Bad Request", 400);
+        }
+
+        const conversation = await messageService.findOrCreateConversation(senderId, Number(recipientId));
+        return success(res, conversation, "Conversación iniciada/obtenida correctamente.", 200);
+    } catch (e) {
+        next(e);
+    }
+};
