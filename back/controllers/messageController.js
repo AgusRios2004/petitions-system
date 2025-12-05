@@ -19,7 +19,7 @@ exports.getMessagesByConversation = async (req, res, next) => {
 
         const isParticipant = await messageService.isUserParticipant(userId, idConversation);
         if (!isParticipant) {
-            return error(res, "Acceso denegado a esta conversación.", "Forbidden", 403);
+            return error(res, "Acceso denegado a esta conversación.", 403, null);
         }
 
         const messages = await messageService.getMessagesByConversation(idConversation);
@@ -37,7 +37,7 @@ exports.createMessage = async (req, res, next) => {
 
         const isParticipant = await messageService.isUserParticipant(userId, idConversation);
         if (!isParticipant) {
-            return error(res, "No puedes enviar mensajes a esta conversación.", "Forbidden", 403);
+            return error(res, "No puedes enviar mensajes a esta conversación.", 403, null);
         }
 
         const messageWithSender = await messageService.createMessage(idConversation, userId, content);
@@ -60,13 +60,13 @@ exports.createMessage = async (req, res, next) => {
 exports.startConversation = async (req, res, next) => {
     try {
         const senderId = req.user.sub;
-        const { recipientId } = req.body;
+        const { recipientId, petitionId } = req.body; // Recibimos el petitionId
 
-        if (!recipientId || senderId === recipientId) {
-            return error(res, "Se requiere un ID de destinatario válido y distinto al remitente.", "Bad Request", 400);
+        if (!recipientId || !petitionId || senderId === recipientId) {
+            return error(res, "Se requiere un ID de destinatario, un ID de petición y que no sean el mismo usuario.", 400, null);
         }
 
-        const conversation = await messageService.findOrCreateConversation(senderId, Number(recipientId));
+        const conversation = await messageService.findOrCreateConversation(senderId, Number(recipientId), Number(petitionId));
         return success(res, conversation, "Conversación iniciada/obtenida correctamente.", 200);
     } catch (e) {
         next(e);
