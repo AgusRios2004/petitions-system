@@ -306,3 +306,29 @@ export interface Notification {
   related_petition_id?: number;
   related_postulation_id?: number;
 }
+
+/**
+ * Representa un único mensaje dentro de una conversación.
+ * Coincide con la respuesta de `getMessagesByConversation` y `createMessage`.
+ */
+export interface IMessage {
+  id_message: number;
+  conversation_id: number;
+  sender_id: number;
+  content: string;
+  created_at: string;
+  read: boolean;
+  sender: Pick<IUser, 'id_user' | 'name' | 'lastname' | 'profile_image'>;
+}
+
+/**
+ * Representa una conversación en la bandeja de entrada.
+ * Coincide con la respuesta de `getConversationsForUser`.
+ */
+export interface IConversationPreview {
+  id_conversation: number;
+  last_message_content: string | null;
+  last_message_date: string | null;
+  // La consulta del backend está diseñada para devolver solo al otro usuario en este array.
+  users: Pick<IUser, 'id_user' | 'name' | 'lastname' | 'profile_image'>[];
+}
