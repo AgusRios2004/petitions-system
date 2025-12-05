@@ -1,7 +1,7 @@
 const messageService = require('../services/messageService');
 const { success, error } = require('../middlewares/response');
 
-exports.getConverstaions = async (req, res, next) => {
+exports.getConversations = async (req, res, next) => {
     try {
         const userId = req.user.sub;
         const conversations = await messageService.getConversationsForUser(userId);
