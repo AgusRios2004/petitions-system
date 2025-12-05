@@ -7,6 +7,7 @@ import { SocketProvider } from "@/context/SocketContext";
 import LogoutButton from '@/components/auth/LogoutButton';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from "@/components/notification/NotificationBell";
+import MessageList from "@/components/messajes/MessageList";
 import QueryProvider from './QueryProvider';
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         <div className="font-semibold">Final Project</div>
                         <div className="flex items-center gap-4">
                           <NotificationBell />
+                          <MessageList />
                           <LogoutButton />
                         </div>
                       </div>
