@@ -1,55 +1,37 @@
-'use client';
-
 import React, { Suspense } from "react";
-import { useQuery } from "@tanstack/react-query";
+import ChatView from "@/components/message/ChatView";
 import { Loader2 } from "lucide-react";
-import { getMessagesByConversation } from "@/service/messageService";
-import MessageInput from "@/components/message/MessageInput";
 
-function ChatView({ conversationId }: { conversationId: number }) {
-  const { data: messages, isLoading, error } = useQuery({
-    queryKey: ['messages', conversationId],
-    queryFn: () => getMessagesByConversation(conversationId),
-  });
+type PageParams = {
+  conversationId: string;
+};
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center p-4 h-full">
-      <Loader2 className="animate-spin text-gray-500" />
-    </div>
-  }
+export default async function MessagePage({
+  params,
+}: {
+  params: Promise<PageParams>;
+}) {
+  const { conversationId } = await params;
 
-  if (error) {
-    return <div className="p-4">Error: {error.message}</div>
-  }
+  const id = Number(conversationId);
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 p-4 overflow-y-auto">
-        {messages?.map(msg => (
-          <div key={msg.id_message}>
-            <p>{msg.content}</p>
-          </div>
-        ))}
-      </div>
-      <MessageInput conversationId={conversationId} />
-    </div>
-  )
-}
-
-// El componente de página que exportas por defecto
-export default function MessagePage({ params }: { params: { conversationId: string } }) {
-  // Extraemos el ID de la URL y lo convertimos a número
-  const conversationId = parseInt(params.conversationId, 10);
-
-  // Validamos que el ID sea un número válido
-  if (isNaN(conversationId)) {
+  if (isNaN(id)) {
     return <div>ID de conversación inválido.</div>;
   }
 
-  // Renderizamos nuestro componente de cliente, pasándole el ID
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="animate-spin" /></div>}>
-      <ChatView conversationId={conversationId} />
-    </Suspense>
+    <main className="flex justify-center items-center p-4 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="w-full max-w-2xl h-[70vh] bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col">
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="animate-spin" />
+            </div>
+          }
+        >
+          <ChatView conversationId={id} />
+        </Suspense>
+      </div>
+    </main>
   );
 }

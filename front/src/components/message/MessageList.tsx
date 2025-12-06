@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { getConversations } from '@/service/messageService';
-import { IConversationPreview } from '@/types/common';
+import { IConversationPreview, IMessage } from '@/types/common';
 import { useSocket } from '@/context/SocketContext';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext'; // 1. Importa el hook de autenticación
@@ -27,11 +27,41 @@ export default function MessageList() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (message: any) => {
-      console.log('Nuevo mensaje recibido via socket, invalidando conversaciones:', message);
-      // Invalida la query para que se vuelva a fetchear y se muestre el último mensaje y orden.
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      // Opcional: podrías hacer una actualización optimista si lo prefieres
+    const handleNewMessage = (newMessage: IMessage) => {
+      console.log('Nuevo mensaje recibido via socket:', newMessage);
+
+      // Actualizamos el caché de 'conversations' manualmente
+      queryClient.setQueryData<IConversationPreview[]>(['conversations'], (oldData) => {
+        const conversations = oldData || [];
+        const conversationIndex = conversations.findIndex(c => c.id_conversation === newMessage.conversation_id);
+
+        if (conversationIndex !== -1) {
+          // La conversación ya existe en la lista.
+          const existingConvo = conversations[conversationIndex];
+          
+          // Verificamos si el remitente del mensaje es el "otro" usuario.
+          // Si es así, usamos sus datos para corregir la preview.
+          const otherUser = newMessage.sender_id !== user?.id_user 
+            ? newMessage.sender 
+            : existingConvo.users[0]; // Si yo envié el mensaje, mantengo los datos que ya tenía.
+
+          const updatedConversation = {
+            ...existingConvo,
+            last_message_content: newMessage.content,
+            last_message_date: newMessage.created_at,
+            users: [otherUser], // Corregimos/actualizamos el usuario mostrado.
+          };
+
+          const filteredConversations = conversations.filter(c => c.id_conversation !== newMessage.conversation_id);
+          return [updatedConversation, ...filteredConversations];
+        } else {
+          // Si la conversación es nueva y no está en la lista,
+          // la forma más segura de obtenerla con los datos correctos del participante
+          // es invalidando la query para que se vuelva a cargar desde el servidor.
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          return oldData;
+        }
+      });
     };
 
     // Escuchamos el evento de nuevo mensaje
@@ -89,9 +119,13 @@ export default function MessageList() {
               </div>
             ) : conversations && conversations.length > 0 ? (
               conversations.map(convo => {
-                // 3. Encuentra al otro participante en la conversación
-                const otherUser = convo.users.find(u => u.id_user !== user?.id_user);
+                // 3. Accede directamente al otro usuario.
+                // La API garantiza que el array 'users' contiene solo al otro participante.
+                const otherUser = convo.users && convo.users.length > 0 ? convo.users[0] : null;
+
                 if (!otherUser) return null; // No renderizar si algo sale mal
+
+                console.log("Other User: " ,otherUser)
 
                 return (
                 <Link key={convo.id_conversation} href={`/message/${convo.id_conversation}`} onClick={() => setIsOpen(false)} >
