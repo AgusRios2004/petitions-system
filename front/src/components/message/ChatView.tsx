@@ -1,17 +1,23 @@
 'use client';
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { getMessagesByConversation } from "@/service/messageService";
 import MessageInput from "@/components/message/MessageInput";
 import { useAuth } from "@/context/AuthContext";
 import { IMessage } from "@/types/common";
+import { useSocket } from "@/context/SocketContext";
 
 interface ChatViewProps {
   conversationId: number;
 }
 
 export default function ChatView({ conversationId }: ChatViewProps) {
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const {
     data: messages,
     isLoading,
@@ -21,6 +27,37 @@ export default function ChatView({ conversationId }: ChatViewProps) {
     queryFn: () => getMessagesByConversation(conversationId),
   });
   const { user: currentUser } = useAuth();
+
+  // Efecto para unirse a la sala de la conversación
+  useEffect(() => {
+    if (socket && conversationId) {
+      const roomName = `conversation:${conversationId}`;
+      socket.emit('joinConversation', roomName);
+      return () => {
+        socket.emit('leaveConversation', roomName);
+      };
+    }
+  }, [socket, conversationId]);
+
+  // Efecto para escuchar nuevos mensajes en tiempo real
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (newMessage: IMessage) => {
+      if (newMessage.conversation_id === conversationId) {
+        queryClient.setQueryData<IMessage[]>(['messages', conversationId], (oldData) => {
+          const oldMessages = oldData || [];
+          return [...oldMessages, newMessage];
+        });
+      }
+    };
+
+    socket.on('newMessage', handleNewMessage);
+
+    return () => {
+      socket.off('newMessage', handleNewMessage);
+    };
+  }, [socket, conversationId, queryClient]);
 
   if (isLoading) {
     return (
@@ -37,7 +74,7 @@ export default function ChatView({ conversationId }: ChatViewProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Mensajes */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-2">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages?.map((msg: IMessage) => {
           const isSender = msg.sender_id === currentUser?.id_user;
           return (
@@ -58,6 +95,7 @@ export default function ChatView({ conversationId }: ChatViewProps) {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
