@@ -11,8 +11,13 @@ const isUserParticipant = async (userId, conversationId) => {
 const getConversationsForUser = async (userId) => {
     const conversations = await Conversation.findAll({
         // 1. Filtro principal: Asegura que el usuario actual es participante.
+        // Se cambia la forma de filtrar para que el include traiga a todos los usuarios.
         where: {
-            '$users.id_user$': userId
+            id_conversation: {
+                [Op.in]: [
+                    sequelize.literal(`SELECT conversation_id FROM n_conversation_participants WHERE user_id = ${userId}`)
+                ]
+            }
         },
         include: [
             {
@@ -20,8 +25,6 @@ const getConversationsForUser = async (userId) => {
                 as: 'users',
                 attributes: ['id_user', 'name', 'lastname', 'profile_image'],
                 through: { attributes: [] },
-                // No filtramos aquí para traer a todos los participantes.
-                // El frontend se encargará de mostrar al otro usuario.
             }
         ],
         attributes: [
@@ -31,7 +34,18 @@ const getConversationsForUser = async (userId) => {
         ],
         order: [[sequelize.literal('last_message_date'), 'DESC']]
     });
-    return conversations;
+
+    // 2. Post-procesamiento: Filtramos el array 'users' para excluir al usuario actual.
+    // Esto simplifica la lógica del frontend, que ahora solo tiene que renderizar lo que recibe.
+    const processedConversations = conversations.map(conversation => {
+        const conversationJSON = conversation.toJSON();
+        conversationJSON.users = conversationJSON.users.filter(
+            participant => participant.id_user !== userId
+        );
+        return conversationJSON;
+    });
+
+    return processedConversations;
 };
 
 const getMessagesByConversation = async (conversationId) => {
