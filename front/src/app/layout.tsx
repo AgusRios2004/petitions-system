@@ -4,11 +4,9 @@ import "./globals.css";
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from "@/context/SocketContext";
-import LogoutButton from '@/components/auth/LogoutButton';
 import { Toaster } from 'react-hot-toast';
-import NotificationBell from "@/components/notification/NotificationBell";
-import MessageList from "@/components/message/MessageList";
 import QueryProvider from './QueryProvider';
+import Header from '@/components/ui/Header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,16 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Toaster />
               <ThemeRegistry>
                   <div className="min-h-screen">
-                    <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-                      <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
-                        <div className="font-semibold">Final Project</div>
-                        <div className="flex items-center gap-4">
-                          <NotificationBell />
-                          <MessageList />
-                          <LogoutButton />
-                        </div>
-                      </div>
-                    </header>
+                    <Header />
                     {children}
                   </div>
               </ThemeRegistry>
