@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { getMessagesByConversation } from "@/service/messageService";
 import MessageInput from "@/components/message/MessageInput";
 import { useAuth } from "@/context/AuthContext";
 import { IMessage } from "@/types/common";
+import { Button } from "@/components/ui/Button";
 import { useSocket } from "@/context/SocketContext";
 
 interface ChatViewProps {
@@ -17,6 +19,7 @@ export default function ChatView({ conversationId }: ChatViewProps) {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const {
     data: messages,
@@ -73,7 +76,17 @@ export default function ChatView({ conversationId }: ChatViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Mensajes */}
+      {/* --- INICIO DE LA MODIFICACIÓN --- */}
+      <div className="flex items-center border-b p-2 dark:border-gray-800">
+        <Button
+          onClick={() => router.back()}
+          variant="ghost" // Usamos la variante "ghost" para un botón sin fondo
+          size="icon" // Ahora sí usamos el tamaño "icon" que acabamos de crear
+          aria-label="Volver"
+        >
+          <ArrowLeft size={22} />
+        </Button>
+      </div>
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages?.map((msg: IMessage) => {
           const isSender = msg.sender_id === currentUser?.id_user;

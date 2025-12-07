@@ -30,13 +30,18 @@ const initialize = (io, socket) => {
     // Unir al usuario a sus salas al conectarse
     joinConversationRooms();
 
-    // (Opcional) Escuchar un evento para enviar mensajes directamente vía socket
-    // Aunque el enfoque principal será vía API REST para persistencia.
-    socket.on('sendMessage', (data) => {
-        // Esta es una alternativa. En nuestro enfoque principal, la API REST emitirá el evento.
-        // const { conversation_id, content } = data;
-        // const roomName = `conversation:${conversation_id}`;
-        // io.to(roomName).emit('newMessage', { content, sender_id: socket.userId, conversation_id });
+    // [MEJORA 1] Escuchar cuando el front pide unirse a una sala específica.
+    // Útil si se crea una conversación mientras el usuario está conectado.
+    socket.on('joinConversation', (roomName) => {
+        socket.join(roomName);
+        console.log(`User ${socket.userId} manually joined room: ${roomName}`);
+    });
+
+    // [MEJORA 2] Escuchar cuando el front pide salir de una sala.
+    // Buena práctica para limpiar suscripciones.
+    socket.on('leaveConversation', (roomName) => {
+        socket.leave(roomName);
+        console.log(`User ${socket.userId} left room: ${roomName}`);
     });
 };
 
