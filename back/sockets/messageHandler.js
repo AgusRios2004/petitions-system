@@ -30,15 +30,11 @@ const initialize = (io, socket) => {
     // Unir al usuario a sus salas al conectarse
     joinConversationRooms();
 
-    // [MEJORA 1] Escuchar cuando el front pide unirse a una sala específica.
-    // Útil si se crea una conversación mientras el usuario está conectado.
     socket.on('joinConversation', (roomName) => {
         socket.join(roomName);
         console.log(`User ${socket.userId} manually joined room: ${roomName}`);
     });
 
-    // [MEJORA 2] Escuchar cuando el front pide salir de una sala.
-    // Buena práctica para limpiar suscripciones.
     socket.on('leaveConversation', (roomName) => {
         socket.leave(roomName);
         console.log(`User ${socket.userId} left room: ${roomName}`);
