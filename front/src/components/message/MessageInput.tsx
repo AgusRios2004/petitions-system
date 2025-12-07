@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useIsMutating } from '@tanstack/react-query';
 import { createMessage } from '@/service/messageService';
 import { Send } from 'lucide-react';
+import TextareaAutosize from 'react-textarea-autosize';
 import toast from 'react-hot-toast';
-import { IMessage } from '@/types/common'; // Asumiendo que tienes este tipo
+import { IMessage } from '@/types/common';
 import { useAuth } from '@/context/AuthContext';
 
 interface MessageInputProps {
@@ -17,14 +18,16 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Hook para saber si la mutación de esta conversación está en curso
+  const isSending = useIsMutating({ mutationKey: ['sendMessage', conversationId] }) > 0;
+
   const sendMessageMutation = useMutation({
-    mutationFn: (newContent: string) => createMessage(conversationId, newContent),
-    // 1. onMutate se ejecuta antes de la mutación
+    mutationKey: ['sendMessage', conversationId], // Clave de mutación única
+    mutationFn: (newContent: string) => createMessage(conversationId, newContent), // Clave de mutación única
     onMutate: async (newContent) => {
       // Cancela cualquier recarga de datos en curso para evitar sobrescribir nuestra actualización optimista
       await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
 
-      // Guarda el estado anterior de los mensajes
       const previousMessages = queryClient.getQueryData<IMessage[]>(['messages', conversationId]);
 
       // Actualiza el caché con el nuevo mensaje de forma optimista
@@ -34,13 +37,13 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
       }
       queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) => {
         const optimisticMessage: IMessage = {
-          id_message: Date.now(), // ID temporal
-          content: newContent, // Usa el contenido pasado como argumento
+          id_message: Date.now(),
+          content: newContent,
           conversation_id: conversationId,
           sender_id: user.id_user,
           created_at: new Date().toISOString(),
-          read: false, // Un mensaje nuevo no está leído por el receptor
-          sender: { // Objeto del remitente con los datos del usuario actual
+          read: false,
+          sender: {
             id_user: user.id_user,
             name: user.name,
             lastname: user.lastname,
@@ -50,22 +53,29 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
         return old ? [...old, optimisticMessage] : [optimisticMessage];
       });
 
-      // Limpia el input inmediatamente
       setContent('');
 
-      // Devuelve el estado anterior para poder hacer rollback en caso de error
       return { previousMessages };
     },
-    // 2. Si la mutación falla, usamos el contexto de onMutate para revertir los cambios
-    onError: (err, newTodo, context) => {
+    onError: (_err, _newContent, context) => {
+      // Si la mutación falla, revierte a los mensajes anteriores
       if (context?.previousMessages) {
         queryClient.setQueryData(['messages', conversationId], context.previousMessages);
       }
       toast.error('Error al enviar el mensaje');
     },
-    // 3. Cuando la mutación termina (éxito o error), volvemos a solicitar los datos para asegurar consistencia
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+    onSuccess: (data, variables, context) => {
+      // En lugar de invalidar, actualizamos la caché directamente con el mensaje real.
+      // Es más rápido y evita un refetch.
+      queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) => {
+        const previous = context?.previousMessages || [];
+        // Reemplazamos el mensaje optimista (que no tiene un id_message real)
+        // con el mensaje que nos devuelve el servidor.
+        // Asumimos que el último mensaje es el optimista.
+        // Una alternativa más robusta sería usar un ID temporal único.
+        return [...previous, data];
+      });
+
       // ¡Esta es la línea clave! Invalida la lista de conversaciones para que se actualice.
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
@@ -80,8 +90,19 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
   return (
     <footer className="p-4 border-t border-gray-200 dark:border-gray-700">
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        <input type="text" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Escribe un mensaje..." className="flex-1 p-2 border rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white" disabled={sendMessageMutation.isPending} />
-        <button type="submit" className="p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400" disabled={sendMessageMutation.isPending || !content.trim()}>
+        <TextareaAutosize
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Escribe un mensaje..."
+          className="flex-1 resize-none p-2 border rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          maxRows={5}
+          disabled={isSending}
+        />
+        <button
+          type="submit"
+          className="p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 self-end"
+          disabled={isSending || !content.trim()}
+        >
           <Send size={20} />
         </button>
       </form>

@@ -31,7 +31,6 @@ export default function ChatView({ conversationId }: ChatViewProps) {
   });
   const { user: currentUser } = useAuth();
 
-  // Efecto para unirse a la sala de la conversación
   useEffect(() => {
     if (socket && conversationId) {
       const roomName = `conversation:${conversationId}`;
@@ -76,12 +75,11 @@ export default function ChatView({ conversationId }: ChatViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* --- INICIO DE LA MODIFICACIÓN --- */}
       <div className="flex items-center border-b p-2 dark:border-gray-800">
         <Button
           onClick={() => router.back()}
-          variant="ghost" // Usamos la variante "ghost" para un botón sin fondo
-          size="icon" // Ahora sí usamos el tamaño "icon" que acabamos de crear
+          variant="ghost"
+          size="icon"
           aria-label="Volver"
         >
           <ArrowLeft size={22} />
@@ -90,6 +88,7 @@ export default function ChatView({ conversationId }: ChatViewProps) {
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages?.map((msg: IMessage) => {
           const isSender = msg.sender_id === currentUser?.id_user;
+          const isOptimistic = typeof msg.id_message === 'number';
           return (
             <div
               key={msg.id_message}
@@ -102,7 +101,11 @@ export default function ChatView({ conversationId }: ChatViewProps) {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               )}
-              <div className={`max-w-xs md:max-w-md p-3 rounded-lg ${isSender ? "bg-indigo-600 text-white" : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"}`}>
+              <div className={`max-w-xs md:max-w-md p-3 rounded-lg transition-opacity duration-300 ${
+                  isSender
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
+                } ${isOptimistic ? "opacity-60" : "opacity-100"}`}>
                 <p>{msg.content}</p>
               </div>
             </div>

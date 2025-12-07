@@ -7,7 +7,7 @@ import { getConversations } from '@/service/messageService';
 import { IConversationPreview, IMessage } from '@/types/common';
 import { useSocket } from '@/context/SocketContext';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext'; // 1. Importa el hook de autenticación
+import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -16,11 +16,11 @@ export default function MessageList() {
   const panelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
-  const { user } = useAuth(); // 2. Obtén los datos del usuario logueado
+  const { user } = useAuth();
 
   const { data: conversations, isLoading } = useQuery<IConversationPreview[]>({
     queryKey: ['conversations'],
-    queryFn: getConversations, // Necesitarás crear esta función en tu messageService del front
+    queryFn: getConversations,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -95,9 +95,6 @@ export default function MessageList() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // En tu backend, getConversationsForUser ya devuelve el conteo de no leídos.
-  // Si no, tendrías que calcularlo aquí. Por ahora, no mostramos contador.
-
   return (
     <div className="relative" ref={panelRef}>
       <button
@@ -119,13 +116,9 @@ export default function MessageList() {
               </div>
             ) : conversations && conversations.length > 0 ? (
               conversations.map(convo => {
-                // 3. Accede directamente al otro usuario.
-                // La API garantiza que el array 'users' contiene solo al otro participante.
                 const otherUser = convo.users && convo.users.length > 0 ? convo.users[0] : null;
 
-                if (!otherUser) return null; // No renderizar si algo sale mal
-
-                console.log("Other User: " ,otherUser)
+                if (!otherUser) return null;
 
                 return (
                 <Link key={convo.id_conversation} href={`/message/${convo.id_conversation}`} onClick={() => setIsOpen(false)} >
