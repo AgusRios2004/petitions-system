@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '../ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
 import { IPostulation } from '@/types/common';
 import RatingModal from '../petitions/RatingModal'; // Asegúrate que la ruta sea correcta
 import { useAuth } from '@/context/AuthContext';
+import { startConversation } from '@/service/messageService';
+import { MessageSquare } from 'lucide-react';
 
 interface PostulationCardProps {
   postulation: IPostulation;
@@ -13,6 +16,7 @@ interface PostulationCardProps {
 
 const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) => {
   const { user } = useAuth();
+  const router = useRouter();
   const [isRatingModalOpen, setRatingModalOpen] = useState(false);
   const isPostulationInactive = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4 || postulation.states.id_state === 6;
 
@@ -52,6 +56,24 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
             <Link href={`/postulation/edit/${postulation.id_postulation}`}>
                 <Button variant='primary' fullWidth={false}>Editar</Button>
             </Link>
+        )}
+        {/* --- INICIO: Botón para iniciar conversación --- */}
+        {role === 'customer' && (
+          <Button
+            variant='primary'
+            fullWidth={false}
+            onClick={async () => {
+              if (!postulation.createdBy?.id_user || !postulation.petition?.id_petition) return;
+              try {
+                const conversation = await startConversation(postulation.createdBy.id_user, postulation.petition.id_petition);
+                router.push(`/message/${conversation.id_conversation}`);
+              } catch (error) {
+                console.error("Error al iniciar la conversación:", error);
+              }
+            }}
+          >
+            <MessageSquare size={16} className="mr-2" /> Enviar Mensaje
+          </Button>
         )}
         <Link href={`/postulation/${postulation.id_postulation}`}>
           <Button variant='secondary' fullWidth={false}>Ver detalles</Button>

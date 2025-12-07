@@ -33,6 +33,7 @@ const imageUploadRoutes = require('./routes/imageUploadRoutes');
 const path = require('path');
 const gradeRoutes = require('./routes/gradeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 const app = express();
 app.use(express.json());
@@ -77,6 +78,7 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/upload', imageUploadRoutes);
 app.use('/api/grade', gradeRoutes);
 app.use('/api/notification', notificationRoutes);
+app.use('/api', messageRoutes);
 
 app.use('/api/week', require('./routes/weekRoutes'));
 
