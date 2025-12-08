@@ -8,11 +8,13 @@ interface ProviderPostulationsProps {
   id_provider: number;
 }
 
+// El `value` corresponde al `id_state` de la postulación en la base de datos.
 const postulationStatusTabs = [
   { label: 'Pendientes', value: 3 },
-  { label: 'Rechazadas', value: 2 },
-  { label: 'Dado de baja', value: 4 },
   { label: 'Ganadoras', value: 1 },
+  { label: 'Rechazadas', value: 2 },
+  { label: 'Canceladas', value: 6 }, // Postulaciones de peticiones canceladas por el cliente
+  { label: 'Dado de baja', value: 4 },
 ];
 
 const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider }) => {

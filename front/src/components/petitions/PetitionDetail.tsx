@@ -3,7 +3,10 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cancelPetition } from '@/service/petitionService';
+import toast from 'react-hot-toast';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 interface Petition {
   id_petition: number;
@@ -68,24 +71,36 @@ import PetitionPostulations from '@/components/postulations/PetitionPostulations
 const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => {
   const { user } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPostulations, setShowPostulations] = React.useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
   console.log('PetitionDetail Props:', petition);
 
   const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
 
   const togglePostulations = () => setShowPostulations(!showPostulations);
 
-  const handleCancelPetition = async () => {
-    if (window.confirm('¿Estás seguro de que quieres cancelar esta petición?')) {
-      try {
-        await cancelPetition(petition.id_petition);
-        alert('Petición cancelada exitosamente');
-        router.push('/profile');
-      } catch (error) {
-        console.error('Error al cancelar la petición:', error);
-        alert('Hubo un error al cancelar la petición');
-      }
-    }
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelPetition(petition.id_petition),
+    onSuccess: () => {
+      toast.success('Petición cancelada exitosamente');
+      queryClient.invalidateQueries({ queryKey: ['petitions'] });
+      router.push('/profile');
+      setIsCancelModalOpen(false);
+    },
+    onError: (error) => {
+      console.error('Error al cancelar la petición:', error);
+      toast.error('Hubo un error al cancelar la petición');
+      setIsCancelModalOpen(false);
+    },
+  });
+
+  const handleCancelPetition = () => {
+    setIsCancelModalOpen(true);
+  };
+
+  const confirmCancel = () => {
+    cancelMutation.mutate();
   };
 
   return (
@@ -179,6 +194,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
           >
             Volver
           </Button>
+          {/* El botón de postulación aparece si el usuario es un proveedor y no el dueño de la petición. */}
           {!isOwner && user?.provider && (
             <Link href={`/postulation/create/${petition.id_petition}`} className="flex-1 min-w-[120px]">
               <Button variant="primary" className="w-full">Postularse</Button>
@@ -196,10 +212,11 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               </Button>
               <Button
                 onClick={handleCancelPetition}
-                variant="primary"
-                className="bg-red-500 hover:bg-red-600 flex-1 min-w-[120px]"
+                variant="destructive"
+                className="flex-1 min-w-[120px]"
+                disabled={cancelMutation.isPending}
               >
-                Cancelar petición
+                {cancelMutation.isPending ? 'Cancelando...' : 'Cancelar petición'}
               </Button>
             </>
           )}
@@ -221,6 +238,16 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
           <PetitionPostulations petitionId={petition.id_petition} />
         </div>
       )}
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={confirmCancel}
+        title="Confirmar Cancelación"
+        message="¿Estás seguro de que quieres cancelar esta petición? Esta acción no se puede deshacer."
+        confirmText="Sí, cancelar"
+        isConfirming={cancelMutation.isPending}
+        confirmButtonVariant="destructive"
+      />
     </div>)}
 
     export default PetitionDetail;
