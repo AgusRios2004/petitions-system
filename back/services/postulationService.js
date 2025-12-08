@@ -265,7 +265,7 @@ class PostulationService {
 
             // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
             // La notificación se hará DESPUÉS del commit.
-            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 5, postulation.id_postulation); // Se asume 5 = No seleccionada
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 6, postulation.id_postulation); // Se asume 5 = No seleccionada
 
             await t.commit();
             // La transacción ha terminado exitosamente.

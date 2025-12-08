@@ -1,4 +1,4 @@
-const { Petition, Customer, sequelize, Postulation, State, User, ProviderCategory, Interest } = require('../models');
+const { Petition, Customer, sequelize, Postulation, State, User, Provider, ProviderCategory, Interest } = require('../models');
 const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
 const { Op } = require('sequelize');
 
@@ -76,10 +76,21 @@ class PetitionService {
                 {
                     model: Postulation,
                     as: 'postulations',
-                    include: [{
-                        model: State,
-                        as: 'states',
-                    }]
+                    include: [
+                        {
+                            model: State,
+                            as: 'states',
+                        },
+                        {
+                            model: Provider,
+                            as: 'provider', // Alias para el proveedor
+                            include: [{
+                                model: User,
+                                as: 'user', // Alias para el usuario dentro del proveedor
+                                attributes: ['name', 'lastname'] // Solo traemos los datos necesarios
+                            }]
+                        }
+                    ]
                 }
             ]
         });

@@ -1,11 +1,11 @@
 const { Grade, GradeProvider, GradeCustomer, sequelize, Provider, Customer } = require('../models');
 const notificationService = require('../services/notificationService');
+const { ConflictError } = require('../middlewares/customErrors');
 
 const createGrade = async (gradeData) => {
   const t = await sequelize.transaction();
   try {
     let targetUserId = null;
-    let gradeId = null;
 
     const { id_customer, id_provider, grade_number, comment, id_user_create, id_color } = gradeData;
 
@@ -29,7 +29,7 @@ const createGrade = async (gradeData) => {
       });
 
       if (existingGrade) {
-        throw new Error('Ya has calificado a este proveedor.');
+        throw new ConflictError('Ya has calificado a este proveedor.');
       }
 
       // 1.2. Crear la calificación principal (Grade)
@@ -72,7 +72,7 @@ const createGrade = async (gradeData) => {
       });
 
       if (existingGrade) {
-        throw new Error('Ya has calificado a este cliente.');
+        throw new ConflictError('Ya has calificado a este cliente.');
       }
 
       // 2.2. Crear la calificación principal (Grade)
