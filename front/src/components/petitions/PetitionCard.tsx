@@ -5,39 +5,10 @@ import { getStatusColor } from '@/helpers/statusHelper';
 import { useState, Fragment, useMemo, useEffect } from 'react';
 import RatingModal from '../../components/petitions/RatingModal'; 
 import StarRatingDisplay from '../ui/StarRatingDisplay';
-
-interface Petition {
-  id_petition: number;
-  description: string;
-  date_create: string;
-  date_since: string;
-  date_until: string;
-  states: {
-    state: string;
-  };
-  typePetitions: {
-    name: string;
-  };
-  id_customer: number;
-  customers: {
-    dni: string;
-    phone: string;
-    user: {
-      name: string;
-      lastname: string; // Asegúrate que el backend envíe 'lastname' y no 'last_name'
-    };
-    average_rating: number | null;
-  };
-  postulations: {
-    id_provider: number;
-    states: {
-      state: string;
-    }
-  }[];
-}
+import { IPetitionCardData } from '@/types/common';
 
 interface PetitionCardProps {
-  petition: Petition;
+  petition: IPetitionCardData;
 }
 
 
@@ -50,12 +21,14 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
   const sinceDate = new Date(petition.date_since).toLocaleDateString();
   const untilDate = new Date(petition.date_until).toLocaleDateString();
 
-  const providerId = useMemo(() => {
+  const acceptedPostulation = useMemo(() => {
     const acceptedPostulation = petition.postulations?.find(
       p => p.states.state === 'Aceptado'
     );
-    return acceptedPostulation?.id_provider;
+    return acceptedPostulation;
   }, [petition.postulations]);
+
+  const postulationCount = petition.postulations?.length || 0;
 
   useEffect(() => {
     if (petition.customers && petition.customers.average_rating !== undefined) {
@@ -68,6 +41,12 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
   return (
     <Fragment>
       <div className="group relative rounded-xl border border-white/10 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col justify-between h-full">
+        {postulationCount > 0 && (
+          <div className="absolute top-0 right-0 -mt-2 -mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500 text-xs font-bold text-white shadow-lg">
+            {postulationCount}
+          </div>
+        )}
+
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h3 className="font-semibold text-white">{petition.customers?.user?.name} {petition.customers?.user?.lastname}</h3>
@@ -90,10 +69,21 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
             <p>Disponible desde el <span className="font-semibold text-gray-300">{sinceDate}</span> hasta el <span className="font-semibold text-gray-300">{untilDate}</span></p>
           </div>
         </div>
+        
+        {/* --- SECCIÓN DEL PROVEEDOR ASIGNADO --- */}
+        {acceptedPostulation && (
+          <div className="mt-4 pt-4 border-t border-white/20">
+            <p className="text-xs text-cyan-400 font-semibold uppercase tracking-wider">Proveedor Asignado</p>
+            <p className="text-lg font-bold text-white">
+              {acceptedPostulation.provider.user.name} {acceptedPostulation.provider.user.lastname}
+            </p>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mt-4">
           <span className="text-sm text-gray-500 dark:text-gray-400">Creada: {creationDate}</span>
           <div className="flex items-center gap-2">
-            {providerId && (
+            {acceptedPostulation && (
               <Button 
                 fullWidth={false} 
                 size="sm" 
@@ -111,11 +101,11 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
       </div>
       
       {/* El modal se renderiza si hay un proveedor aceptado */}
-      {providerId && (
+      {acceptedPostulation && (
         <RatingModal
           isOpen={isRatingModalOpen}
           onClose={() => setIsRatingModalOpen(false)}
-          providerId={providerId}
+          providerId={acceptedPostulation.id_provider}
           customerId={petition.id_customer}
           ratingTarget="provider"
         />

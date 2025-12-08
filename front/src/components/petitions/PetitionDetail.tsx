@@ -123,10 +123,6 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             <span className="text-gray-800">{new Date(petition.date_until).toLocaleDateString()}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Cliente DNI: </span>
-            <span className="text-gray-800">{petition.customers?.dni}</span>
-          </div>
-          <div>
             <span className="font-medium text-gray-500">Teléfono: </span>
             <span className="text-gray-800">{petition.customers?.phone}</span>
           </div>

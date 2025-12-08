@@ -12,13 +12,13 @@ export const uploadAttachment = async (petitionId: number, file: File, name: str
   formData.append('attachmentFile', file);
   formData.append('name', name); // Añadir el título personalizado al FormData
 
-  const response = await apiClient.post("/api/attachments", formData);
+  const response = await apiClient.post("/attachments", formData);
 
   console.log('API Response:', response.data);
   return response.data;
 };
 
 export const deleteAttachment = async (attachmentId: number) => {
-  const response = await apiClient.delete(`/api/attachments/${attachmentId}`);
+  const response = await apiClient.delete(`/attachments/${attachmentId}`);
   return response.data;
 };

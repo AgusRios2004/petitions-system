@@ -85,6 +85,7 @@ export interface IPostulation {
   winner: boolean;
   date_create: string;
   date_update: string | null;
+  provider: IProvider; // Objeto del proveedor que se postula
   createdBy: {
     id_user: number;
     name: string;
@@ -198,6 +199,32 @@ export interface ICustomer {
   address: IAddress;
   petitions: IPetition[];
   user: IUser;
+}
+
+/**
+ * Representa los datos necesarios para una tarjeta de petición (PetitionCard).
+ * Contiene información resumida de la petición, el cliente y sus postulaciones.
+ */
+export interface IPetitionCardData {
+  id_petition: number;
+  description: string;
+  date_create: string;
+  date_since: string;
+  date_until: string;
+  states: {
+    state: string;
+  };
+  typePetitions: {
+    name: string;
+  };
+  id_customer: number;
+  customers: {
+    dni: string;
+    phone: string;
+    user: Pick<IUser, 'name' | 'lastname'>;
+    average_rating: number | null;
+  };
+  postulations: Pick<IPostulation, 'id_provider' | 'states' | 'provider'>[];
 }
 
 export interface IProfile extends IUser {
