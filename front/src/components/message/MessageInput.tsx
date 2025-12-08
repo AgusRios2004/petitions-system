@@ -37,7 +37,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
       }
       queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) => {
         const optimisticMessage: IMessage = {
-          id_message: Date.now(),
+          id_message: -1,
           content: newContent,
           conversation_id: conversationId,
           sender_id: user.id_user,
@@ -53,27 +53,24 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
         return old ? [...old, optimisticMessage] : [optimisticMessage];
       });
 
-      setContent('');
-
-      return { previousMessages };
+      // Limpiamos el input aquí para una mejor experiencia de usuario
+      setContent(''); 
+      // Pasamos el ID temporal al contexto para usarlo en onError y onSuccess
+      return { previousMessages, optimisticId: (queryClient.getQueryData<IMessage[]>(['messages', conversationId])?.slice(-1)[0] as IMessage).id_message };
     },
     onError: (_err, _newContent, context) => {
-      // Si la mutación falla, revierte a los mensajes anteriores
-      if (context?.previousMessages) {
-        queryClient.setQueryData(['messages', conversationId], context.previousMessages);
-      }
+      // Si falla, removemos específicamente el mensaje optimista que falló por su ID
+      queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) =>
+        old?.filter((m) => m.id_message !== context?.optimisticId) ?? []
+      );
       toast.error('Error al enviar el mensaje');
     },
-    onSuccess: (data, variables, context) => {
-      // En lugar de invalidar, actualizamos la caché directamente con el mensaje real.
-      // Es más rápido y evita un refetch.
+    onSuccess: (data, _variables, context) => {
+      // Buscamos el mensaje optimista por su ID temporal y lo reemplazamos con el real del servidor
       queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) => {
-        const previous = context?.previousMessages || [];
-        // Reemplazamos el mensaje optimista (que no tiene un id_message real)
-        // con el mensaje que nos devuelve el servidor.
-        // Asumimos que el último mensaje es el optimista.
-        // Una alternativa más robusta sería usar un ID temporal único.
-        return [...previous, data];
+        return old?.map((message) =>
+          message.id_message === context?.optimisticId ? data : message
+        ) ?? [data];
       });
 
       // ¡Esta es la línea clave! Invalida la lista de conversaciones para que se actualice.
