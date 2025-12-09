@@ -1,8 +1,8 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useForm, useFieldArray, SubmitHandler, useWatch } from 'react-hook-form';
 import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,12 +31,23 @@ export default function CreatePostulationPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const petitionId = parseInt(params.petitionId as string, 10);
-  const [articles, setArticles] = useState<IArticle[]>([]);
-  const [categories, setCategories] = useState<ICategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [filteredArticles, setFilteredArticles] = useState<IArticle[]>([]);
 
-  const { register, handleSubmit, control } = useForm<FormValues>({
+  // --- MEJORA 1: Usar useQuery para la carga de datos ---
+  const { data: articlesData, isLoading: isLoadingArticles } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => articleService.getAllArticles(),
+    select: (data) => data.data ?? [], // Extraemos y aseguramos que sea un array
+  });
+  const articles = articlesData ?? []; // Para evitar undefined
+
+  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+  const categories = categoriesData ?? []; // Para evitar undefined
+
+  const { register, handleSubmit, control, formState: { isSubmitting }, setValue } = useForm<FormValues>({
     defaultValues: {
       id_petition: petitionId,
       proposal: '',
@@ -47,33 +58,24 @@ export default function CreatePostulationPage() {
 
   const { fields, append, remove } = useFieldArray({ control, name: 'articles' });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [articlesRes, categoriesRes] = await Promise.all([
-          articleService.getAllArticles(),
-          categoryService.getAllCategories(),
-        ]);
+  // --- MEJORA 3: Cálculo automático del costo total ---
+  const watchedArticles = useWatch({ control, name: 'articles' });
 
-        setArticles(articlesRes.data ?? []);
-        setFilteredArticles(articlesRes.data ?? []);
-        setCategories(categoriesRes);
+  const suggestedCost = useMemo(() => {
+    return watchedArticles.reduce((sum, article) => {
+      return sum + (Number(article.cost) || 0) * (Number(article.quantity) || 0);
+    }, 0);
+  }, [watchedArticles]);
 
-      } catch (error: any) {
-        console.error('Error fetching data:', error);
-        toast.error(error.message || 'Error al cargar los datos.');
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
+  // --- MEJORA 2: Usar useMemo para el estado derivado (filtrado) ---
+  const filteredArticles = useMemo(() => {
     if (selectedCategory && selectedCategory !== 0) {
-      setFilteredArticles(articles.filter(a => a.id_category === selectedCategory));
-    } else {
-      setFilteredArticles(articles);
+      return articles.filter(a => a.id_category === selectedCategory);
     }
+    return articles;
   }, [selectedCategory, articles]);
+
+  const isDataLoading = isLoadingArticles || isLoadingCategories;
 
   const postulationMutation = useMutation({
     mutationFn: postulationService.createPostulation,
@@ -97,8 +99,9 @@ export default function CreatePostulationPage() {
       toast.error('Solo los proveedores pueden postularse.');
       return;
     }
+
     if (data.cost <= 0) {
-      toast.error('El costo debe ser mayor a 0.');
+      toast.error('El costo total debe ser mayor a cero.');
       return;
     }
 
@@ -108,11 +111,14 @@ export default function CreatePostulationPage() {
     });
   };
 
-  console.log(categories)
+  if (isDataLoading) {
+    return <div className="container mx-auto p-6 text-center">Cargando datos del formulario...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6">
-      <div className="max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold text-center mb-4">Crear Postulación</h2>
+      <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
 
           {/* Propuesta */}
@@ -126,6 +132,7 @@ export default function CreatePostulationPage() {
           </div>
 
           {/* Costo total */}
+          <div>
             <Input
               type="number"
               label="Costo total"
@@ -133,6 +140,19 @@ export default function CreatePostulationPage() {
               placeholder="Costo total de la propuesta"
               variant="white"
             />
+            {suggestedCost > 0 && (
+              <div className="mt-2 text-sm text-gray-500">
+                Costo sugerido por artículos: <strong>${suggestedCost.toLocaleString('es-AR')}</strong>
+                <button
+                  type="button"
+                  className="ml-2 text-blue-600 hover:underline font-semibold"
+                  onClick={() => setValue('cost', suggestedCost, { shouldValidate: true })}
+                >
+                  Aplicar
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Artículos */}
           <div>
@@ -174,7 +194,7 @@ export default function CreatePostulationPage() {
                     type="number"
                     label="Cantidad"
                     {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
-                    placeholder="Ej: 10"
+                    placeholder="Ej: 1"
                     variant="white"
                   />
                 </div>
@@ -184,7 +204,7 @@ export default function CreatePostulationPage() {
                     type="number"
                     label="Costo"
                     {...register(`articles.${index}.cost`, { valueAsNumber: true })}
-                    placeholder="Ej: 2500"
+                    placeholder="Ej: 2500 (por unidad)"
                     variant="white"
                   />
                 </div>
@@ -221,7 +241,7 @@ export default function CreatePostulationPage() {
             </Button>
             <Button
               type="submit"
-              disabled={postulationMutation.isPending}
+              disabled={postulationMutation.isPending || isSubmitting}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
               {postulationMutation.isPending ? 'Enviando...' : 'Enviar Postulación'}
