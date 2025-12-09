@@ -34,8 +34,6 @@ const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider
     setActiveTab(newTab);
   };
 
-  console.log('ProviderPostulations Props:', data)
-
   return (
     <div>
       <div className="flex justify-start mb-4">
