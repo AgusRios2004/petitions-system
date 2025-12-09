@@ -27,17 +27,21 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
     onMutate: async (newContent) => {
       // Cancela cualquier recarga de datos en curso para evitar sobrescribir nuestra actualización optimista
       await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
-
+      
+      // Guarda el estado anterior por si necesitamos hacer rollback
       const previousMessages = queryClient.getQueryData<IMessage[]>(['messages', conversationId]);
 
-      // Actualiza el caché con el nuevo mensaje de forma optimista
       if (!user) {
         // No se puede crear un mensaje optimista sin un usuario
         return { previousMessages };
       }
+
+      const optimisticId = Date.now(); // Usamos un ID temporal único
+
+      // Actualiza el caché con el nuevo mensaje de forma optimista
       queryClient.setQueryData<IMessage[]>(['messages', conversationId], (old) => {
         const optimisticMessage: IMessage = {
-          id_message: -1,
+          id_message: optimisticId, // Usar el ID temporal
           content: newContent,
           conversation_id: conversationId,
           sender_id: user.id_user,
@@ -55,8 +59,8 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
 
       // Limpiamos el input aquí para una mejor experiencia de usuario
       setContent(''); 
-      // Pasamos el ID temporal al contexto para usarlo en onError y onSuccess
-      return { previousMessages, optimisticId: (queryClient.getQueryData<IMessage[]>(['messages', conversationId])?.slice(-1)[0] as IMessage).id_message };
+      // Pasamos el contexto con el ID temporal para usarlo en onError y onSuccess
+      return { previousMessages, optimisticId };
     },
     onError: (_err, _newContent, context) => {
       // Si falla, removemos específicamente el mensaje optimista que falló por su ID
