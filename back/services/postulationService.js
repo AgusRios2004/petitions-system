@@ -4,6 +4,17 @@ const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Cust
 const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
 
+// Caché simple para evitar consultar la BD repetidamente por los mismos estados
+const stateCache = {};
+
+async function getStateId(code) {
+    if (stateCache[code]) return stateCache[code];
+    const state = await State.findOne({ where: { code } });
+    if (!state) throw new Error(`Estado con código '${code}' no encontrado.`);
+    stateCache[code] = state.id_state;
+    return state.id_state;
+}
+
 class PostulationService {
 
     // --- MÉTODOS DE LECTURA (sin cambios mayores) ---
@@ -98,7 +109,8 @@ class PostulationService {
                 throw error;
             }
 
-            if (petition.id_state !== 3) { 
+            const petitionPendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
+            if (petition.id_state !== petitionPendingState) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -116,12 +128,14 @@ class PostulationService {
                 throw error;
             }
             
+            const postulationPendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
+
             const newPostulation = await Postulation.create({
                 id_petition: id_petition,
                 id_provider: provider.id_provider,
                 proposal: proposal,
                 cost: cost,
-                id_state: 3, // 3 = pendiente
+                id_state: postulationPendingState,
                 id_user_create: userId,
                 winner: false,
                 date_create: new Date(),
@@ -246,9 +260,12 @@ class PostulationService {
                 throw error;
             }
             
+            const postulationWinState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
+            const petitionClosedState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
+
             await postulation.update({
                 winner: true,
-                id_state: 1, // 1 = aceptada
+                id_state: postulationWinState,
                 id_user_update: userId,
                 date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
@@ -261,14 +278,16 @@ class PostulationService {
             }
 
             await petition.update({
-                id_state: 1, // Asumiendo 1 = 'Cerrada' o 'Asignada' para la petición
+                id_state: petitionClosedState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, {transaction: t});
 
             // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
             // La notificación se hará DESPUÉS del commit.
-            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 6, postulation.id_postulation); // Se asume 5 = No seleccionada
+            // Usamos 'REC' (Rechazada - ID 2) o 'CAN' (Cancelada - ID 6) según tu lógica de negocio.
+            // Aquí usamos 'CAN' para las que no ganaron porque se cerró la petición, o podrías usar 'REC'.
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 'CAN', postulation.id_postulation);
 
             await t.commit();
             // La transacción ha terminado exitosamente.
@@ -349,9 +368,11 @@ class PostulationService {
                 throw error;
             }
     
+            const postulationRejectedState = await getStateId('REC'); // REC = Rechazado (ID 2)
+
             await postulation.update({
                 winner: false,
-                id_state: 2, // 2 = Rechazada
+                id_state: postulationRejectedState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, { transaction: t });
@@ -416,8 +437,10 @@ class PostulationService {
                 throw error;
             }
 
+            const postulationWithdrawnState = await getStateId('BJA'); // BJA = Dado de baja (ID 4)
+
             await postulation.update({
-                id_state: 4, // 4 = dado de baja / retirado
+                id_state: postulationWithdrawnState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, { transaction: t });
@@ -460,15 +483,18 @@ class PostulationService {
      * @param {number} petitionId 
      * @param {number} userId 
      * @param {object} transaction 
-     * @param {number} newState - 6 (Cancelada) o 5 (No Seleccionada)
+     * @param {string} newStateCode - Código del nuevo estado (ej: 'CAN')
      * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null) {
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newStateCode = 'CAN', winnerPostulationId = null) {
         
+        const pendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
+        const newStateId = await getStateId(newStateCode);
+
         // A. Configurar el filtro (Excluir ganador si existe)
         const whereCondition = {
             id_petition: petitionId,
-            id_state: 3 // Pendientes
+            id_state: pendingState
         };
 
         if (winnerPostulationId) {
@@ -485,7 +511,7 @@ class PostulationService {
         // C. Actualizar estado
         const updateResult = await Postulation.update(
             {
-                id_state: newState,
+                id_state: newStateId,
                 id_user_update: userId,
                 date_update: new Date(),
             },

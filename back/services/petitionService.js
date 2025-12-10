@@ -17,7 +17,7 @@ class PetitionService {
     
     // ... (todos los métodos GET que ya tenías, sin cambios)
     async getPetitions(filter = {}, options = {}) {
-        const { providerId, ...restOfFilter } = filter;
+        const { providerId, excludeAppliedByProviderId, ...restOfFilter } = filter;
         const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
         const offset = (page - 1) * limit;
 
@@ -44,6 +44,22 @@ class PetitionService {
             where[Op.and] = [
                 ...(where[Op.and] || []),
                 matchesInterestsQuery
+            ];
+        }
+
+        // [NUEVO] Filtro para excluir peticiones donde el proveedor YA se postuló
+        if (excludeAppliedByProviderId) {
+            const excludeQuery = sequelize.literal(`
+                NOT EXISTS (
+                    SELECT 1
+                    FROM postulation AS p
+                    WHERE p.id_petition = \`Petition\`.\`id_petition\`
+                    AND p.id_provider = ${sequelize.escape(excludeAppliedByProviderId)}
+                )
+            `);
+            where[Op.and] = [
+                ...(where[Op.and] || []),
+                excludeQuery
             ];
         }
 
@@ -158,19 +174,17 @@ class PetitionService {
                 throw error;
             }
 
-            const petitionCancelledState = await getStateId('PET_CAN'); // ID 6 (Asumiendo PET_CAN)
+            const petitionCancelledState = await getStateId('CAN'); // CAN = Cancelada (ID 6)
 
             await petition.update({
-                id_state: 6,
                 id_state: petitionCancelledState,
                 id_user_update: userId,
                 date_update: new Date()
             }, { transaction: t });
 
             // Pasamos el eventBus en lugar de app
-            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, null, eventBus);
-            // Usamos el código 'POS_CAN' para cancelar las postulaciones asociadas
-            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 'POS_CAN', null, eventBus);
+            // Usamos el código 'CAN' para cancelar las postulaciones asociadas
+            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 'CAN', null, eventBus);
 
             await t.commit();
             return this.getPetitionById(petitionId);

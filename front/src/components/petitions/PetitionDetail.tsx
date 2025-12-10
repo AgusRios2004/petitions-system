@@ -195,7 +195,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             Volver
           </Button>
           {/* El botón de postulación aparece si el usuario es un proveedor y no el dueño de la petición. */}
-          {!isOwner && user?.provider && (
+          {!isOwner && user?.provider && petition.states.state === 'Pendiente' &&(
             <Link href={`/postulation/create/${petition.id_petition}`} className="flex-1 min-w-[120px]">
               <Button variant="primary" className="w-full">Postularse</Button>
             </Link>
