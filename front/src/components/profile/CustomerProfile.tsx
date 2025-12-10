@@ -112,7 +112,6 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="text-cyan-400 font-semibold text-sm uppercase tracking-wide">
-                            A: {grade.provider?.user?.name || 'Proveedor'} {grade.provider?.user?.lastname || ''}
                             A: {grade.provider 
                                   ? `${grade.provider.user.name} ${grade.provider.user.lastname}` 
                                   : grade.customer 

@@ -8,18 +8,24 @@ class GradeService {
             // ya que las relaciones Grade <-> Provider/Customer son a través de tablas intermedias.
             const query = `
                 SELECT 
-                    g.id_grade, g.grade_number, gc.comment, g.date_create,
+                    g.id_grade,
+                    g.grade_number,
+                    gc.comment AS customer_comment,
+                    gp.coment AS provider_comment,
+                    g.date_create,
+
                     p.id_provider, 
-                    up.name as p_name, up.lastname as p_lastname,
+                    up.name AS p_name, up.lastname AS p_lastname,
+
                     c.id_customer,
-                    uc.name as c_name, uc.lastname as c_lastname
-                FROM grade g
-                LEFT JOIN grade_provider gp ON g.id_grade = gp.id_grade
-                LEFT JOIN n_provider p ON gp.id_provider = p.id_provider
-                LEFT JOIN n_user up ON p.user_id = up.id_user
+                    uc.name AS c_name, uc.lastname AS c_lastname
+                FROM ${Grade.tableName} g
                 LEFT JOIN grade_customer gc ON g.id_grade = gc.id_grade
-                LEFT JOIN n_customer c ON gc.id_customer = c.id_customer
-                LEFT JOIN n_user uc ON c.user_id = uc.id_user
+                LEFT JOIN grade_provider gp ON g.id_grade = gp.id_grade
+                LEFT JOIN ${Provider.tableName} p ON gp.id_provider = p.id_provider
+                LEFT JOIN ${User.tableName} up ON p.user_id = up.id_user
+                LEFT JOIN ${Customer.tableName} c ON gc.id_customer = c.id_customer
+                LEFT JOIN ${User.tableName} uc ON c.user_id = uc.id_user
                 WHERE g.id_user_create = :id_user_create
                 ORDER BY g.date_create DESC
             `;
@@ -32,7 +38,7 @@ class GradeService {
             return grades.map(row => ({
                 id_grade: row.id_grade,
                 grade_number: row.grade_number,
-                comment: row.comment,
+                comment: row.provider_comment || row.customer_comment,
                 date_create: row.date_create,
                 provider: row.id_provider ? {
                     id_provider: row.id_provider,
