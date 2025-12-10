@@ -1,27 +1,30 @@
 const gradeService = require('../services/gradeService');
-const { error, success } = require('../middlewares/response');
-const { ConflictError } = require('../middlewares/customErrors');
+const { success, error } = require('../middlewares/response'); // Asumiendo que usas este helper
 
-const createGrade = async (req, res, next) => {
-  try {
-    const { id_provider, id_customer, grade_number, comment, id_color } = req.body;
-    const id_user_create = req.user.sub;
-    
-    const grade = await gradeService.createGrade({ id_provider, id_customer, grade_number, comment, id_user_create, id_color });
-    success(res, grade, 'Calificación creada correctamente', 201);
-  } catch (e) {
-    // Capturamos nuestro error personalizado
-    if (e instanceof ConflictError) {
-      return error(res, e.message, e.statusCode);
+const getGrades = async (req, res) => {
+    try {
+        const filter = req.query;
+        const grades = await gradeService.getGrades(filter);
+        return success(res, grades);
+    } catch (e) {
+        console.error("Error obteniendo calificaciones:", e);
+        return error(res, 'Error al obtener el historial de calificaciones');
     }
-    // ¡Línea clave para depuración!
-    // Imprime el error completo en la consola del servidor.
-    console.error('[ERROR] gradeController:', e); 
-
-    error(res, e.message || 'Error al crear la calificación', 500, e);
-  }
 };
 
-module.exports = {
-  createGrade,
+const createGrade = async (req, res) => {
+    try {
+        const data = req.body;
+        // Asignamos el usuario que crea la calificación desde el token de autenticación
+        data.id_user_create = req.user.sub; 
+        data.date_create = new Date();
+        
+        const newGrade = await gradeService.createGrade(data);
+        return success(res, newGrade, 'Calificación enviada con éxito', 201);
+    } catch (e) {
+        console.error("Error creando calificación:", e);
+        return error(res, 'Error al enviar la calificación');
+    }
 };
+
+module.exports = { getGrades, createGrade };

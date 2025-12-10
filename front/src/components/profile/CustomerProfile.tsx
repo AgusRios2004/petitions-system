@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQuery } from '@tanstack/react-query';
 import toast, { Toaster } from 'react-hot-toast'; // 1. Importamos toast y Toaster
-import { UserProfile, ICustomer, IPostulation } from '@/types/common'; // 2. Importamos IPostulation
+import { UserProfile, ICustomer, IPostulation, IGrade } from '@/types/common'; // 2. Importamos IPostulation
 import { customerService } from '@/service/customerService';
+import { gradeService } from '@/service/gradeService';
 
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 import CustomerInfo from './customer/CustomerInfo';
@@ -34,6 +35,15 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
       return customerService.getCustomerById(customerIdFromKey);
     },
     enabled: !!customerId,
+  });
+
+  // Consulta para obtener las calificaciones hechas por el cliente
+  const { data: givenGrades, isLoading: isLoadingGrades } = useQuery({
+    queryKey: ['givenGrades', user.id_user],
+    queryFn: async () => {
+      return await gradeService.getGrades({ id_user_create: user.id_user });
+    },
+    enabled: activeTab === 'historial' && !!user.id_user,
   });
 
   useEffect(() => {
@@ -87,7 +97,44 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         return <CustomerInfo customer={detailedCustomer} user={user} />;
       }
       if (activeTab === 'historial') {
-        return <CustomerHistory customer={detailedCustomer} />;
+        return (
+          <div className="space-y-8">
+            <CustomerHistory customer={detailedCustomer} />
+            
+            <div className="border-t border-gray-700 pt-6">
+              <h3 className="text-xl font-bold text-white mb-4">Calificaciones Realizadas</h3>
+              {isLoadingGrades ? (
+                <p className="text-gray-400">Cargando historial de calificaciones...</p>
+              ) : givenGrades && givenGrades.length > 0 ? (
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  {givenGrades.map((grade: any) => (
+                    <div key={grade.id_grade} className="bg-gray-700/30 p-4 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="text-cyan-400 font-semibold text-sm uppercase tracking-wide">
+                            A: {grade.provider?.user?.name || 'Proveedor'} {grade.provider?.user?.lastname || ''}
+                            A: {grade.provider 
+                                  ? `${grade.provider.user.name} ${grade.provider.user.lastname}` 
+                                  : grade.customer 
+                                    ? `${grade.customer.user.name} ${grade.customer.user.lastname}`
+                                    : 'Usuario'}
+                          </p>
+                          <p className="text-xs text-gray-500">{new Date(grade.date_create).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center bg-gray-800 px-2 py-1 rounded text-yellow-400 font-bold text-sm">
+                          ★ {grade.grade_number}
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm italic">"{grade.comment}"</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No has realizado ninguna calificación todavía.</p>
+              )}
+            </div>
+          </div>
+        );
       }
     }
   }

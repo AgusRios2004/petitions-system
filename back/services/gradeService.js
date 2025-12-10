@@ -1,109 +1,56 @@
-const { Grade, GradeProvider, GradeCustomer, sequelize, Provider, Customer } = require('../models');
-const notificationService = require('../services/notificationService');
-const { ConflictError } = require('../middlewares/customErrors');
+const { Grade, Provider, Customer, User, sequelize } = require('../models');
 
-const createGrade = async (gradeData) => {
-  const t = await sequelize.transaction();
-  try {
-    let targetUserId = null;
+class GradeService {
+    
+    async getGrades(filter = {}) {
+        if (filter.id_user_create) {
+            // Usamos Raw Query para evitar errores de asociación (EagerLoadingError)
+            // ya que las relaciones Grade <-> Provider/Customer son a través de tablas intermedias.
+            const query = `
+                SELECT 
+                    g.id_grade, g.grade_number, gc.comment, g.date_create,
+                    p.id_provider, 
+                    up.name as p_name, up.lastname as p_lastname,
+                    c.id_customer,
+                    uc.name as c_name, uc.lastname as c_lastname
+                FROM grade g
+                LEFT JOIN grade_provider gp ON g.id_grade = gp.id_grade
+                LEFT JOIN n_provider p ON gp.id_provider = p.id_provider
+                LEFT JOIN n_user up ON p.user_id = up.id_user
+                LEFT JOIN grade_customer gc ON g.id_grade = gc.id_grade
+                LEFT JOIN n_customer c ON gc.id_customer = c.id_customer
+                LEFT JOIN n_user uc ON c.user_id = uc.id_user
+                WHERE g.id_user_create = :id_user_create
+                ORDER BY g.date_create DESC
+            `;
 
-    const { id_customer, id_provider, grade_number, comment, id_user_create, id_color } = gradeData;
+            const grades = await sequelize.query(query, {
+                replacements: { id_user_create: filter.id_user_create },
+                type: sequelize.constructor.QueryTypes.SELECT
+            });
 
-    // Escenario 1: Un cliente está calificando a un PROVEEDOR.
-    // Se identifica porque se reciben tanto el ID del proveedor (calificado) como el del cliente (autor).
-    if (id_provider) {
-      const provider = await Provider.findByPk(id_provider, { transaction: t });
-      if(!provider) return new Error('Proveedor no encontrado');
-      targetUserId = provider.user_id;
-      
-      // 1.1. Validar que este cliente no haya calificado ya a este proveedor.
-      const existingGrade = await Grade.findOne({
-        where: { id_user_create: id_user_create }, // El autor es el usuario logueado
-        include: [{
-          model: GradeProvider,
-          as: 'gradeProviders',
-          where: { id_provider: id_provider }, // Y el calificado es este proveedor
-          required: true
-        }],
-        transaction: t
-      });
+            return grades.map(row => ({
+                id_grade: row.id_grade,
+                grade_number: row.grade_number,
+                comment: row.comment,
+                date_create: row.date_create,
+                provider: row.id_provider ? {
+                    id_provider: row.id_provider,
+                    user: { name: row.p_name, lastname: row.p_lastname }
+                } : null,
+                customer: row.id_customer ? {
+                    id_customer: row.id_customer,
+                    user: { name: row.c_name, lastname: row.c_lastname }
+                } : null
+            }));
+        }
 
-      if (existingGrade) {
-        throw new ConflictError('Ya has calificado a este proveedor.');
-      }
-
-      // 1.2. Crear la calificación principal (Grade)
-      const newGrade = await Grade.create({
-        grade_number,
-        id_user_create,
-        id_color,
-        date_create: new Date(),
-      }, { transaction: t });
-
-      // 1.3. Asociar con el proveedor (el calificado)
-      await GradeProvider.create({
-        id_provider,
-        id_grade: newGrade.id_grade,
-        coment: comment, // El modelo GradeProvider usa 'coment'
-        id_user_create,
-        date_create: new Date(),
-      }, { transaction: t });
-      
-      await t.commit();
-      return newGrade;
-
-    // Escenario 2: Un proveedor está calificando a un CLIENTE.
-    // Se identifica porque se recibe el ID del cliente pero no el del proveedor (el proveedor es el autor).
-    } else if (id_customer) {
-      const customer = await Customer.findByPk(id_customer, { transaction: t });
-      if(!customer) return new Error('Cliente no encontrado');
-      targetUserId = customer.user_id;
-
-      // 2.1. Validar que este proveedor no haya calificado ya a este cliente.
-      const existingGrade = await Grade.findOne({
-        where: { id_user_create: id_user_create }, // El autor es el usuario logueado (proveedor)
-        include: [{
-          model: GradeCustomer,
-          as: 'gradeCustomers',
-          where: { id_customer: id_customer }, // Y el calificado es este cliente
-          required: true
-        }],
-        transaction: t
-      });
-
-      if (existingGrade) {
-        throw new ConflictError('Ya has calificado a este cliente.');
-      }
-
-      // 2.2. Crear la calificación principal (Grade)
-      const newGrade = await Grade.create({
-        grade_number,
-        id_user_create,
-        id_color,
-        date_create: new Date(),
-      }, { transaction: t });
-
-      // 2.3. Asociar la calificación con el cliente (el calificado)
-      await GradeCustomer.create({
-        id_customer,
-        id_grade: newGrade.id_grade,
-        comment: comment,
-        id_user_create,
-        date_create: new Date(),
-      }, { transaction: t });
-
-      await t.commit();
-      return newGrade;
-
-    } else {
-      throw new Error('Datos insuficientes para crear la calificación. Se requiere id_provider o id_customer.');
+        return await Grade.findAll({ order: [['date_create', 'DESC']] });
     }
-  } catch (error) {
-    await t.rollback();
-    throw error;
-  }
-};
 
-module.exports = {
-  createGrade,
-};
+    async createGrade(data) {
+        return await Grade.create(data);
+    }
+}
+
+module.exports = new GradeService();
