@@ -2,6 +2,17 @@ const { Petition, Customer, sequelize, Postulation, State, User, Provider, Provi
 const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
 const { Op } = require('sequelize');
 
+// Caché simple para estados
+const stateCache = {};
+
+async function getStateId(code) {
+    if (stateCache[code]) return stateCache[code];
+    const state = await State.findOne({ where: { code } });
+    if (!state) throw new Error(`Estado con código '${code}' no encontrado.`);
+    stateCache[code] = state.id_state;
+    return state.id_state;
+}
+
 class PetitionService {
     
     // ... (todos los métodos GET que ya tenías, sin cambios)
@@ -147,14 +158,19 @@ class PetitionService {
                 throw error;
             }
 
+            const petitionCancelledState = await getStateId('PET_CAN'); // ID 6 (Asumiendo PET_CAN)
+
             await petition.update({
                 id_state: 6,
+                id_state: petitionCancelledState,
                 id_user_update: userId,
                 date_update: new Date()
             }, { transaction: t });
 
             // Pasamos el eventBus en lugar de app
             await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 6, null, eventBus);
+            // Usamos el código 'POS_CAN' para cancelar las postulaciones asociadas
+            await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 'POS_CAN', null, eventBus);
 
             await t.commit();
             return this.getPetitionById(petitionId);
