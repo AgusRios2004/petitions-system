@@ -22,9 +22,7 @@ const ProviderOportunities = () => {
     const providerId = user?.provider?.id_provider;
     const providerTypeId = user?.provider?.id_type_provider;
 
-    // Estado para controlar el filtro
     const [filterByMyType, setFilterByMyType] = useState(false);
-
 
     const { data: postulationsData, isLoading: isLoadingPostulations } = useQuery({
         queryKey: ['providerPostulations', providerId],

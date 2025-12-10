@@ -52,17 +52,6 @@ export default function ProfilePage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-white">
             Bienvenido, {user.name}
           </h1>
-          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
-            {user.profile_image ? (
-              <img
-                src={user.profile_image}
-                alt="Foto de perfil"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-gray-400 text-sm">Foto</span>
-            )}
-          </div>
         </header>
 
         {(() => {

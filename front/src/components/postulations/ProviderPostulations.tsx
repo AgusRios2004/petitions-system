@@ -1,33 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { postulationService } from '@/service/postulationService';
+import { stateService } from '@/service/stateService';
 import PostulationList from './PostulationList';
 import Tabs from '@/components/ui/Tabs';
+import { IState } from '@/types/common';
 
 interface ProviderPostulationsProps {
   id_provider: number;
 }
 
-// El `value` corresponde al `id_state` de la postulación en la base de datos.
-const postulationStatusTabs = [
-  { label: 'Pendientes', value: 3 },
-  { label: 'Ganadoras', value: 1 },
-  { label: 'Rechazadas', value: 2 },
-  { label: 'Canceladas', value: 6 }, // Postulaciones de peticiones canceladas por el cliente
-  { label: 'Dado de baja', value: 4 },
-];
-
 const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider }) => {
-  const [activeTab, setActiveTab] = useState(3);
+  const [activeTab, setActiveTab] = useState<number | undefined>();
+
+  // Hook para obtener los estados de las postulaciones desde el backend
+  const { data: postulationStatusTabs, isLoading: isLoadingStatus } = useQuery({
+    queryKey: ['states'], // Clave genérica para aprovechar caché en toda la app
+    queryFn: () => stateService.getAllStates(),
+    select: (response) => {
+      // Filtramos y mapeamos. Si el backend devuelve TODOS los estados (incluyendo usuarios, etc),
+      // aquí podrías filtrar por state.code.startsWith('POS') si fuera necesario.
+      return response.data?.map((state: IState) => ({
+        label: state.state,
+        value: state.id_state,
+      })) || [];
+    },
+  });
+
+  // Efecto para establecer la pestaña activa una vez que los estados se han cargado
+  useEffect(() => {
+    if (postulationStatusTabs && postulationStatusTabs.length > 0 && activeTab === undefined) {
+      // Por defecto seleccionamos 'Pendientes' (id 3) si existe, si no, la primera de la lista. Se añade el tipo para 'tab'.
+      const pendingTab = postulationStatusTabs.find((tab: { value: number }) => tab.value === 3);
+      setActiveTab(pendingTab ? pendingTab.value : postulationStatusTabs[0].value);
+    }
+  }, [postulationStatusTabs, activeTab]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['postulations', { id_provider, id_state: activeTab }],
     queryFn: () => {
+      if (activeTab === undefined) {
+        // No ejecutar la consulta si no hay una pestaña activa
+        return Promise.resolve({ data: [] });
+      }
       const params = { id_provider, id_state: activeTab };
       return postulationService.getAllPostulations(params);
     },
     select: (response) => response.data,
-    enabled: !!id_provider,
+    // Habilitar la consulta solo cuando id_provider y activeTab tienen un valor. [5, 10]
+    enabled: !!id_provider && activeTab !== undefined,
   });
 
   const handleTabChange = (newTab: number) => {
@@ -37,16 +58,20 @@ const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider
   return (
     <div>
       <div className="flex justify-start mb-4">
-        <Tabs
-          tabs={postulationStatusTabs}
-          activeTab={activeTab}
-          onTabClick={handleTabChange}
-        />
+        {isLoadingStatus ? (
+          <p className="text-center text-gray-400">Cargando estados...</p>
+        ) : postulationStatusTabs && activeTab !== undefined ? (
+          <Tabs
+            tabs={postulationStatusTabs}
+            activeTab={activeTab}
+            onTabClick={handleTabChange}
+          />
+        ) : null}
       </div>
 
       {isLoading && <p className="text-center text-gray-400">Cargando postulaciones...</p>}
       {isError && <p className="text-center text-red-500">Error al cargar las postulaciones: {error.message}</p>}
-      
+
       {data && data.length > 0 ? (
         <PostulationList postulations={data} role="provider" />
       ) : (

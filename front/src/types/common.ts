@@ -359,3 +359,10 @@ export interface IConversationPreview {
   // La consulta del backend está diseñada para devolver solo al otro usuario en este array.
   users: Pick<IUser, 'id_user' | 'name' | 'lastname' | 'profile_image'>[];
 }
+
+export interface IState {
+  id_state: number;
+  state: string;
+  code: string;
+  description?: string;
+}

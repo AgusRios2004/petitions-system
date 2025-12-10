@@ -80,10 +80,10 @@ class PostulationService {
     // --- MÉTODOS DE ESCRITURA (REFACTORIZADOS Y CORREGIDOS) ---
 
     async createPostulation(data, userId, eventBus) { // Ya no recibe 'app', sino 'eventBus'
-        
-        // ... (código original sin cambios, ya era robusto)
         const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
+        let newPostulationId; // Variable para guardar el ID y usarlo fuera de la transacción
+
         try {
             const provider = await Provider.findOne({ where: { user_id: userId } }, { transaction: t });
             if (!provider) {
@@ -97,8 +97,6 @@ class PostulationService {
                 error.statusCode = 404;
                 throw error;
             }
-            // [CORREGIDO] Obtenemos el cliente asociado para tener su user_id
-            const customer = await petition.getCustomers({ transaction: t });
 
             if (petition.id_state !== 3) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
@@ -129,6 +127,8 @@ class PostulationService {
                 date_create: new Date(),
             }, { transaction: t });
 
+            newPostulationId = newPostulation.id_postulation;
+
             if (articles && articles.length > 0) {
                 const inventoryData = articles.map(article => ({
                     id_article: article.id_article,
@@ -142,48 +142,51 @@ class PostulationService {
             }
 
             await t.commit();
-
-            // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
-            if (eventBus) {
-                const targetUserId = customer.user_id; // Usamos el ID de usuario correcto del cliente
-                const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
-
-                // El servicio solo "anuncia" que algo pasó. No sabe nada de sockets.
-                eventBus.emit('postulation:created', {
-                    postulation: postulationWithDetails,
-                    targetUserId: targetUserId
-                });
-            }
-            // --- FIN DE LÓGICA DE EVENTOS ---
-
-            try {
-                await notificationService.createNotification({
-                    id_user: customer.user_id, // [CORREGIDO] Usamos el ID de usuario correcto del cliente
-                    title: "Nueva Postulación Recibida",
-                    message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
-                    notification_type: "POSTULATION_CREATED",
-                    settingKey: "postulation_created",
-                    related_postulation_id: newPostulation.id_postulation,
-                    related_petition_id: petition.id_petition,
-                    metadata: {
-                        id_customer: petition.id_customer,
-                        description: petition.description,
-                        id_provider: provider.id_provider,
-                        proposal: proposal
-                    },
-                });
-            } catch (notifyError) {
-                // Capturamos error silenciosamente para no fallar el request si la notificación falla
-                console.error("Error enviando notificación:", notifyError);
-            }
-            
-            return await this.getPostulationById(newPostulation.id_postulation);
         } catch (e) {
             await t.rollback();
             console.error("Error en el servicio de creación de postulación:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
         }
+
+        // --- OPTIMIZACIÓN: Lógica fuera de la transacción ---
+        // 1. Obtenemos la postulación completa UNA sola vez.
+        const postulationWithDetails = await this.getPostulationById(newPostulationId);
+        
+        // 2. Extraemos datos necesarios para notificaciones del objeto ya cargado
+        // Asumimos que 'customers' viene incluido en 'petition' gracias a getPostulationById
+        const customer = postulationWithDetails.petition.customers; 
+        const targetUserId = customer.user_id;
+
+        // 3. Eventos (Desacoplados)
+        if (eventBus) {
+            eventBus.emit('postulation:created', {
+                postulation: postulationWithDetails,
+                targetUserId: targetUserId
+            });
+        }
+
+        // 4. Notificaciones (NO BLOQUEANTES - Fire and Forget)
+        // Quitamos el 'await' para que el cliente no espere a que se envíe el correo/notificación
+        notificationService.createNotification({
+            id_user: targetUserId,
+            title: "Nueva Postulación Recibida",
+            message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
+            notification_type: "POSTULATION_CREATED",
+            settingKey: "postulation_created",
+            related_postulation_id: newPostulationId,
+            related_petition_id: id_petition,
+            metadata: {
+                id_customer: postulationWithDetails.petition.id_customer,
+                description: postulationWithDetails.petition.description,
+                id_provider: postulationWithDetails.createdBy.provider.id_provider,
+                proposal: proposal
+            },
+        }).catch(notifyError => {
+            console.error("Error enviando notificación en segundo plano:", notifyError);
+        });
+        
+        return postulationWithDetails;
     }
 
     async updatePostulation(id, data) {
