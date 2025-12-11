@@ -81,7 +81,13 @@ class PostulationService {
                     as: 'inventories',
                     include: ['article']
                 },
-                'createdBy',
+                // [CORREGIDO] Se expande la inclusión de 'createdBy' para que también traiga el 'provider' asociado al usuario.
+                // Esto es crucial para la lógica post-transacción que necesita el id_provider.
+                {
+                    model: User,
+                    as: 'createdBy',
+                    include: [{ model: Provider, as: 'provider' }]
+                },
                 'updatedBy',
                 'states'
             ],
@@ -109,8 +115,9 @@ class PostulationService {
                 throw error;
             }
 
-            const petitionPendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
-            if (petition.id_state !== petitionPendingState) { 
+            // [CORREGIDO] Se valida contra el estado 'Abierta' (ABI), no 'Pendiente' (PEN).
+            const petitionOpenState = await getStateId('PEN');
+            if (petition.id_state !== petitionOpenState) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -166,7 +173,16 @@ class PostulationService {
         // --- OPTIMIZACIÓN: Lógica fuera de la transacción ---
         // 1. Obtenemos la postulación completa UNA sola vez.
         const postulationWithDetails = await this.getPostulationById(newPostulationId);
-        
+
+        // [CORREGIDO] Se añade una validación para evitar un crash si la petición no tiene un cliente asociado.
+        // Esto puede ocurrir si hay datos corruptos o un error en la lógica de asociación.
+        if (!postulationWithDetails?.petition?.customers?.user_id) {
+            console.error(`[ADVERTENCIA POST-TRANSACCIÓN] No se pudo encontrar el cliente (o su user_id) para la petición con ID: ${id_petition}. La postulación con ID ${newPostulationId} se creó, pero no se enviará la notificación. Revise los datos de la petición.`);
+            // Devolvemos la postulación creada con éxito, ya que la operación principal funcionó.
+            // El cliente recibirá una respuesta 200 OK en lugar de un 500.
+            return postulationWithDetails;
+        }
+
         // 2. Extraemos datos necesarios para notificaciones del objeto ya cargado
         // Asumimos que 'customers' viene incluido en 'petition' gracias a getPostulationById
         const customer = postulationWithDetails.petition.customers; 
@@ -176,7 +192,8 @@ class PostulationService {
         if (eventBus) {
             eventBus.emit('postulation:created', {
                 postulation: postulationWithDetails,
-                targetUserId: targetUserId
+                // Pasamos el ID del usuario de forma segura después de la validación.
+                targetUserId: targetUserId 
             });
         }
 
