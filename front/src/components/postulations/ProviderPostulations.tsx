@@ -27,8 +27,8 @@ const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider
   // Efecto para establecer la pestaña activa una vez que los estados se han cargado
   useEffect(() => {
     if (postulationStatusTabs && postulationStatusTabs.length > 0 && activeTab === undefined) {
-      // Por defecto seleccionamos 'Pendientes' (id 3) si existe, si no, la primera de la lista. Se añade el tipo para 'tab'.
-      const pendingTab = postulationStatusTabs.find((tab: { value: number }) => tab.value === 3);
+      // Hacemos la búsqueda por el texto 'Pendiente' para que sea más robusto que usar un ID fijo (3).
+      const pendingTab = postulationStatusTabs.find((tab: { label: string, value: number }) => tab.label.toLowerCase() === 'pendiente');
       setActiveTab(pendingTab ? pendingTab.value : postulationStatusTabs[0].value);
     }
   }, [postulationStatusTabs, activeTab]);

@@ -32,19 +32,21 @@ class PetitionService {
         `);
     }
 
+
     /**
-     * Construye el filtro SQL para excluir postulaciones existentes
+        * Devuelve una subconsulta SQL con los IDs de las peticiones 
+        * donde el proveedor ya tiene una postulación en estado 'PEN'
      */
-    _getExcludeAppliedFilter(providerId) {
-        return sequelize.literal(`
-            NOT EXISTS (
-                SELECT 1
-                FROM postulation AS p
-                WHERE p.id_petition = \`Petition\`.\`id_petition\`
-                AND p.id_provider = ${sequelize.escape(providerId)}
-            )
-        `);
-    }
+    _getExcludedIdsLiteral(providerId) {
+        // Usamos tu lógica exacta: Postulaciones del proveedor con estado 'PEN'
+        return sequelize.literal(`(
+            SELECT p.id_petition
+            FROM postulation AS p 
+            INNER JOIN state AS s ON s.id_state = p.id_state
+            WHERE s.code = 'PEN'
+            AND p.id_provider = ${sequelize.escape(providerId)}
+        )`);
+    }  
 
     /**
      * Devuelve la configuración masiva de relaciones (Includes)
@@ -100,40 +102,52 @@ class PetitionService {
     }
 
     async getPetitions(filter = {}, options = {}) {
-        const { providerId, excludeAppliedByProviderId, ...restOfFilter } = filter;
+        // 1. Extraemos SOLO providerId (asumimos que usas el mismo ID para intereses y exclusión)
+        const { providerId, ...restOfFilter } = filter;
         const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
         const offset = (page - 1) * limit;
 
-        // 1. Configuración base del filtro
+        // 2. Configuración base del filtro
         const where = { ...restOfFilter };
 
-        // 2. Aplicar filtro por descripción
+        // 3. Filtro por descripción
         if (where.description) {
             where.description = { [Op.like]: `%${where.description}%` };
         }
 
-        // 3. Aplicar filtro de intereses (Delegamos la lógica sucia al helper)
+        // 4. LÓGICA DEL PROVEEDOR (Intereses + Exclusión)
         if (providerId) {
+            // A. Filtro de Intereses (Tu lógica original)
             const interestQuery = this._getProviderInterestFilter(providerId);
-            where[Op.and] = [ ...(where[Op.and] || []), interestQuery ];
+            
+            // B. Filtro de Exclusión (NUEVO: Usamos NOT IN con SQL Literal)
+            // Según tu log, la tabla se llama 'postulation' (sin n_ al principio)
+            const exclusionLiteral = sequelize.literal(`(
+                SELECT p.id_petition
+                FROM postulation AS p
+                WHERE p.id_provider = ${sequelize.escape(providerId)}
+            )`);
+
+            // C. Combinamos ambos en el WHERE
+            where[Op.and] = [
+                ...(where[Op.and] || []), // Mantenemos otros filtros AND si existen
+                interestQuery,            // Debe coincidir con intereses
+                { 
+                    id_petition: { [Op.notIn]: exclusionLiteral } // NO debe estar en postulaciones
+                }
+            ];
         }
 
-        // 4. Aplicar filtro de exclusión (Delegamos la lógica sucia al helper)
-        if (excludeAppliedByProviderId) {
-            const excludeQuery = this._getExcludeAppliedFilter(excludeAppliedByProviderId);
-            where[Op.and] = [ ...(where[Op.and] || []), excludeQuery ];
-        }
-
-        // 5. Ejecutar consulta (Ahora se ve súper limpio)
+        // 5. Ejecutar consulta
         return await Petition.findAndCountAll({
             where,
             limit,
             offset,
             order: [[sortBy, order]],
             distinct: true,
-            include: this._getPetitionIncludes() // Llamada al helper
+            include: this._getPetitionIncludes(),
         });
-    }
+    }    
 
     async getPetitionById(id) {
         return await Petition.findByPk(id, {
