@@ -13,13 +13,10 @@ interface ProviderPostulationsProps {
 const ProviderPostulations: React.FC<ProviderPostulationsProps> = ({ id_provider }) => {
   const [activeTab, setActiveTab] = useState<number | undefined>();
 
-  // Hook para obtener los estados de las postulaciones desde el backend
   const { data: postulationStatusTabs, isLoading: isLoadingStatus } = useQuery({
     queryKey: ['states'], // Clave genérica para aprovechar caché en toda la app
     queryFn: () => stateService.getAllStates(),
     select: (response) => {
-      // Filtramos y mapeamos. Si el backend devuelve TODOS los estados (incluyendo usuarios, etc),
-      // aquí podrías filtrar por state.code.startsWith('POS') si fuera necesario.
       return response.data?.map((state: IState) => ({
         label: state.state,
         value: state.id_state,

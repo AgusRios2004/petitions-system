@@ -1,5 +1,5 @@
 const { Petition, Customer, sequelize, Postulation, State, User, Provider, ProviderCategory, Interest } = require('../models');
-const postulationService = require('./postulationService'); // Importamos el servicio de postulaciones
+const postulationService = require('./postulationService'); 
 const { Op } = require('sequelize');
 
 // Caché simple para estados
@@ -14,8 +14,91 @@ async function getStateId(code) {
 }
 
 class PetitionService {
-    
-    // ... (todos los métodos GET que ya tenías, sin cambios)
+
+    // --- MÉTODOS PRIVADOS (Helpers) ---
+
+    /**
+     * Construye el filtro SQL para coincidencias de intereses del proveedor
+     */
+    _getProviderInterestFilter(providerId) {
+        return sequelize.literal(`
+            EXISTS (
+                SELECT 1
+                FROM n_interest AS i
+                INNER JOIN n_provider_cateogory AS pc ON pc.category_id = i.id_category
+                WHERE i.id_customer = \`Petition\`.\`id_customer\`
+                AND pc.provider_id = ${sequelize.escape(providerId)} 
+            )
+        `);
+    }
+
+    /**
+     * Construye el filtro SQL para excluir postulaciones existentes
+     */
+    _getExcludeAppliedFilter(providerId) {
+        return sequelize.literal(`
+            NOT EXISTS (
+                SELECT 1
+                FROM postulation AS p
+                WHERE p.id_petition = \`Petition\`.\`id_petition\`
+                AND p.id_provider = ${sequelize.escape(providerId)}
+            )
+        `);
+    }
+
+    /**
+     * Devuelve la configuración masiva de relaciones (Includes)
+     */
+    _getPetitionIncludes() {
+        return [
+            'attachments',
+            {
+                model: Customer,
+                as: 'customers',
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['name', 'lastname', 'profile_image']
+                    }
+                ],
+                attributes: {
+                    include: [
+                        [
+                            sequelize.literal(`(
+                                SELECT COALESCE(AVG(g.grade_number), 0)
+                                FROM \`grade\` AS g
+                                JOIN grade_customer AS gc ON g.id_grade = gc.id_grade 
+                                WHERE gc.id_customer = \`customers\`.\`id_customer\`
+                            )`),
+                            'average_rating'
+                        ]
+                    ]
+                }
+            },
+            'typePetitions',
+            'states',
+            'profession',
+            'typeProvider',
+            {
+                model: Postulation,
+                as: 'postulations',
+                include: [
+                    { model: State, as: 'states' },
+                    {
+                        model: Provider,
+                        as: 'provider',
+                        include: [{
+                            model: User,
+                            as: 'user',
+                            attributes: ['name', 'lastname']
+                        }]
+                    }
+                ]
+            }
+        ];
+    }
+
     async getPetitions(filter = {}, options = {}) {
         const { providerId, excludeAppliedByProviderId, ...restOfFilter } = filter;
         const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
@@ -24,102 +107,31 @@ class PetitionService {
         // 1. Configuración base del filtro
         const where = { ...restOfFilter };
 
-        // Filtro por descripción (si existe)
+        // 2. Aplicar filtro por descripción
         if (where.description) {
             where.description = { [Op.like]: `%${where.description}%` };
         }
 
+        // 3. Aplicar filtro de intereses (Delegamos la lógica sucia al helper)
         if (providerId) {
-            const matchesInterestsQuery = sequelize.literal(`
-                EXISTS (
-                    SELECT 1
-                    FROM n_interest AS i
-                    INNER JOIN n_provider_cateogory AS pc ON pc.category_id = i.id_category
-                    WHERE i.id_customer = \`Petition\`.\`id_customer\`  -- Conecta con la petición actual
-                    AND pc.provider_id = ${sequelize.escape(providerId)} 
-                )
-            `);
-
-            // Lo agregamos al WHERE asegurando que conviva con otros filtros
-            where[Op.and] = [
-                ...(where[Op.and] || []),
-                matchesInterestsQuery
-            ];
+            const interestQuery = this._getProviderInterestFilter(providerId);
+            where[Op.and] = [ ...(where[Op.and] || []), interestQuery ];
         }
 
-        // [NUEVO] Filtro para excluir peticiones donde el proveedor YA se postuló
+        // 4. Aplicar filtro de exclusión (Delegamos la lógica sucia al helper)
         if (excludeAppliedByProviderId) {
-            const excludeQuery = sequelize.literal(`
-                NOT EXISTS (
-                    SELECT 1
-                    FROM postulation AS p
-                    WHERE p.id_petition = \`Petition\`.\`id_petition\`
-                    AND p.id_provider = ${sequelize.escape(excludeAppliedByProviderId)}
-                )
-            `);
-            where[Op.and] = [
-                ...(where[Op.and] || []),
-                excludeQuery
-            ];
+            const excludeQuery = this._getExcludeAppliedFilter(excludeAppliedByProviderId);
+            where[Op.and] = [ ...(where[Op.and] || []), excludeQuery ];
         }
 
-        // 3. Ejecutamos la consulta trayendo TODOS los datos (Includes)
+        // 5. Ejecutar consulta (Ahora se ve súper limpio)
         return await Petition.findAndCountAll({
-            where, // Aquí va el filtro poderoso
+            where,
             limit,
             offset,
             order: [[sortBy, order]],
-            distinct: true, // Importante para que el count sea correcto con tantos includes
-            include: [
-                'attachments', // Tus adjuntos
-                {
-                    model: Customer,
-                    as: 'customers', // OJO: Revisa si tu alias es 'customers' o 'customer' en el modelo
-                    include: [
-                        {
-                            model: User,
-                            as: 'user',
-                            attributes: ['name', 'lastname', 'profile_image'] 
-                        }
-                    ],
-                    attributes: {
-                        include: [
-                            [
-                                sequelize.literal(`(
-                                    SELECT COALESCE(AVG(g.grade_number), 0)
-                                    FROM \`grade\` AS g
-                                    JOIN grade_customer AS gc ON g.id_grade = gc.id_grade 
-                                    WHERE gc.id_customer = \`customers\`.\`id_customer\`
-                                )`),
-                                'average_rating'
-                            ]
-                        ]
-                    }
-                },
-                'typePetitions',
-                'states',
-                'profession',
-                'typeProvider',
-                {
-                    model: Postulation,
-                    as: 'postulations',
-                    include: [
-                        {
-                            model: State,
-                            as: 'states',
-                        },
-                        {
-                            model: Provider,
-                            as: 'provider', // Alias para el proveedor
-                            include: [{
-                                model: User,
-                                as: 'user', // Alias para el usuario dentro del proveedor
-                                attributes: ['name', 'lastname'] // Solo traemos los datos necesarios
-                            }]
-                        }
-                    ]
-                }
-            ]
+            distinct: true,
+            include: this._getPetitionIncludes() // Llamada al helper
         });
     }
 
@@ -151,12 +163,6 @@ class PetitionService {
         });
     }
 
-    /**
-     * [NUEVO] Cancela una petición y todas sus postulaciones pendientes.
-     * @param {number} petitionId - El ID de la petición a cancelar.
-     * @param {number} userId - El ID del usuario (cliente) que realiza la acción.
-     * @returns {Promise<Petition>} - La petición actualizada.
-     */
     async cancelPetition(petitionId, userId, eventBus) {
         const t = await sequelize.transaction();
         try {
@@ -170,11 +176,11 @@ class PetitionService {
             const customer = await Customer.findOne({ where: { user_id: userId } });
             if (!customer || petition.id_customer !== customer.id_customer) {
                 const error = new Error("No tienes permiso para cancelar esta petición.");
-                error.statusCode = 403; // Forbidden
+                error.statusCode = 403;
                 throw error;
             }
 
-            const petitionCancelledState = await getStateId('CAN'); // CAN = Cancelada (ID 6)
+            const petitionCancelledState = await getStateId('CAN'); 
 
             await petition.update({
                 id_state: petitionCancelledState,
@@ -182,8 +188,6 @@ class PetitionService {
                 date_update: new Date()
             }, { transaction: t });
 
-            // Pasamos el eventBus en lugar de app
-            // Usamos el código 'CAN' para cancelar las postulaciones asociadas
             await postulationService.cancelPostulationsForPetition(petitionId, userId, t, 'CAN', null, eventBus);
 
             await t.commit();

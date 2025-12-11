@@ -23,7 +23,6 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
     id_state: undefined as number | undefined,
   });
 
-  /** 🔹 1) Cargar estados desde el backend */
   const { data: petitionStatusTabs, isLoading: isLoadingStates } = useQuery({
     queryKey: ['petitionStates'],
     queryFn: () => stateService.getAllStates(),
@@ -34,7 +33,6 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
       })) || [],
   });
 
-  /** 🔹 2) Setear pestaña por defecto una vez cargados los estados */
   useEffect(() => {
     if (petitionStatusTabs && filters.id_state === undefined) {
       const pending = petitionStatusTabs.find((s: { value: number }) => s.value === 3);
@@ -46,7 +44,6 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
     }
   }, [petitionStatusTabs, filters.id_state]);
 
-  /** 🔹 3) Cargar peticiones según estado y paginación */
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['petitions', customerId, filters],
     queryFn: () => {
@@ -74,8 +71,6 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
       page: newPage,
     }));
   };
-
-  /** 🔹 UI */
 
   if (isLoadingStates)
     return <p className="text-center text-gray-400">Cargando estados...</p>;
