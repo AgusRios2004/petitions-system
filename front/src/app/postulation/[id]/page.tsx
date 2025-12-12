@@ -184,9 +184,6 @@ export default function PostulationDetailPage() {
 
         <div className="text-xs text-gray-500 space-y-1 mb-8">
           <p>Postulación creada el: {new Date(postulation.date_create).toLocaleString()}</p>
-          {postulation.date_update && (
-            <p>Última actualización: {new Date(postulation.date_update).toLocaleString()}</p>
-          )}
         </div>
 
         {/* --- SECCIÓN DE ACCIONES --- */}

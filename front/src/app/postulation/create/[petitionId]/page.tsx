@@ -81,9 +81,13 @@ export default function CreatePostulationPage() {
     mutationFn: postulationService.createPostulation,
     onSuccess: () => {
       toast.success('Postulación enviada con éxito!');
+      // Invalida las queries para que los datos se refresquen en la app
       queryClient.invalidateQueries({ queryKey: ['postulations', petitionId] });
       queryClient.invalidateQueries({ queryKey: ['petition', petitionId] });
-      router.push(`/petition/${petitionId}`);
+      if (user?.provider?.id_provider) {
+        queryClient.invalidateQueries({ queryKey: ['openPetitions', user.provider.id_provider] });
+      }
+      router.push(`/profile?tab=oportunidades`); // Redirigir a la página de oportunidades del perfil
     },
     onError: (error: any) => {
       if (error.response && error.response.status === 409) {

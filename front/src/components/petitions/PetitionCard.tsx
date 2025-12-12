@@ -60,6 +60,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
         )}
 
         <div>
+          { !isOwner && (
           <div className="flex items-center gap-2 mb-2">
             <h3 className="font-semibold text-white">
               {petition.customers?.user?.name} {petition.customers?.user?.lastname}
@@ -68,6 +69,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
               <StarRatingDisplay rating={customerRating} size={18} />
             )}
           </div>
+          )}
 
           <div className="flex justify-between items-start mb-3">
             <span className="text-sm font-medium text-gray-400">

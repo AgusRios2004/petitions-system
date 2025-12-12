@@ -61,6 +61,7 @@ export const CustomerInterestsManager: React.FC<CustomerInterestsManagerProps> =
   return (
     <div className="space-y-6 p-4 bg-gray-800 rounded-lg">
       <h3 className="text-2xl font-bold text-white mb-6">Mis Intereses</h3>
+      <p className="font-bold text-white mb-3"> Recuerde que sus intereses matchean con los proveedores</p>
       
       {/* Lista de Intereses Actuales */}
       {isLoadingCustomerInterests ? <p className="text-sky-400">Cargando mis intereses...</p> :
