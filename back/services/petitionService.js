@@ -98,7 +98,7 @@ class PetitionService {
 
     // ... (Método getPetitions se mantiene igual) ...
     async getPetitions(filter = {}, options = {}) {
-       const { providerId, ...restOfFilter } = filter;
+       const { providerId, categories, ...restOfFilter } = filter;
        const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
        const offset = (page - 1) * limit;
 
@@ -121,6 +121,33 @@ class PetitionService {
                interestQuery,
                { id_petition: { [Op.notIn]: exclusionLiteral } }
            ];
+       }
+
+       // Filtro por categorías específicas (Seleccionadas manualmente)
+       if (categories) {
+           let catIds = [];
+           if (Array.isArray(categories)) {
+               catIds = categories;
+           } else if (typeof categories === 'string') {
+               catIds = categories.split(',').map(id => parseInt(id, 10)).filter(n => !isNaN(n));
+           } else if (typeof categories === 'number') {
+               catIds = [categories];
+           }
+
+           if (catIds.length > 0) {
+               const idsStr = catIds.join(',');
+               where[Op.and] = [
+                   ...(where[Op.and] || []),
+                   sequelize.literal(`
+                       EXISTS (
+                           SELECT 1
+                           FROM n_petition_category AS ppc_cat
+                           WHERE ppc_cat.id_petition = \`Petition\`.\`id_petition\`
+                           AND ppc_cat.id_category IN (${idsStr})
+                       )
+                   `)
+               ];
+           }
        }
 
        return await Petition.findAndCountAll({
