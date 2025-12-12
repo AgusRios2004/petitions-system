@@ -109,7 +109,6 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
     { id: 'oportunidades', label: 'Buscar Oportunidades' },
     { id: 'postulaciones', label: 'Mis Postulaciones' },
     { id: 'disponibilidad', label: 'Disponibilidad' },
-    { id: 'configuracion', label: 'Configuración' },
   ];
 
   return (

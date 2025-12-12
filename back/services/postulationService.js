@@ -4,6 +4,17 @@ const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Cust
 const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
 
+// Caché simple para evitar consultar la BD repetidamente por los mismos estados
+const stateCache = {};
+
+async function getStateId(code) {
+    if (stateCache[code]) return stateCache[code];
+    const state = await State.findOne({ where: { code } });
+    if (!state) throw new Error(`Estado con código '${code}' no encontrado.`);
+    stateCache[code] = state.id_state;
+    return state.id_state;
+}
+
 class PostulationService {
 
     // --- MÉTODOS DE LECTURA (sin cambios mayores) ---
@@ -70,7 +81,13 @@ class PostulationService {
                     as: 'inventories',
                     include: ['article']
                 },
-                'createdBy',
+                // [CORREGIDO] Se expande la inclusión de 'createdBy' para que también traiga el 'provider' asociado al usuario.
+                // Esto es crucial para la lógica post-transacción que necesita el id_provider.
+                {
+                    model: User,
+                    as: 'createdBy',
+                    include: [{ model: Provider, as: 'provider' }]
+                },
                 'updatedBy',
                 'states'
             ],
@@ -80,10 +97,10 @@ class PostulationService {
     // --- MÉTODOS DE ESCRITURA (REFACTORIZADOS Y CORREGIDOS) ---
 
     async createPostulation(data, userId, eventBus) { // Ya no recibe 'app', sino 'eventBus'
-        
-        // ... (código original sin cambios, ya era robusto)
         const { id_petition, proposal, cost, articles } = data;
         const t = await sequelize.transaction();
+        let newPostulationId; // Variable para guardar el ID y usarlo fuera de la transacción
+
         try {
             const provider = await Provider.findOne({ where: { user_id: userId } }, { transaction: t });
             if (!provider) {
@@ -97,10 +114,10 @@ class PostulationService {
                 error.statusCode = 404;
                 throw error;
             }
-            // [CORREGIDO] Obtenemos el cliente asociado para tener su user_id
-            const customer = await petition.getCustomers({ transaction: t });
 
-            if (petition.id_state !== 3) { 
+            // [CORREGIDO] Se valida contra el estado 'Abierta' (ABI), no 'Pendiente' (PEN).
+            const petitionOpenState = await getStateId('PEN');
+            if (petition.id_state !== petitionOpenState) { 
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -118,16 +135,20 @@ class PostulationService {
                 throw error;
             }
             
+            const postulationPendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
+
             const newPostulation = await Postulation.create({
                 id_petition: id_petition,
                 id_provider: provider.id_provider,
                 proposal: proposal,
                 cost: cost,
-                id_state: 3, // 3 = pendiente
+                id_state: postulationPendingState,
                 id_user_create: userId,
                 winner: false,
                 date_create: new Date(),
             }, { transaction: t });
+
+            newPostulationId = newPostulation.id_postulation;
 
             if (articles && articles.length > 0) {
                 const inventoryData = articles.map(article => ({
@@ -142,48 +163,61 @@ class PostulationService {
             }
 
             await t.commit();
-
-            // --- LÓGICA DE EVENTOS (DESACOPLADA) ---
-            if (eventBus) {
-                const targetUserId = customer.user_id; // Usamos el ID de usuario correcto del cliente
-                const postulationWithDetails = await this.getPostulationById(newPostulation.id_postulation);
-
-                // El servicio solo "anuncia" que algo pasó. No sabe nada de sockets.
-                eventBus.emit('postulation:created', {
-                    postulation: postulationWithDetails,
-                    targetUserId: targetUserId
-                });
-            }
-            // --- FIN DE LÓGICA DE EVENTOS ---
-
-            try {
-                await notificationService.createNotification({
-                    id_user: customer.user_id, // [CORREGIDO] Usamos el ID de usuario correcto del cliente
-                    title: "Nueva Postulación Recibida",
-                    message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
-                    notification_type: "POSTULATION_CREATED",
-                    settingKey: "postulation_created",
-                    related_postulation_id: newPostulation.id_postulation,
-                    related_petition_id: petition.id_petition,
-                    metadata: {
-                        id_customer: petition.id_customer,
-                        description: petition.description,
-                        id_provider: provider.id_provider,
-                        proposal: proposal
-                    },
-                });
-            } catch (notifyError) {
-                // Capturamos error silenciosamente para no fallar el request si la notificación falla
-                console.error("Error enviando notificación:", notifyError);
-            }
-            
-            return await this.getPostulationById(newPostulation.id_postulation);
         } catch (e) {
             await t.rollback();
             console.error("Error en el servicio de creación de postulación:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
         }
+
+        // --- OPTIMIZACIÓN: Lógica fuera de la transacción ---
+        // 1. Obtenemos la postulación completa UNA sola vez.
+        const postulationWithDetails = await this.getPostulationById(newPostulationId);
+
+        // [CORREGIDO] Se añade una validación para evitar un crash si la petición no tiene un cliente asociado.
+        // Esto puede ocurrir si hay datos corruptos o un error en la lógica de asociación.
+        if (!postulationWithDetails?.petition?.customers?.user_id) {
+            console.error(`[ADVERTENCIA POST-TRANSACCIÓN] No se pudo encontrar el cliente (o su user_id) para la petición con ID: ${id_petition}. La postulación con ID ${newPostulationId} se creó, pero no se enviará la notificación. Revise los datos de la petición.`);
+            // Devolvemos la postulación creada con éxito, ya que la operación principal funcionó.
+            // El cliente recibirá una respuesta 200 OK en lugar de un 500.
+            return postulationWithDetails;
+        }
+
+        // 2. Extraemos datos necesarios para notificaciones del objeto ya cargado
+        // Asumimos que 'customers' viene incluido en 'petition' gracias a getPostulationById
+        const customer = postulationWithDetails.petition.customers; 
+        const targetUserId = customer.user_id;
+
+        // 3. Eventos (Desacoplados)
+        if (eventBus) {
+            eventBus.emit('postulation:created', {
+                postulation: postulationWithDetails,
+                // Pasamos el ID del usuario de forma segura después de la validación.
+                targetUserId: targetUserId 
+            });
+        }
+
+        // 4. Notificaciones (NO BLOQUEANTES - Fire and Forget)
+        // Quitamos el 'await' para que el cliente no espere a que se envíe el correo/notificación
+        notificationService.createNotification({
+            id_user: targetUserId,
+            title: "Nueva Postulación Recibida",
+            message: `Un proveedor se ha postulado a tu petición con una propuesta de $${cost}.`,
+            notification_type: "POSTULATION_CREATED",
+            settingKey: "postulation_created",
+            related_postulation_id: newPostulationId,
+            related_petition_id: id_petition,
+            metadata: {
+                id_customer: postulationWithDetails.petition.id_customer,
+                description: postulationWithDetails.petition.description,
+                id_provider: postulationWithDetails.createdBy.provider.id_provider,
+                proposal: proposal
+            },
+        }).catch(notifyError => {
+            console.error("Error enviando notificación en segundo plano:", notifyError);
+        });
+        
+        return postulationWithDetails;
     }
 
     async updatePostulation(id, data) {
@@ -243,9 +277,12 @@ class PostulationService {
                 throw error;
             }
             
+            const postulationWinState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
+            const petitionClosedState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
+
             await postulation.update({
                 winner: true,
-                id_state: 1, // 1 = aceptada
+                id_state: postulationWinState,
                 id_user_update: userId,
                 date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
@@ -258,14 +295,16 @@ class PostulationService {
             }
 
             await petition.update({
-                id_state: 1, // Asumiendo 1 = 'Cerrada' o 'Asignada' para la petición
+                id_state: petitionClosedState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, {transaction: t});
 
             // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
             // La notificación se hará DESPUÉS del commit.
-            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 5, postulation.id_postulation); // Se asume 5 = No seleccionada
+            // Usamos 'REC' (Rechazada - ID 2) o 'CAN' (Cancelada - ID 6) según tu lógica de negocio.
+            // Aquí usamos 'CAN' para las que no ganaron porque se cerró la petición, o podrías usar 'REC'.
+            await this.cancelPostulationsForPetition(petition.id_petition, userId, t, 'CAN', postulation.id_postulation);
 
             await t.commit();
             // La transacción ha terminado exitosamente.
@@ -346,9 +385,11 @@ class PostulationService {
                 throw error;
             }
     
+            const postulationRejectedState = await getStateId('REC'); // REC = Rechazado (ID 2)
+
             await postulation.update({
                 winner: false,
-                id_state: 2, // 2 = Rechazada
+                id_state: postulationRejectedState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, { transaction: t });
@@ -413,8 +454,10 @@ class PostulationService {
                 throw error;
             }
 
+            const postulationWithdrawnState = await getStateId('BJA'); // BJA = Dado de baja (ID 4)
+
             await postulation.update({
-                id_state: 4, // 4 = dado de baja / retirado
+                id_state: postulationWithdrawnState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, { transaction: t });
@@ -457,15 +500,18 @@ class PostulationService {
      * @param {number} petitionId 
      * @param {number} userId 
      * @param {object} transaction 
-     * @param {number} newState - 6 (Cancelada) o 5 (No Seleccionada)
+     * @param {string} newStateCode - Código del nuevo estado (ej: 'CAN')
      * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
-    async cancelPostulationsForPetition(petitionId, userId, transaction, newState = 6, winnerPostulationId = null) {
+    async cancelPostulationsForPetition(petitionId, userId, transaction, newStateCode = 'CAN', winnerPostulationId = null) {
         
+        const pendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
+        const newStateId = await getStateId(newStateCode);
+
         // A. Configurar el filtro (Excluir ganador si existe)
         const whereCondition = {
             id_petition: petitionId,
-            id_state: 3 // Pendientes
+            id_state: pendingState
         };
 
         if (winnerPostulationId) {
@@ -482,7 +528,7 @@ class PostulationService {
         // C. Actualizar estado
         const updateResult = await Postulation.update(
             {
-                id_state: newState,
+                id_state: newStateId,
                 id_user_update: userId,
                 date_update: new Date(),
             },

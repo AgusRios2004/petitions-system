@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Servicios y contexto
 import { createPetition } from '@/service/petitionService';
@@ -56,6 +56,7 @@ type PetitionFormValues = z.infer<typeof petitionSchema>;
 export default function CreatePetitionPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Carga de datos usando useQuery
   const { data: typePetitions, isLoading: isLoadingTypePetitions } = useQuery<ApiResponse<TypePetition[]>>({ // Aquí se aplica el tipo
@@ -159,6 +160,9 @@ export default function CreatePetitionPage() {
           }
         );
       }
+
+      await queryClient.invalidateQueries({ queryKey: ['customerProfile', user.customer.id_customer] });
+      await queryClient.invalidateQueries({ queryKey: ['petitions'] });
 
       reset();
       setAttachmentFile(null);

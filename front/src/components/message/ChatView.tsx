@@ -88,7 +88,6 @@ export default function ChatView({ conversationId }: ChatViewProps) {
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages?.map((msg: IMessage) => {
           const isSender = msg.sender_id === currentUser?.id_user;
-          const isOptimistic = typeof msg.id_message === 'number';
           return (
             <div
               key={msg.id_message}
@@ -105,7 +104,7 @@ export default function ChatView({ conversationId }: ChatViewProps) {
                   isSender
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
-                } ${isOptimistic ? "opacity-60" : "opacity-100"}`}>
+                } opacity-100`}>
                 <p>{msg.content}</p>
               </div>
             </div>
