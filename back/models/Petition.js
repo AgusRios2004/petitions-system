@@ -107,6 +107,18 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
+
+        Petition.belongsToMany(models.Category, {
+            through: models.PetitionCategory,
+            foreignKey: 'id_petition',
+            otherKey: 'id_category',
+            as: 'categories' 
+        });
+
+        Petition.hasMany(models.PetitionCategory, {
+            foreignKey: 'id_petition',
+            as: 'petitionCategories' // Este alias debe coincidir con el del include en el servicio
+        });
     };
     
     return Petition;

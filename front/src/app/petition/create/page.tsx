@@ -14,11 +14,13 @@ import { uploadAttachment } from '@/service/attachmentService';
 import { getProfessions } from '@/service/professionsService';
 import { getTypePetitions } from '@/service/typePetitionsService';
 import { getTypeProviders } from '@/service/typeProviderService';
+import { categoryService } from '@/service/categoryService';
 import { useAuth } from '@/context/AuthContext';
 
 // Tipos y componentes
 import { Button } from '@/components/ui/Button';
-import { TypePetition, TypeProvider, Profession, ApiResponse } from '@/types/common';
+import { Select } from '@/components/ui/Select';
+import { TypePetition, TypeProvider, Profession, ApiResponse, ICategory } from '@/types/common';
 
 // Esquema de validación para el formulario principal
 const petitionSchema = z
@@ -38,6 +40,9 @@ const petitionSchema = z
     date_until: z
       .string({ message: 'La fecha de fin es obligatoria.' })
       .min(1, { message: 'La fecha de fin es obligatoria.' }),
+    categoryIds: z
+      .array(z.string())
+      .optional(), // O .min(1, "Selecciona al menos una categoría") si es obligatorio
   })
   .refine(
     (data) => {
@@ -74,14 +79,22 @@ export default function CreatePetitionPage() {
     queryFn: getProfessions,
   });
 
+  const { data: categories, isLoading: isLoadingCategories } = useQuery<ICategory[]>({
+    queryKey: ['categories'],
+    queryFn: categoryService.getAllCategories,
+  });
+
   // Determinar si alguno de los datos está cargando
-  const isAnyDataLoading = isLoadingTypePetitions || isLoadingTypeProviders || isLoadingProfessions;
+  const isAnyDataLoading = isLoadingTypePetitions || isLoadingTypeProviders || isLoadingProfessions || isLoadingCategories;
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
+    setValue,
+    watch,
+    getValues,
   } = useForm<PetitionFormValues>({
     resolver: zodResolver(petitionSchema),
     defaultValues: {
@@ -91,8 +104,27 @@ export default function CreatePetitionPage() {
       id_profession: '',
       date_since: '',
       date_until: '',
+      categoryIds: [],
     },
   });
+
+  // Observamos las categorías seleccionadas para renderizarlas
+  const selectedCategoryIds = watch('categoryIds') || [];
+
+  // Funciones para manejar la selección manual con el componente Select
+  const handleAddCategory = (value: string | number | null) => {
+    if (!value) return;
+    const stringValue = String(value);
+    const currentIds = getValues('categoryIds') || [];
+    if (!currentIds.includes(stringValue)) {
+      setValue('categoryIds', [...currentIds, stringValue], { shouldValidate: true });
+    }
+  };
+
+  const handleRemoveCategory = (idToRemove: string) => {
+    const currentIds = getValues('categoryIds') || [];
+    setValue('categoryIds', currentIds.filter((id) => id !== idToRemove), { shouldValidate: true });
+  };
 
   // Estados para el adjunto
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
@@ -131,6 +163,9 @@ export default function CreatePetitionPage() {
       return;
     }
 
+    // Convertir el array de strings (del select multiple) a números
+    const selectedCategoryIds = data.categoryIds?.map((id) => Number(id)).filter((n) => !isNaN(n)) || [];
+
     const dataToSend = {
       description: data.description,
       date_since: data.date_since,
@@ -140,6 +175,7 @@ export default function CreatePetitionPage() {
       id_type_petition: id_type_petition,
       id_type_provider: toNumber(data.id_type_provider),
       id_profession: toNumber(data.id_profession),
+      categoryIds: selectedCategoryIds, // Enviamos el array de IDs
     };
 
     try {
@@ -270,6 +306,36 @@ export default function CreatePetitionPage() {
             </select>
             {errors.id_profession && <p className="mt-1 text-sm text-red-600">{errors.id_profession.message}</p>}
           </div>
+        </div>
+
+        {/* Categorías (Combobox con lista de tags) */}
+        <div>
+          <Select
+            label="Categorías de Interés"
+            id="categories-select"
+            options={categories?.map((c) => ({ value: c.id_category, label: c.name })) || []}
+            onChange={handleAddCategory}
+            value={null} // Siempre null para que funcione como un "agregador" y se limpie tras seleccionar
+            placeholder="Selecciona una categoría para agregar..."
+            disabled={isAnyDataLoading}
+            variant="white"
+          />
+          
+          {/* Lista visual de categorías seleccionadas */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {selectedCategoryIds.map((id) => {
+              const category = categories?.find((c) => String(c.id_category) === id);
+              return (
+                <span key={id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {category?.name || 'Cargando...'}
+                  <button type="button" onClick={() => handleRemoveCategory(id)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold focus:outline-none">
+                    &times;
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Selecciona las categorías que mejor describan tu petición para notificar a los proveedores adecuados.</p>
         </div>
 
         {/* Fechas */}

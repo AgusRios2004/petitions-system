@@ -59,6 +59,11 @@ interface Petition {
     name: string;
     path: string;
   }[];
+
+  categories?: {
+    id_category: number;
+    name: string;
+  }[];
 }
 
 interface PetitionDetailProps {
@@ -153,6 +158,20 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             <div>
               <span className="font-medium text-gray-500">Descripción del Estado: </span>
               <span className="text-gray-800">{petition.states.description}</span>
+            </div>
+          )}
+          
+          {/* Mostrar Categorías si existen */}
+          {petition.categories && petition.categories.length > 0 && (
+            <div className="col-span-1 md:col-span-2 mt-2">
+              <span className="font-medium text-gray-500 block mb-2">Categorías de Interés: </span>
+              <div className="flex flex-wrap gap-2">
+                {petition.categories.map((cat) => (
+                  <span key={cat.id_category} className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full border border-blue-200">
+                    {cat.name}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
