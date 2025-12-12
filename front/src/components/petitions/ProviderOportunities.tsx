@@ -4,7 +4,9 @@ import React, { useState, useMemo } from "react";
 import {useQuery} from '@tanstack/react-query';
 import Link from 'next/link';
 import { getPetitions } from "@/service/petitionService";
+import { getProfilePublicProvider } from '@/service/providerService';
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import PetitionCard from "./PetitionCard";
 import { IPetitionCardData } from "@/types/common";
 import { useAuth } from '@/context/AuthContext';
@@ -22,17 +24,33 @@ const ProviderOportunities = () => {
     const providerTypeId = user?.provider?.id_type_provider;
 
     const [filterByMyType, setFilterByMyType] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+    // Obtener perfil del proveedor para sacar sus categorías
+    const { data: providerProfile } = useQuery({
+        queryKey: ['providerPublicProfile', providerId],
+        queryFn: () => getProfilePublicProvider(providerId!.toString()),
+        enabled: !!providerId,
+    });
+
+    const categoryOptions = providerProfile?.providerCategories?.map(pc => ({
+        value: pc.category.id_category,
+        label: pc.category.name
+    })) || [];
 
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ['openPetitions', providerId], // Agregamos providerId a la key para que refresque si cambia
+        queryKey: ['openPetitions', providerId, selectedCategoryId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
-            const params: { id_state: number; providerId?: number; excludeAppliedByProviderId?: number } = { 
+            const params: any = { 
                 id_state: 3 // Asumiendo 3 es el ID para "Abierta"
             };
             // Añadimos el providerId a los parámetros si existe
             if (providerId) {
-                params.providerId = providerId; // Para filtrar por intereses
+                params.providerId = providerId; // Para filtrar por mis categorías de proveedor
                 params.excludeAppliedByProviderId = providerId; // Para excluir las ya postuladas
+            }
+            if (selectedCategoryId) {
+                params.categories = selectedCategoryId;
             }
             const response = await getPetitions(params);
             return response;
@@ -60,20 +78,44 @@ const ProviderOportunities = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <h2 className="text-2xl font-bold text-white">Oportunidades Disponibles</h2>
+            <div className="flex flex-col gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-2xl font-bold text-white">Oportunidades Disponibles</h2>
+                    {user?.provider && (
+                        <Button
+                            onClick={() => setFilterByMyType(prev => !prev)}
+                            variant={filterByMyType ? 'primary' : 'secondary'}
+                            className="w-full sm:w-auto"
+                        >
+                            {filterByMyType ? 'Mostrar Todas' : 'Filtrar por mi tipo de proveedor'}
+                        </Button>
+                    )}
+                </div>
+                
                 {user?.provider && (
-                    <Button
-                        onClick={() => setFilterByMyType(prev => !prev)}
-                        variant={filterByMyType ? 'primary' : 'secondary'}
-                        className="w-full sm:w-auto"
-                    >
-                        {filterByMyType ? 'Mostrar Todas' : 'Filtrar por mi tipo de proveedor'}
-                    </Button>
+                    <div className="w-full sm:w-72">
+                        <Select
+                            label="Filtrar por categoría"
+                            options={categoryOptions}
+                            value={selectedCategoryId || 0}
+                            onChange={(val) => setSelectedCategoryId(val ? Number(val) : null)}
+                            placeholder={categoryOptions.length > 0 ? "Mis categorías" : "Sin categorías"}
+                            disabled={categoryOptions.length === 0}
+                        />
+                    </div>
                 )}
             </div>
                 {petitions.length === 0 ? (
-                    <p className="text-white text-center">{filterByMyType ? 'No hay peticiones que coincidan con tu tipo de proveedor.' : 'No hay peticiones abiertas en este momento.'}</p>
+                    <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">
+                        <p className="text-gray-400 text-lg">
+                            {filterByMyType 
+                                ? 'No hay peticiones que coincidan con tu tipo de proveedor.' 
+                                : selectedCategoryId 
+                                    ? 'No hay peticiones para la categoría seleccionada.'
+                                    : 'No hay peticiones abiertas que coincidan con tus intereses.'}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2">Intenta cambiar los filtros.</p>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {petitions.map((petition: PetitionForProvider) => (

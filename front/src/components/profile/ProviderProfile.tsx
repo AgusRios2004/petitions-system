@@ -10,6 +10,7 @@ import { UserProfile, IPostulation } from '@/types/common'; // 1. Importamos IPo
 import ProviderPostulations from '@/components/postulations/ProviderPostulations';
 import ProviderOportunities from '@/components/petitions/ProviderOportunities';
 import ProviderAvailability from '@/components/availability/ProviderAvailability';
+import ProviderOffers from '@/components/profile/provider/ProviderOffers';
 
 // Importaciones de los nuevos componentes que hemos creado
 import PublicProfileContent from './provider/PublicProfileContent';
@@ -107,6 +108,7 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
   const tabs = [
     { id: 'perfil-publico', label: 'Mi Perfil Público' },
     { id: 'oportunidades', label: 'Buscar Oportunidades' },
+    { id: 'ofertas', label: 'Mis Ofertas' },
     { id: 'postulaciones', label: 'Mis Postulaciones' },
     { id: 'disponibilidad', label: 'Disponibilidad' },
   ];
@@ -138,6 +140,8 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
           <ProviderPostulations id_provider={user.provider.id_provider} />
         ) : activeTab === 'oportunidades' ? (
           <ProviderOportunities />
+        ) : activeTab === 'ofertas' && user.provider ? (
+          <ProviderOffers providerId={user.provider.id_provider} />
         ) : activeTab === 'disponibilidad' ? (
           <ProviderAvailability />
         ) : activeTab == "perfil-publico" && user.provider ? (

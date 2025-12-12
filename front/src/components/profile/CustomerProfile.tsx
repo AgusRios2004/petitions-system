@@ -11,6 +11,7 @@ import { gradeService } from '@/service/gradeService';
 import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 import CustomerInfo from './customer/CustomerInfo';
 import CustomerHistory from './customer/CustomerHistory';
+import CustomerOffers from './customer/CustomerOffers';
 
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
@@ -75,6 +76,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
 
   const customerTabs = [
     { id: 'peticiones', label: 'Mis Peticiones' },
+    { id: 'ofertas', label: 'Explorar Ofertas' },
     { id: 'informacion', label: 'Información Personal' },
     { id: 'historial', label: 'Historial y Calificaciones' },
   ];
@@ -82,6 +84,10 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
   const renderTabContent = () => {
     if (activeTab === 'peticiones'){
       return customerId ? <CustomerPetitions customerId={customerId}/> : null;
+    }
+
+    if (activeTab === 'ofertas') {
+      return <CustomerOffers customer={detailedCustomer} />;
     }
 
     if (isLoading) {
