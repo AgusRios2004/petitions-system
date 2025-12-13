@@ -92,6 +92,7 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
               {...register('title')} 
               error={errors.title?.message} 
               placeholder="Ej: Mantenimiento de PC"
+              className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
           
@@ -111,18 +112,20 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
               label="Fecha Inicio" 
               type="date"
               {...register('date_open')} 
+              className="bg-gray-800 border-gray-700 text-white [color-scheme:dark]"
             />
             <Input 
               label="Fecha Fin" 
               type="date"
               {...register('date_close')} 
+              className="bg-gray-800 border-gray-700 text-white [color-scheme:dark]"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
             <Textarea 
               {...register('description')} 
-              className="bg-gray-800 border-gray-700 text-white"
+              variant="dark"
               placeholder="Describe detalladamente qué incluye tu oferta..."
             />
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
