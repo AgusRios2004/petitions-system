@@ -173,7 +173,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
     },
     onSuccess: () => {
       toast.success("Perfil actualizado con éxito!");
-      queryClient.invalidateQueries({ queryKey: ['providerProfile', providerId] });
+      queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
     },
     onError: (error) => {
       toast.error(`Error al actualizar: ${error.message}`);

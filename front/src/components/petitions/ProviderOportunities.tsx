@@ -2,13 +2,14 @@
 
 import React, { useState, useMemo } from "react";
 import {useQuery} from '@tanstack/react-query';
-import Link from 'next/link';
 import { getPetitions } from "@/service/petitionService";
 import { getProfilePublicProvider } from '@/service/providerService';
+import { stateService } from "@/service/stateService";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import PetitionCard from "./PetitionCard";
 import { IPetitionCardData } from "@/types/common";
+import { IState } from "@/types/common";
 import { useAuth } from '@/context/AuthContext';
 
 type PetitionForProvider = IPetitionCardData & {
@@ -26,6 +27,15 @@ const ProviderOportunities = () => {
     const [filterByMyType, setFilterByMyType] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
+    const { data: statesResponse } = useQuery({
+        queryKey: ['states'],
+        queryFn: () => stateService.getAllStates(),
+    });
+
+    const pendingStateId = useMemo(() => {
+        return statesResponse?.data?.find((s: IState) => s.state === 'Pendiente')?.id_state;
+    }, [statesResponse]);
+
     // Obtener perfil del proveedor para sacar sus categorías
     const { data: providerProfile } = useQuery({
         queryKey: ['providerPublicProfile', providerId],
@@ -33,21 +43,24 @@ const ProviderOportunities = () => {
         enabled: !!providerId,
     });
 
-    const categoryOptions = providerProfile?.providerCategories?.map(pc => ({
+    const rawCategories = providerProfile?.providerCategories?.map(pc => ({
         value: pc.category.id_category,
         label: pc.category.name
     })) || [];
 
+    const categoryOptions = rawCategories.length > 0 
+        ? [{ value: 0, label: 'Todas las categorías' }, ...rawCategories] 
+        : [];
+
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ['openPetitions', providerId, selectedCategoryId], // Agregamos selectedCategoryId a la key
+        queryKey: ['openPetitions', providerId, selectedCategoryId, pendingStateId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
             const params: any = { 
-                id_state: 3 // Asumiendo 3 es el ID para "Abierta"
+                id_state: pendingStateId
             };
             // Añadimos el providerId a los parámetros si existe
             if (providerId) {
                 params.providerId = providerId; // Para filtrar por mis categorías de proveedor
-                params.excludeAppliedByProviderId = providerId; // Para excluir las ya postuladas
             }
             if (selectedCategoryId) {
                 params.categories = selectedCategoryId;
@@ -55,18 +68,24 @@ const ProviderOportunities = () => {
             const response = await getPetitions(params);
             return response;
         },
-        enabled: !!providerId,
+        enabled: !!providerId && !!pendingStateId,
         select: (response) => response?.data.petitions || [],
     });
 
-    // Aplicamos el filtro opcional sobre los datos ya filtrados por postulación
     const petitions = useMemo(() => {
-        const availablePetitions = data || [];
+        let availablePetitions = data || [];
+
+        if (selectedCategoryId) {
+            availablePetitions = availablePetitions.filter((p: any) => 
+                p.petitionCategories?.some((pc: any) => pc.category.id_category === selectedCategoryId)
+            );
+        }
+
         if (filterByMyType && providerTypeId) {
             return availablePetitions.filter((p: PetitionForProvider) => p.id_type_provider === providerTypeId);
         }
         return availablePetitions;
-    }, [data, filterByMyType, providerTypeId]);
+    }, [data, filterByMyType, providerTypeId, selectedCategoryId]);
         
     if (isLoading) {
         return <p className="text-white text-center">Cargando oportunidades...</p>;
