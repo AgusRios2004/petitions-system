@@ -45,6 +45,44 @@ class AvailabilityService {
   }
 
   async createAvailability(data) {
+    // --- VALIDACIÓN DE SOLAPAMIENTO ---
+    const { id_provider, id_week, id_from_hour, id_until_hour } = data;
+
+    // 1. Obtener los objetos Hour para saber el tiempo real
+    const fromHour = await db.Hour.findByPk(id_from_hour);
+    const untilHour = await db.Hour.findByPk(id_until_hour);
+
+    if (!fromHour || !untilHour) {
+        const error = new Error('Horas seleccionadas inválidas.');
+        error.status = 400;
+        throw error;
+    }
+
+    const getMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(' ')[0].split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    const newStart = getMinutes(fromHour.name);
+    const newEnd = getMinutes(untilHour.name);
+
+    // 2. Buscar disponibilidades existentes para ese proveedor y día
+    // Nota: Reutilizamos getAllAvailabilities o hacemos una consulta directa más ligera
+    const existing = await this.getAllAvailabilities({ id_provider, id_week });
+
+    // 3. Comprobar intersección
+    const hasOverlap = existing.some(avail => {
+        const existStart = getMinutes(avail.fromHour.name);
+        const existEnd = getMinutes(avail.untilHour.name);
+        return (newStart < existEnd && newEnd > existStart);
+    });
+
+    if (hasOverlap) {
+        const error = new Error('El rango horario se superpone con una disponibilidad existente.');
+        error.status = 409; // Conflict
+        throw error;
+    }
+
     return await Availability.create(data);
   }
 
