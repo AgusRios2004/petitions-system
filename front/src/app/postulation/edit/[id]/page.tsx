@@ -66,12 +66,13 @@ export default function EditPostulationPage() {
   // 3. Poblar el formulario cuando llegue la data de la postulación
   useEffect(() => {
     if (postulation) {
+      const data = postulation.data || postulation;
       reset({
-        proposal: postulation.proposal,
-        cost: postulation.cost,
+        proposal: data.proposal,
+        cost: data.cost,
         // Mapeamos los artículos existentes de la postulación al formato del formulario
-        articles: postulation.postulationArticles?.map((pa: any) => ({
-          id_article: pa.id_article,
+        articles: (data.inventories || data.postulationArticles)?.map((pa: any) => ({
+          id_article: pa.id_article || pa.article?.id_article,
           quantity: pa.quantity,
           cost: pa.cost, 
         })) || [],
