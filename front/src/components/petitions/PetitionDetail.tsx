@@ -59,6 +59,11 @@ interface Petition {
     name: string;
     path: string;
   }[];
+
+  categories?: {
+    id_category: number;
+    name: string;
+  }[];
 }
 
 interface PetitionDetailProps {
@@ -74,7 +79,6 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
   const queryClient = useQueryClient();
   const [showPostulations, setShowPostulations] = React.useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
-  console.log('PetitionDetail Props:', petition);
 
   const isOwner = user?.customer?.id_customer === petition.customers?.id_customer;
 
@@ -103,63 +107,79 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
     cancelMutation.mutate();
   };
 
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="bg-white shadow-md rounded-lg p-6">
+    <div className="min-h-screen bg-gray-950 py-8">
+      <div className="container mx-auto p-4">
+      <div className="bg-gray-800 shadow-lg rounded-lg p-6 border border-gray-700">
         <div className="flex justify-between items-start mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-white">
             {petition.profession?.name || 'Sin título'}
           </h1>
-          <span className="bg-red-100 text-orange-800 text-sm font-semibold px-3 py-1 rounded-full">
+          <span className="bg-orange-900/30 text-orange-200 border border-orange-800 text-sm font-semibold px-3 py-1 rounded-full">
             {petition.states?.state || 'Sin Estado'}
           </span>
         </div>
 
-        <div className="mb-6 pb-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">Descripción</h2>
-          <p className="text-gray-600 whitespace-pre-wrap">{petition.description}</p>
+        <div className="mb-6 pb-4 border-b border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-200 mb-2">Descripción</h2>
+          <p className="text-gray-300 whitespace-pre-wrap">{petition.description}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
           <div>
-            <span className="font-medium text-gray-500">Tipo de Petición: </span>
-            <span className="text-gray-800">{petition.typePetitions?.name}</span>
+            <span className="font-medium text-gray-400">Tipo de Petición: </span>
+            <span className="text-gray-200">{petition.typePetitions?.name}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Tipo de Proveedor: </span>
-            <span className="text-gray-800">{petition.typeProvider?.name}</span>
+            <span className="font-medium text-gray-400">Tipo de Proveedor: </span>
+            <span className="text-gray-200">{petition.typeProvider?.name}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Desde: </span>
-            <span className="text-gray-800">{new Date(petition.date_since).toLocaleDateString()}</span>
+            <span className="font-medium text-gray-400">Desde: </span>
+            <span className="text-gray-200">{new Date(petition.date_since).toLocaleDateString()}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Hasta: </span>
-            <span className="text-gray-800">{new Date(petition.date_until).toLocaleDateString()}</span>
+            <span className="font-medium text-gray-400">Hasta: </span>
+            <span className="text-gray-200">{new Date(petition.date_until).toLocaleDateString()}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Teléfono: </span>
-            <span className="text-gray-800">{petition.customers?.phone}</span>
+            <span className="font-medium text-gray-400">Teléfono: </span>
+            <span className="text-gray-200">{petition.customers?.phone}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Fecha de Creación: </span>
-            <span className="text-gray-800">{new Date(petition.date_create).toLocaleDateString()}</span>
+            <span className="font-medium text-gray-400">Fecha de Creación: </span>
+            <span className="text-gray-200">{new Date(petition.date_create).toLocaleDateString()}</span>
           </div>
           <div>
-            <span className="font-medium text-gray-500">Última Actualización: </span>
-            <span className="text-gray-800">{new Date(petition.date_update).toLocaleDateString()}</span>
+            <span className="font-medium text-gray-400">Última Actualización: </span>
+            <span className="text-gray-200">{new Date(petition.date_update).toLocaleDateString()}</span>
           </div>
           {petition.states?.description && (
             <div>
-              <span className="font-medium text-gray-500">Descripción del Estado: </span>
-              <span className="text-gray-800">{petition.states.description}</span>
+              <span className="font-medium text-gray-400">Descripción del Estado: </span>
+              <span className="text-gray-200">{petition.states.description}</span>
+            </div>
+          )}
+          
+          {/* Mostrar Categorías si existen */}
+          {petition.categories && petition.categories.length > 0 && (
+            <div className="col-span-1 md:col-span-2 mt-2">
+              <span className="font-medium text-gray-400 block mb-2">Categorías de Interés: </span>
+              <div className="flex flex-wrap gap-2">
+                {petition.categories.map((cat) => (
+                  <span key={cat.id_category} className="bg-blue-900/40 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full border border-blue-700">
+                    {cat.name}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-6 pt-6 border-t border-gray-700">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-800">Adjuntos</h3>
+            <h3 className="text-lg font-semibold text-gray-200">Adjuntos</h3>
             {isOwner && !user?.provider && petition.id_state == 3 && (
               <Link href={`/petition/${petition.id_petition}/add-attachment`}>
                 <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
@@ -167,14 +187,14 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             )}
           </div>
           {petition.attachments && petition.attachments.length > 0 ? (
-            <ul className="list-disc list-inside pl-2 text-gray-400">
+            <ul className="list-disc list-inside pl-2 text-gray-300">
               {petition.attachments.map((file) => (
                 <li key={file.id_attachment}>
                   <a
                     href={`http://localhost:3000/${file.path}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-500 underline hover:text-blue-600"
+                    className="text-blue-400 underline hover:text-blue-300"
                   >
                     {file.name}
                   </a>
@@ -182,7 +202,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No hay adjuntos en esta petición.</p>
+            <p className="text-gray-500 italic">No hay adjuntos en esta petición.</p>
           )}
         </div>
 
@@ -248,6 +268,8 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
         isConfirming={cancelMutation.isPending}
         confirmButtonVariant="destructive"
       />
-    </div>)}
+      </div>
+    </div>
+  )}
 
     export default PetitionDetail;

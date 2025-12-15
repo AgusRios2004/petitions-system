@@ -107,8 +107,8 @@ class NotificationService {
                             EXISTS (
                                 SELECT 1 
                                 FROM n_provider_cateogory pc
-                                JOIN n_interest i ON i.id_category = pc.category_id
-                                WHERE i.id_customer = ${sequelize.escape(petition.id_customer)}
+                                JOIN n_petition_category ppc ON ppc.id_category = pc.category_id
+                                WHERE ppc.id_petition = ${sequelize.escape(petition.id_petition)}
                                 AND pc.provider_id = \`Provider\`.\`id_provider\`
                             )
                         `)
@@ -128,7 +128,7 @@ class NotificationService {
 
             const notificationData = matchingProviders.map(provider => ({
                 id_user: provider.user.id_user,
-                title: "Nueva opostunidad laboral",
+                title: "Nueva oportunidad laboral",
                 message: `Un cliente hizo una petición con una categoría que manejas: ${petition.description.substring(0,30)}`,
                 notification_type: "petition_created",
                 related_petition_id: petition.id_petition,

@@ -366,3 +366,28 @@ export interface IState {
   code: string;
   description?: string;
 }
+
+export interface ITypeOffer {
+  id_type_offer: number;
+  name: string;
+}
+
+export interface IOffer {
+  offer_id: number;
+  id_provider: number;
+  id_type_offer: number;
+  name: string;
+  description: string;
+  date_create: string;
+  date_open?: string;
+  date_close?: string;
+  typeOffer?: ITypeOffer;
+  provider?: {
+    id_provider: number;
+    user: {
+      name: string;
+      lastname: string;
+      profile_image?: string | null;
+    }
+  };
+}

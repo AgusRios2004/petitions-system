@@ -1,11 +1,12 @@
 'use client';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useForm, useFieldArray, SubmitHandler, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, SubmitHandler, useWatch, Controller } from 'react-hook-form';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { articleService } from '@/service/articleService';
@@ -120,18 +121,18 @@ export default function CreatePostulationPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-bold text-center mb-4">Crear Postulación</h2>
-      <div className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div className="min-h-screen bg-gray-950 py-12">
+      <div className="container mx-auto px-4 max-w-3xl">
+        <h2 className="text-2xl font-bold text-center mb-6 text-white">Crear Postulación</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
 
           {/* Propuesta */}
           <div>
-            <Label className="font-semibold">Propuesta</Label>
+            <Label className="font-semibold text-gray-200 mb-2 block">Propuesta</Label>
             <Textarea
               {...register('proposal', { required: true })}
               placeholder="Escribí tu propuesta..."
-              variant="white"
+              variant="dark"
             />
           </div>
 
@@ -142,10 +143,10 @@ export default function CreatePostulationPage() {
               label="Costo total"
               {...register('cost', { valueAsNumber: true })}
               placeholder="Costo total de la propuesta"
-              variant="white"
+              variant="dark"
             />
             {suggestedCost > 0 && (
-              <div className="mt-2 text-sm text-gray-500">
+              <div className="mt-2 text-sm text-gray-400">
                 Costo sugerido por artículos: <strong>${suggestedCost.toLocaleString('es-AR')}</strong>
                 <button
                   type="button"
@@ -160,37 +161,38 @@ export default function CreatePostulationPage() {
 
           {/* Artículos */}
           <div>
-            <Label className="font-semibold">Categorías</Label>
-            <div className="flex gap-2 mb-2 mt-1">
-              <select
-                onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
-                className="p-2 border rounded w-full bg-white text-gray-900 max-h-30 overflow-y-auto"
-              >
-                <option value="0">Todas las categorías</option>
-                {categories.map((c) => (
-                  <option key={c.id_category} value={c.id_category}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <div className="mb-4">
+              <Select
+                label="Filtrar artículos por Categoría"
+                options={[
+                  { value: 0, label: 'Todas las categorías' },
+                  ...categories.map((c) => ({ value: c.id_category, label: c.name }))
+                ]}
+                value={selectedCategory || 0}
+                onChange={(val) => setSelectedCategory(Number(val))}
+                variant="dark"
+              />
             </div>
 
             {fields.map((item, index) => (
-              <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-blue-100 rounded-lg bg-blue-50/40">
+              <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-gray-600 rounded-lg bg-gray-700/50">
                 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.id_article`} className="text-sm">Artículo</Label>
-                  <select
-                    {...register(`articles.${index}.id_article`, { valueAsNumber: true })}
-                    className="p-2 border rounded w-full bg-white text-gray-900"
-                  >
-                    <option value="0" disabled>Seleccione un artículo</option>
-                    {[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)!])].filter(Boolean).map((a) => (
-                      <option key={a.id_article} value={a.id_article}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    control={control}
+                    name={`articles.${index}.id_article`}
+                    render={({ field }) => (
+                      <Select
+                        label="Artículo"
+                        id={`articles.${index}.id_article`}
+                        options={[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)!])].filter(Boolean).map((a) => ({ value: a.id_article, label: a.name || 'Artículo sin nombre' }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        variant="dark"
+                        placeholder="Seleccione un artículo"
+                      />
+                    )}
+                  />
                 </div>
 
                 <div className="flex-1">
@@ -199,7 +201,7 @@ export default function CreatePostulationPage() {
                     label="Cantidad"
                     {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
                     placeholder="Ej: 1"
-                    variant="white"
+                    variant="dark"
                   />
                 </div>
 
@@ -209,7 +211,7 @@ export default function CreatePostulationPage() {
                     label="Costo"
                     {...register(`articles.${index}.cost`, { valueAsNumber: true })}
                     placeholder="Ej: 2500 (por unidad)"
-                    variant="white"
+                    variant="dark"
                   />
                 </div>
 
@@ -224,7 +226,7 @@ export default function CreatePostulationPage() {
             <Button
               type="button"
               onClick={() => append({ id_article: 0, quantity: 1, cost: 0 })}
-              className="w-full bg-blue-500 hover:bg-blue-600"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
               Añadir Artículo
             </Button>

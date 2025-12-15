@@ -93,27 +93,38 @@ exports.getPetitionsByStateAndType = async (req, res) => {
 
 exports.createPetition = async (req, res) => {
     try {
-        const { id_customer, id_type_petition, description, date_since, date_until, id_state, id_profession, id_type_provider } = req.body;
+        // 1. Extraemos categoryIds del body
+        const { 
+            id_customer, 
+            id_type_petition, 
+            description, 
+            date_since, 
+            date_until, 
+            id_state, 
+            id_profession, 
+            id_type_provider,
+            categoryIds // <--- NUEVO CAMPO (Array de IDs, ej: [1, 5, 8])
+        } = req.body;
 
         if (!id_customer || !id_type_petition || !description || !date_since || !date_until || !id_state) {
             return error(res, 'Los campos id_customer, id_type_petition, description, date_since, date_until, id_state son requeridos');
         }
 
+        // 2. Pasamos categoryIds como segundo argumento al servicio
         const petition = await service.createPetition({
             id_customer,
             id_type_petition,
             description,
             date_since,
             date_until,
-            id_state: 3,
-            id_profession, // Puede ser null
-            id_type_provider, // Puede ser null
+            id_state: 3, // Estado inicial (ej: Pendiente)
+            id_profession, 
+            id_type_provider, 
             id_user_create: req.user.sub,
             id_user_update: req.user.sub,
             is_deleted: false,
-        });
+        }, categoryIds); // <--- AQUÍ LO PASAMOS
 
-        // Pasamos el eventBus en lugar de toda la app
         const eventBus = req.app.get('eventBus');
         notificationService.notificationMatchingProvider(petition, eventBus);
 
@@ -127,7 +138,7 @@ exports.createPetition = async (req, res) => {
 exports.updatePetition = async (req, res) => {
     try {
         const { id } = req.params;
-        const { id_customer, id_type_petition, description, date_since, date_until, id_state, id_profession, id_type_provider } = req.body;
+        const { id_customer, id_type_petition, description, date_since, date_until, id_state, id_profession, id_type_provider, categoryIds } = req.body;
 
         // Manteniendo la validación original para los campos centrales
         if (!id_customer || !id_type_petition || !description || !date_since || !date_until || !id_state) {
@@ -144,7 +155,7 @@ exports.updatePetition = async (req, res) => {
             id_profession, // Se actualizará si se proporciona
             id_type_provider, // Se actualizará si se proporciona
             id_user_update: req.user.sub,
-        });
+        }, categoryIds);
 
         if (!petition) return error(res, 'Petición no encontrada', 404);
         return success(res, petition, 'Petición actualizada correctamente');
@@ -153,7 +164,6 @@ exports.updatePetition = async (req, res) => {
         return error(res, e.message, 500);
     }
 };
-
 
 
 exports.cancelPetition = async (req, res) => {

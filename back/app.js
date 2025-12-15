@@ -34,6 +34,8 @@ const path = require('path');
 const gradeRoutes = require('./routes/gradeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const offerRoutes = require('./routes/offerRoutes');
+const typeOfferRoutes = require('./routes/typeOfferRoutes');
 
 const app = express();
 app.use(express.json());
@@ -79,10 +81,9 @@ app.use('/api/upload', imageUploadRoutes);
 app.use('/api/grade', gradeRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api', messageRoutes);
-
+app.use('/api/offer', offerRoutes);
+app.use('/api/type-offer', typeOfferRoutes);
 app.use('/api/week', require('./routes/weekRoutes'));
-
-// Provider-Category routes
 app.use('/api/provider-category', require('./routes/providerCategoryRoutes'));
 
 // Middleware para manejo de errores

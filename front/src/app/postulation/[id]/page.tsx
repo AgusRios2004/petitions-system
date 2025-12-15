@@ -134,47 +134,47 @@ export default function PostulationDetailPage() {
   return (
     <>
     <div className="container mx-auto p-6">
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+      <div className="max-w-3xl mx-auto bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
         
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Detalles de la Postulación</h1>
+        <h1 className="text-3xl font-bold mb-6 text-white">Detalles de la Postulación</h1>
 
-        <div className="border-b border-gray-200 pb-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Petición Original</h2>
-          <p className="text-gray-800 mb-2 line-clamp-3">{postulation.petition.description}</p>
-          <Link href={`/petition/${postulation.petition.id_petition}`} className="text-sm text-blue-600 hover:underline">
+        <div className="border-b border-gray-700 pb-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-200 mb-2">Petición Original</h2>
+          <p className="text-gray-300 mb-2 line-clamp-3">{postulation.petition.description}</p>
+          <Link href={`/petition/${postulation.petition.id_petition}`} className="text-sm text-blue-400 hover:underline">
             Ver petición completa
           </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <p className="text-gray-600 text-sm">Estado</p>
+            <p className="text-gray-400 text-sm">Estado</p>
             <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
               {postulation.states.state}
             </span>
           </div>
           <div>
-            <p className="text-gray-600 text-sm">Costo Ofertado</p>
-            <p className="text-2xl font-bold text-gray-900">${postulation.cost}</p>
+            <p className="text-gray-400 text-sm">Costo Ofertado</p>
+            <p className="text-2xl font-bold text-white">${postulation.cost}</p>
           </div>
         </div>
 
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Propuesta del Proveedor</h2>
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-200 mb-4">Propuesta del Proveedor</h2>
+          <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
             <div className="flex items-center mb-2">
-              <p className="font-semibold text-gray-800">{postulation.createdBy.name} {postulation.createdBy.lastname}</p>
+              <p className="font-semibold text-gray-200">{postulation.createdBy.name} {postulation.createdBy.lastname}</p>
             </div>
-            <p className="text-gray-700 whitespace-pre-wrap">{postulation.proposal}</p>
+            <p className="text-gray-300 whitespace-pre-wrap">{postulation.proposal}</p>
           </div>
         </div>
 
         {postulation.inventories && postulation.inventories.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Artículos Incluidos</h3>
-            <ul className="list-disc list-inside space-y-1 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-200 mb-2">Artículos Incluidos</h3>
+            <ul className="list-disc list-inside space-y-1 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
               {postulation.inventories.map((item: any) => (
-                <li key={item.id_inventory} className="text-gray-800">
+                <li key={item.id_inventory} className="text-gray-300">
                   <span className="font-semibold">{item.article.name}</span> - Cantidad: {item.quantity} - Costo: ${item.cost}
                 </li>
               ))}
@@ -182,17 +182,17 @@ export default function PostulationDetailPage() {
           </div>
         )}
 
-        <div className="text-xs text-gray-500 space-y-1 mb-8">
+        <div className="text-xs text-gray-400 space-y-1 mb-8">
           <p>Postulación creada el: {new Date(postulation.date_create).toLocaleString()}</p>
         </div>
 
         {/* --- SECCIÓN DE ACCIONES --- */}
-        <div className="mt-8 pt-6 border-t border-gray-200 space-y-6">
+        <div className="mt-8 pt-6 border-t border-gray-700 space-y-6">
           {/* --- ACCIONES DEL PROVEEDOR --- */}
           {/* Las acciones de editar/retirar solo están disponibles si el proveedor es el postulante y el estado es 'Pendiente' (ID 3) */}
           {isProviderPostulant && postulation.states.id_state === 3 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Tus Acciones</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Tus Acciones</h2>
               <div className="flex gap-4">
                 <Link href={`/postulation/edit/${postulation.id_postulation}`} className="flex-1">
                   <Button variant="primary" className="w-full">Editar Postulación</Button>
@@ -212,7 +212,7 @@ export default function PostulationDetailPage() {
           {/* --- ACCIONES DEL CLIENTE --- */}
           {isOwner && postulation.states.id_state === 3 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Acciones</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Acciones</h2>
               
               {/* Botón de Perfil de Proveedor */}
               <div className="mb-4">

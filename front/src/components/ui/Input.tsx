@@ -3,11 +3,11 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 
-type InputVariant = 'default' | 'white' | 'transparent';
+type InputVariant = 'default' | 'white' | 'transparent' | 'dark';
 
 // 1. Añadir label y error a las props
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  label: string;
+  label?: string;
   error?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -35,6 +35,11 @@ const variantClasses: Record<InputVariant, {
     surface: 'bg-transparent',
     border: (invalid) => (invalid ? 'border-red-400' : 'border-transparent'),
   },
+  dark: {
+    base: 'w-full rounded-lg transition duration-200 focus:outline-none text-gray-100 placeholder-gray-500',
+    surface: 'bg-gray-800 border',
+    border: (invalid) => (invalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-blue-500'),
+  },
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
@@ -57,9 +62,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
     // 2. Envolver todo en un div
     <div className={cn("w-full", className)}>
       {/* 4. Añadir Label */}
-      <label htmlFor={inputId} className="block text-sm font-medium text-gray-300 mb-1">
-        {label}
-      </label>
+      {label && (
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {label}
+        </label>
+      )}
       
       <div className="relative">
         {leftIcon && (

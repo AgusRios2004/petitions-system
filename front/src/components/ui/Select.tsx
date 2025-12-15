@@ -19,45 +19,49 @@ interface CustomSelectProps
   disabled?: boolean;
   value?: number | string | null; // <-- el value viene como primitivo de RHF
   onChange?: (value: number | string | null) => void; // <-- también ajustamos el tipo
+  variant?: 'dark' | 'white';
 }
 
-// Estilos personalizados para react-select
-const customStyles: StylesConfig<SelectOption, false> = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: '#1f2937',
-    borderColor: state.isFocused ? '#3b82f6' : '#4b5563',
-    boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
-    '&:hover': { borderColor: '#6b7280' },
-    borderRadius: '0.375rem',
-    padding: '0.25rem',
-  }),
-  singleValue: (provided) => ({ ...provided, color: '#d1d5db' }),
-  input: (provided) => ({ ...provided, color: '#f9fafb' }),
-  placeholder: (provided) => ({ ...provided, color: '#9ca3af' }),
-  menu: (provided) => ({
-    ...provided,
-    backgroundColor: '#1f2937',
-    border: '1px solid #4b5563',
-    borderRadius: '0.375rem',
-  }),
-  // Estilo para el portal, para asegurar que se muestre por encima de todo
-  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? '#3b82f6'
-      : state.isFocused
-      ? '#374151'
-      : 'transparent',
-    color: state.isSelected ? '#ffffff' : '#d1d5db',
-  }),
-  indicatorSeparator: () => ({ display: 'none' }),
-  dropdownIndicator: (provided) => ({
-    ...provided,
-    color: '#9ca3af',
-    '&:hover': { color: '#d1d5db' },
-  }),
+// Función para generar estilos según la variante
+const getStyles = (variant: 'dark' | 'white'): StylesConfig<SelectOption, false> => {
+  const isDark = variant === 'dark';
+  return {
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      borderColor: state.isFocused ? '#3b82f6' : (isDark ? '#4b5563' : '#d1d5db'),
+      boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+      '&:hover': { borderColor: isDark ? '#6b7280' : '#9ca3af' },
+      borderRadius: '0.375rem',
+      padding: '0.25rem',
+    }),
+    singleValue: (provided) => ({ ...provided, color: isDark ? '#d1d5db' : '#374151' }),
+    input: (provided) => ({ ...provided, color: isDark ? '#f9fafb' : '#111827' }),
+    placeholder: (provided) => ({ ...provided, color: isDark ? '#9ca3af' : '#6b7280' }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      border: `1px solid ${isDark ? '#4b5563' : '#e5e7eb'}`,
+      borderRadius: '0.375rem',
+    }),
+    // Estilo para el portal
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? '#3b82f6'
+        : state.isFocused
+        ? (isDark ? '#374151' : '#f3f4f6')
+        : 'transparent',
+      color: state.isSelected ? '#ffffff' : (isDark ? '#d1d5db' : '#1f2937'),
+    }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      '&:hover': { color: isDark ? '#d1d5db' : '#374151' },
+    }),
+  };
 };
 
 export const Select: React.FC<CustomSelectProps> = ({
@@ -68,6 +72,7 @@ export const Select: React.FC<CustomSelectProps> = ({
   value,
   onChange,
   disabled,
+  variant = 'dark', // Por defecto sigue siendo oscuro
   ...rest
 }) => {
   // Convertimos el valor primitivo en un objeto SelectOption
@@ -84,10 +89,12 @@ export const Select: React.FC<CustomSelectProps> = ({
     setIsClient(true);
   }, []);
 
+  // Calculamos los estilos según la variante
+  const styles = React.useMemo(() => getStyles(variant), [variant]);
 
   return (
     <div className="w-full">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
+      <label htmlFor={id} className={`block text-sm font-medium mb-1 ${variant === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
         {label}
       </label>
       {isClient && (
@@ -95,7 +102,7 @@ export const Select: React.FC<CustomSelectProps> = ({
           {...rest}
           id={id}
           options={options}
-          styles={customStyles}
+          styles={styles}
           value={selectedOption}
           onChange={handleChange}
           placeholder={rest.placeholder || 'Seleccionar...'}
