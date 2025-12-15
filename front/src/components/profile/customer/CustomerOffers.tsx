@@ -31,6 +31,7 @@ const CustomerOffers: React.FC<CustomerOffersProps> = ({ customer }) => {
       activeNow: true, 
       categories: activeFilterIds 
     }),
+    enabled: interestIds.length > 0 || !!selectedCategoryId, // Solo buscar si hay intereses o un filtro activo
   });
 
   const offers = offersResponse?.data?.offers || [];
@@ -45,6 +46,17 @@ const CustomerOffers: React.FC<CustomerOffersProps> = ({ customer }) => {
 
   if (isError) {
     return <p className="text-red-400">Hubo un error al cargar las ofertas.</p>;
+  }
+
+  // Si el cliente no tiene intereses configurados, mostramos un mensaje en lugar de ofertas aleatorias
+  if (interestIds.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700 border-dashed">
+        <FiFilter className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+        <h3 className="text-lg font-medium text-gray-300">Sin intereses definidos</h3>
+        <p className="text-gray-500 mt-2 max-w-sm mx-auto">Agrega categorías de interés a tu perfil para ver ofertas personalizadas de los proveedores.</p>
+      </div>
+    );
   }
 
   return (

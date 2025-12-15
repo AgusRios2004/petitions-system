@@ -211,13 +211,43 @@ class PetitionService {
         }
     }
 
-    async updatePetition(id, petitionData) {
-        const petition = await Petition.findByPk(id);
-        if (!petition) return null;
-        await petition.update(petitionData);
-        return await Petition.findByPk(id, {
-            include: ['attachments', 'customers', 'typePetitions', 'states', 'profession', 'typeProvider']
-        });
+    async updatePetition(id, petitionData, categoryIds) {
+        
+        console.log("DEBUG UPDATE - ID:", id);
+        console.log("DEBUG UPDATE - Body:", JSON.stringify(petitionData));
+        console.log("DEBUG UPDATE - Arg categoryIds:", categoryIds);
+
+        // Si categoryIds no se pasó como argumento, intentamos sacarlo del objeto de datos
+        if (categoryIds === undefined && petitionData && petitionData.categoryIds !== undefined) {
+            categoryIds = petitionData.categoryIds;
+        }
+
+        const t = await sequelize.transaction();
+        try {
+            const petition = await Petition.findByPk(id, { transaction: t });
+            if (!petition) throw new Error("Petición no encontrada");
+
+            // 1. Actualizar datos básicos
+            await petition.update(petitionData, { transaction: t });
+
+            // 2. Actualizar categorías (si se envían explícitamente)
+            if (categoryIds !== undefined && Array.isArray(categoryIds)) {
+                // Eliminar asociaciones existentes
+                await PetitionCategory.destroy({ where: { id_petition: id }, transaction: t });
+                
+                // Crear nuevas asociaciones
+                if (categoryIds.length > 0) {
+                    const categoryRecords = categoryIds.map(idCat => ({ id_petition: id, id_category: idCat }));
+                    await PetitionCategory.bulkCreate(categoryRecords, { transaction: t });
+                }
+            }
+
+            await t.commit();
+            return await this.getPetitionById(id);
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
     }
 
     async cancelPetition(petitionId, userId, eventBus) {

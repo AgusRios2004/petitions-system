@@ -7,6 +7,7 @@ import { availabilityService } from '@/service/availabilityService';
 import { weekService } from '@/service/weekService'; 
 import { hourService } from '@/service/hourService';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import toast from 'react-hot-toast';
 
 interface FormState {
@@ -41,6 +42,13 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         select: (response) => response.data,
     })
 
+    // Consultamos TODAS las disponibilidades existentes para validar solapamientos
+    const { data: existingAvailabilities } = useQuery({
+        queryKey: ['availabilities', 'all'],
+        queryFn: () => availabilityService.getAllAvailabilities({}),
+        select: (response) => response.data,
+    });
+
     const createAvailabilityMutation = useMutation({
         mutationFn: (newAvailability: FormState) => {
             return availabilityService.createAvailability(newAvailability);
@@ -56,14 +64,6 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         }
     });
     const isLoading = isLoadingWeeks || isLoadingHours;
-
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormState(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
-    };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -88,6 +88,31 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                 toast.error('La hora "Desde" no puede ser igual o posterior a la hora "Hasta".');
                 return;
             }
+
+            // --- VALIDACIÓN DE SOLAPAMIENTO ---
+            if (existingAvailabilities) {
+                // Función auxiliar para convertir "HH:mm" a minutos
+                const getMinutes = (timeStr: string) => {
+                    const [h, m] = timeStr.split(':').map(Number);
+                    return h * 60 + m;
+                };
+
+                const newStart = getMinutes(fromTimeStr);
+                const newEnd = getMinutes(untilTimeStr);
+                const selectedWeekId = parseInt(formState.id_week);
+
+                const hasOverlap = existingAvailabilities.some((avail: any) => {
+                    if (avail.week.id_week !== selectedWeekId) return false; // Solo comparar mismo día
+                    const existStart = getMinutes(avail.fromHour.name.split(' ')[0]);
+                    const existEnd = getMinutes(avail.untilHour.name.split(' ')[0]);
+                    return (newStart < existEnd && newEnd > existStart);
+                });
+
+                if (hasOverlap) {
+                    toast.error('El horario seleccionado se superpone con una disponibilidad existente.');
+                    return;
+                }
+            }
         } else {
             toast.error('No se pudieron encontrar los detalles de las horas seleccionadas.');
             return;
@@ -107,51 +132,39 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                     <form onSubmit={handleSubmit}>
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="id_week" className="block text-sm font-medium text-gray-300 mb-1">Día</label>
-                                <select
+                                <Select
+                                    label="Día"
                                     id="id_week"
-                                    name="id_week"
-                                    value={formState.id_week}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
-                                >
-                                    <option value="">Selecciona un día</option>
-                                    {weeks?.map((week: any) => (
-                                        <option key={week.id_week} value={week.id_week}>{week.name}</option>
-                                    ))}
-                                </select>
+                                    options={weeks?.map((week: any) => ({ value: week.id_week, label: week.name })) || []}
+                                    value={formState.id_week ? Number(formState.id_week) : null}
+                                    onChange={(val) => setFormState(prev => ({ ...prev, id_week: String(val || '') }))}
+                                    placeholder="Selecciona un día"
+                                    variant="dark"
+                                />
                             </div>
 
                             <div>
-                                <label htmlFor="id_from_hour" className="block text-sm font-medium text-gray-300 mb-1">Hora desde</label>
-                                <select
+                                <Select
+                                    label="Hora desde"
                                     id="id_from_hour"
-                                    name="id_from_hour"
-                                    value={formState.id_from_hour}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
-                                >
-                                    <option value="">Selecciona una hora</option>
-                                    {hours?.map((hour: any) => (
-                                        <option key={hour.id_hour} value={hour.id_hour}>{hour.name}</option>
-                                    ))}
-                                </select>
+                                    options={hours?.map((hour: any) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                    value={formState.id_from_hour ? Number(formState.id_from_hour) : null}
+                                    onChange={(val) => setFormState(prev => ({ ...prev, id_from_hour: String(val || '') }))}
+                                    placeholder="Selecciona una hora"
+                                    variant="dark"
+                                />
                             </div>
 
                             <div>
-                                <label htmlFor="id_until_hour" className="block text-sm font-medium text-gray-300 mb-1">Hora hasta</label>
-                                <select
+                                <Select
+                                    label="Hora hasta"
                                     id="id_until_hour"
-                                    name="id_until_hour"
-                                    value={formState.id_until_hour}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
-                                >
-                                    <option value="">Selecciona una hora</option>
-                                    {hours?.map((hour: any) => (
-                                        <option key={hour.id_hour} value={hour.id_hour}>{hour.name}</option>
-                                    ))}
-                                </select>
+                                    options={hours?.map((hour: any) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                    value={formState.id_until_hour ? Number(formState.id_until_hour) : null}
+                                    onChange={(val) => setFormState(prev => ({ ...prev, id_until_hour: String(val || '') }))}
+                                    placeholder="Selecciona una hora"
+                                    variant="dark"
+                                />
                             </div>
                         </div>
 

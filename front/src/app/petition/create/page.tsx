@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
@@ -20,6 +20,9 @@ import { useAuth } from '@/context/AuthContext';
 // Tipos y componentes
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { TypePetition, TypeProvider, Profession, ApiResponse, ICategory } from '@/types/common';
 
 // Esquema de validación para el formulario principal
@@ -95,6 +98,7 @@ export default function CreatePetitionPage() {
     setValue,
     watch,
     getValues,
+    control,
   } = useForm<PetitionFormValues>({
     resolver: zodResolver(petitionSchema),
     defaultValues: {
@@ -223,22 +227,21 @@ export default function CreatePetitionPage() {
   console.log(typePetitions, typeProviders, professions);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-6">Crear Nueva Petición</h1>
+    <div className="min-h-screen bg-gray-900 py-12">
+      <div className="container mx-auto px-4 max-w-3xl">
+        <h1 className="text-3xl font-bold mb-6 text-white">Crear Nueva Petición</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 shadow-md rounded-lg">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-gray-800 p-8 shadow-lg rounded-lg border border-gray-700">
 
         {/* Descripción */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción
-          </label>
-          <textarea
+          <Label htmlFor="description" className="text-gray-300 mb-2 block">Descripción</Label>
+          <Textarea
             id="description"
             {...register('description')}
             rows={5}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
             placeholder="Describe detalladamente qué necesitas..."
+            variant="dark"
           />
           {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
         </div>
@@ -246,65 +249,63 @@ export default function CreatePetitionPage() {
         {/* Selects */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label htmlFor="id_type_petition" className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Petición
-            </label>
-            <select
-              id="id_type_petition"
-              {...register('id_type_petition')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              disabled={isAnyDataLoading} // Deshabilitar mientras carga
-            >
-              <option value="">Selecciona un tipo...</option>
-              {typePetitions?.data?.map((tp) => (
-                <option key={tp.id_type_petition} value={tp.id_type_petition}>
-                  {tp.name}
-                </option>
-              ))}
-            </select>
-            {errors.id_type_petition && <p className="mt-1 text-sm text-red-600">{errors.id_type_petition.message}</p>}
+            <Controller
+              name="id_type_petition"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Tipo de Petición"
+                  id="id_type_petition"
+                  options={typePetitions?.data?.map((tp) => ({ value: String(tp.id_type_petition), label: tp.name })) || []}
+                  value={field.value}
+                  onChange={(val) => field.onChange(val ?? '')}
+                  error={errors.id_type_petition?.message}
+                  disabled={isAnyDataLoading}
+                  placeholder="Selecciona"
+                  variant="dark"
+                />
+              )}
+            />
           </div>
 
           <div>
-            <label htmlFor="id_type_provider" className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Proveedor (Opcional)
-            </label>
-            <select
-              id="id_type_provider"
-              {...register('id_type_provider')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              disabled={isAnyDataLoading} // Deshabilitar mientras carga
-            >
-              <option value="">Selecciona si aplica...</option>
-              {typeProviders?.data?.map((tp) => (
-                <option key={tp.id_type_provider} value={tp.id_type_provider}>
-                  {tp.name}
-                </option>
-              ))}
-            </select>
-            {errors.id_type_provider && (
-              <p className="mt-1 text-sm text-red-600">{errors.id_type_provider.message}</p>
-            )}
+            <Controller
+              name="id_type_provider"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Tipo de Proveedor (Opcional)"
+                  id="id_type_provider"
+                  options={typeProviders?.data?.map((tp) => ({ value: String(tp.id_type_provider), label: tp.name })) || []}
+                  value={field.value}
+                  onChange={(val) => field.onChange(val ?? '')}
+                  error={errors.id_type_provider?.message}
+                  disabled={isAnyDataLoading}
+                  placeholder="Selecciona"
+                  variant="dark"
+                />
+              )}
+            />
           </div>
 
           <div>
-            <label htmlFor="id_profession" className="block text-sm font-medium text-gray-700 mb-1">
-              Profesión (Opcional)
-            </label>
-            <select
-              id="id_profession"
-              {...register('id_profession')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              disabled={isAnyDataLoading} // Deshabilitar mientras carga
-            >
-              <option value="">Selecciona si aplica...</option>
-              {professions?.data?.map((p) => (
-                <option key={p.id_profession} value={p.id_profession}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            {errors.id_profession && <p className="mt-1 text-sm text-red-600">{errors.id_profession.message}</p>}
+            <Controller
+              name="id_profession"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Profesión (Opcional)"
+                  id="id_profession"
+                  options={professions?.data?.map((p) => ({ value: String(p.id_profession), label: p.name })) || []}
+                  value={field.value}
+                  onChange={(val) => field.onChange(val ?? '')}
+                  error={errors.id_profession?.message}
+                  disabled={isAnyDataLoading}
+                  placeholder="Selecciona..."
+                  variant="dark"
+                />
+              )}
+            />
           </div>
         </div>
 
@@ -318,7 +319,7 @@ export default function CreatePetitionPage() {
             value={null} // Siempre null para que funcione como un "agregador" y se limpie tras seleccionar
             placeholder="Selecciona una categoría para agregar..."
             disabled={isAnyDataLoading}
-            variant="white"
+            variant="dark"
           />
           
           {/* Lista visual de categorías seleccionadas */}
@@ -326,76 +327,67 @@ export default function CreatePetitionPage() {
             {selectedCategoryIds.map((id) => {
               const category = categories?.find((c) => String(c.id_category) === id);
               return (
-                <span key={id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <span key={id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-900 text-blue-100 border border-blue-700">
                   {category?.name || 'Cargando...'}
-                  <button type="button" onClick={() => handleRemoveCategory(id)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold focus:outline-none">
+                  <button type="button" onClick={() => handleRemoveCategory(id)} className="ml-2 text-blue-300 hover:text-white font-bold focus:outline-none">
                     &times;
                   </button>
                 </span>
               );
             })}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Selecciona las categorías que mejor describan tu petición para notificar a los proveedores adecuados.</p>
+          <p className="text-xs text-gray-400 mt-1">Selecciona las categorías que mejor describan tu petición para notificar a los proveedores adecuados.</p>
         </div>
 
         {/* Fechas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="date_since" className="block text-sm font-medium text-gray-700 mb-1">
-              Disponible Desde
-            </label>
-            <input
+            <Input
+              label="Disponible Desde"
               id="date_since"
               type="date"
               {...register('date_since')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              error={errors.date_since?.message}
               disabled={isAnyDataLoading} // Deshabilitar mientras carga
             />
-            {errors.date_since && <p className="mt-1 text-sm text-red-600">{errors.date_since.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="date_until" className="block text-sm font-medium text-gray-700 mb-1">
-              Disponible Hasta
-            </label>
-            <input
+            <Input
+              label="Disponible Hasta"
               id="date_until"
               type="date"
               {...register('date_until')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              error={errors.date_until?.message}
               disabled={isAnyDataLoading} // Deshabilitar mientras carga
             />
-            {errors.date_until && <p className="mt-1 text-sm text-red-600">{errors.date_until.message}</p>}
           </div>
         </div>
 
         {/* Sección para Adjuntos */}
-        <div className="space-y-4 rounded-lg border border-gray-200 p-4">
-            <h3 className="text-lg font-medium text-gray-900">Adjuntar Archivo (Opcional)</h3>
+        <div className="space-y-4 rounded-lg border border-gray-700 bg-gray-900/50 p-4">
+            <h3 className="text-lg font-medium text-gray-200">Adjuntar Archivo (Opcional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label htmlFor="attachmentName" className="block text-sm font-medium text-gray-700 mb-1">
-                        Título del Adjunto
-                    </label>
-                    <input
+                    <Input
+                        label="Título del Adjunto"
                         id="attachmentName"
                         type="text"
                         value={attachmentName}
                         onChange={(e) => setAttachmentName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         placeholder="Ej: Planos de la casa"
                         disabled={isAnyDataLoading} // Deshabilitar mientras carga
                     />
                 </div>
                 <div>
-                    <label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-700 mb-1">
+                    <Label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-300 mb-1">
                         Seleccionar Archivo
-                    </label>
+                    </Label>
                     <input
                         id="attachmentFile"
                         type="file"
                         onChange={handleFileChange}
-                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-blue-400 hover:file:bg-gray-600"
                         disabled={isAnyDataLoading} // Deshabilitar mientras carga
                     />
                 </div>
@@ -408,6 +400,7 @@ export default function CreatePetitionPage() {
           Volver
         </Button>
       </form>
+      </div>
     </div>
   );
 }

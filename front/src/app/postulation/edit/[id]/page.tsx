@@ -1,20 +1,19 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
+
+import React, { useMemo, useState, useEffect } from 'react';
+import { useForm, useFieldArray, SubmitHandler, useWatch, Controller } from 'react-hook-form';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { articleService } from '@/service/articleService';
 import { postulationService } from '@/service/postulationService';
+import { categoryService } from '@/service/categoryService';
 import toast from 'react-hot-toast';
 import { IArticle, ICategory } from '@/types/common';
-import { categoryService } from '@/service/categoryService';
-import Link from 'next/link';
-import { ca } from 'zod/v4/locales';
 
 type FormValues = {
   proposal: string;
@@ -27,209 +26,209 @@ type FormValues = {
 };
 
 export default function EditPostulationPage() {
-  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const postulationId = params.id as string;
-
-  const [articles, setArticles] = useState<IArticle[]>([]);
-  const [categories, setCategories] = useState<ICategory[]>([]);
+  const postulationId = parseInt(params.id as string, 10);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [filteredArticles, setFilteredArticles] = useState<IArticle[]>([]);
-  const [isMasterDataLoading, setIsMasterDataLoading] = useState(true);
 
-  const { data: postulationData, isLoading: isPostulationLoading } = useQuery({
+  // 1. Cargar datos de la postulación existente
+  const { data: postulation, isLoading: isLoadingPostulation } = useQuery({
     queryKey: ['postulation', postulationId],
-    queryFn: () => postulationService.getPostulationById(postulationId),
+    queryFn: () => postulationService.getPostulationById(String(postulationId)),
     enabled: !!postulationId,
   });
 
-  const { register, handleSubmit, control, reset } = useForm<FormValues>();
+  // 2. Cargar artículos y categorías (igual que en crear)
+  const { data: articlesData, isLoading: isLoadingArticles } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => articleService.getAllArticles(),
+    select: (data) => data.data ?? [],
+  });
+  const articles: IArticle[] = articlesData ?? [];
 
-  useEffect(() => {
-    if (postulationData) {
-      reset({
-        proposal: postulationData.data.proposal,
-        cost: postulationData.data.cost,
-        articles: postulationData.data.inventories.map((inv: any) => ({
-          id_article: inv.id_article,
-          quantity: inv.quantity,
-          cost: inv.cost,
-        })),
-      });
-    }
-  }, [postulationData, reset]);
+  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryService.getAllCategories(),
+  });
+  const categories: ICategory[] = categoriesData ?? [];
+
+  const { register, handleSubmit, control, formState: { isSubmitting }, setValue, reset } = useForm<FormValues>({
+    defaultValues: {
+      proposal: '',
+      cost: 0,
+      articles: [],
+    },
+  });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'articles' });
 
+  // 3. Poblar el formulario cuando llegue la data de la postulación
   useEffect(() => {
-    const fetchData = async () => {
-      setIsMasterDataLoading(true);
-      try {
-        const [articlesRes, categoriesRes] = await Promise.all([
-          articleService.getAllArticles(),
-          categoryService.getAllCategories(),
-        ]);
-        if (articlesRes.data) {
-          setArticles(articlesRes.data);
-          setFilteredArticles(articlesRes.data);
-        }
-        if (categoriesRes) setCategories(categoriesRes);
-      } catch (error) {
-        toast.error('Error al cargar datos maestros.');
-      } finally {
-        setIsMasterDataLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCategory && selectedCategory !== 0) {
-      setFilteredArticles(articles.filter(a => a.id_category === selectedCategory));
-    } else {
-      setFilteredArticles(articles);
+    if (postulation) {
+      reset({
+        proposal: postulation.proposal,
+        cost: postulation.cost,
+        // Mapeamos los artículos existentes de la postulación al formato del formulario
+        articles: postulation.postulationArticles?.map((pa: any) => ({
+          id_article: pa.id_article,
+          quantity: pa.quantity,
+          cost: pa.cost, 
+        })) || [],
+      });
     }
+  }, [postulation, reset]);
+
+  // Cálculo de costo sugerido (igual que en crear)
+  const watchedArticles = useWatch({ control, name: 'articles' });
+  const suggestedCost = useMemo(() => {
+    return watchedArticles?.reduce((sum, article) => {
+      return sum + (Number(article.cost) || 0) * (Number(article.quantity) || 0);
+    }, 0) || 0;
+  }, [watchedArticles]);
+
+  // Filtrado de artículos por categoría
+  const filteredArticles = useMemo(() => {
+    if (selectedCategory && selectedCategory !== 0) {
+      return articles.filter(a => a.id_category === selectedCategory);
+    }
+    return articles;
   }, [selectedCategory, articles]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: FormValues) => postulationService.updatePostulation(postulationId, data),
+    mutationFn: (data: FormValues) => postulationService.updatePostulation(String(postulationId), data),
     onSuccess: () => {
       toast.success('Postulación actualizada con éxito!');
-      queryClient.invalidateQueries({ queryKey: ['postulations'] });
       queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
-      router.push('/profile?tab=postulaciones');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+      router.back();
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al actualizar la postulación');
     },
   });
 
-  const withdrawMutation = useMutation({
-    mutationFn: () => {
-      return postulationService.withdrawPostulation(postulationId, { id_user_update: user!.id_user });
-    },
-    onSuccess: () => {
-      toast.success('Te has dado de baja de la postulación.');
-      queryClient.invalidateQueries({ queryKey: ['postulations'] });
-      queryClient.invalidateQueries({ queryKey: ['postulation', postulationId] });
-      router.push('/profile?tab=postulaciones');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al darse de baja');
-    },
-  });
-
   const onSubmit: SubmitHandler<FormValues> = (data) => {
+    if (data.cost <= 0) {
+      toast.error('El costo total debe ser mayor a cero.');
+      return;
+    }
     updateMutation.mutate(data);
   };
 
-  const handleWithdraw = () => {
-    if (window.confirm('¿Estás seguro de que quieres darte de baja de esta postulación? Esta acción no se puede deshacer.')) {
-      withdrawMutation.mutate();
-    }
-  };
+  const isLoading = isLoadingPostulation || isLoadingArticles || isLoadingCategories;
 
-  if (isPostulationLoading || isMasterDataLoading) return <p>Cargando postulación...</p>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
-  console.log(categories)
+  if (!postulation) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+        <p>Postulación no encontrada o no tienes permisos.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="max-w-xl mx-auto">
-        <div className="mb-4">
-          <Link href="/profile?tab=postulaciones" className="text-blue-500 hover:underline">
-            &larr; Volver a Mis Postulaciones
-          </Link>
-        </div>
-        <h1 className="text-2xl font-bold mb-4">Editar Postulación</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div className="min-h-screen bg-gray-950 py-12">
+      <div className="container mx-auto px-4 max-w-3xl">
+        <h2 className="text-2xl font-bold text-center mb-6 text-white">Editar Postulación</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
+
+          {/* Propuesta */}
           <div>
-            <Label className="font-semibold">Propuesta</Label>
-            <Textarea variant='white' {...register('proposal', { required: true })} />
+            <Label className="font-semibold text-gray-300 mb-1 block">Propuesta</Label>
+            <Textarea
+              {...register('proposal', { required: true })}
+              placeholder="Escribí tu propuesta..."
+              variant="dark"
+            />
           </div>
 
+          {/* Costo total */}
           <div>
-            <Input type="number" label="Costo total" variant='white' {...register('cost', { valueAsNumber: true })} />
+            <Input
+              type="number"
+              label="Costo total"
+              {...register('cost', { valueAsNumber: true })}
+              placeholder="Costo total de la propuesta"
+              variant="dark"
+            />
+            {suggestedCost > 0 && (
+              <div className="mt-2 text-sm text-gray-400">
+                Costo sugerido por artículos: <strong>${suggestedCost.toLocaleString('es-AR')}</strong>
+                <button
+                  type="button"
+                  className="ml-2 text-blue-600 hover:underline font-semibold"
+                  onClick={() => setValue('cost', suggestedCost, { shouldValidate: true })}
+                >
+                  Aplicar
+                </button>
+              </div>
+            )}
           </div>
 
+          {/* Artículos */}
           <div>
-            <Label className="font-semibold">Artículos</Label>
-            <div className="flex gap-2 mb-2 mt-1">
-              <select
-                onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
-                className="p-2 border rounded w-full bg-white text-gray-900 max-h-30 overflow-y-auto"
-              >
-                <option value="0">Todas las categorías</option>
-                {categories.map((c) => (
-                  <option key={c.id_category} value={c.id_category}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <div className="mb-4">
+              <Select
+                label="Filtrar artículos por Categoría"
+                options={[
+                  { value: 0, label: 'Todas las categorías' },
+                  ...categories.map((c) => ({ value: c.id_category, label: c.name }))
+                ]}
+                value={selectedCategory || 0}
+                onChange={(val) => setSelectedCategory(Number(val))}
+                variant="dark"
+              />
             </div>
+
             {fields.map((item, index) => (
-              <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-blue-100 rounded-lg bg-blue-50/40">
+              <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-gray-600 rounded-lg bg-gray-700/50">
                 
                 <div className="flex-1">
-                  <Label htmlFor={`articles.${index}.id_article`} className="text-sm">Artículo</Label>
-                  <select
-                    {...register(`articles.${index}.id_article`, { valueAsNumber: true })}
-                    className="p-2 border rounded w-full bg-white text-gray-900"
-                  >
-                    <option value="0" disabled>Seleccione un artículo</option>
-                    {[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)])].filter(Boolean).map((a) => (
-                      <option key={a.id_article} value={a.id_article}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    label="Cantidad"
-                    {...register(`articles.${index}.quantity`, { valueAsNumber: true })}
-                    placeholder="Ej: 10"
-                    variant="white"
+                  <Controller
+                    control={control}
+                    name={`articles.${index}.id_article`}
+                    render={({ field }) => (
+                      <Select
+                        label="Artículo"
+                        id={`articles.${index}.id_article`}
+                        options={[...new Set([...filteredArticles, articles.find(a => a.id_article === item.id_article)!])].filter(Boolean).map((a) => ({ value: a.id_article, label: a.name || 'Artículo sin nombre' }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        variant="dark"
+                        placeholder="Seleccione un artículo"
+                      />
+                    )}
                   />
                 </div>
 
                 <div className="flex-1">
-                  <Input
-                    type="number"
-                    label="Costo"
-                    {...register(`articles.${index}.cost`, { valueAsNumber: true })}
-                    placeholder="Ej: 2500"
-                    variant="white"
-                  />
+                  <Input type="number" label="Cantidad" {...register(`articles.${index}.quantity`, { valueAsNumber: true })} placeholder="Ej: 1" variant="dark" />
+                </div>
+
+                <div className="flex-1">
+                  <Input type="number" label="Costo" {...register(`articles.${index}.cost`, { valueAsNumber: true })} placeholder="Ej: 2500" variant="dark" />
                 </div>
 
                 <div className="flex items-end">
-                  <Button type="button" onClick={() => remove(index)} variant="destructive">
-                    Eliminar
-                  </Button>
+                  <Button type="button" onClick={() => remove(index)} variant="destructive">Eliminar</Button>
                 </div>
               </div>
             ))}
-            <Button type="button" onClick={() => append({ id_article: 0, quantity: 1, cost: 0 })} className="w-full">
-              Añadir Artículo
-            </Button>
+
+            <Button type="button" onClick={() => append({ id_article: 0, quantity: 1, cost: 0 })} className="w-full bg-blue-600 hover:bg-blue-700 text-white">Añadir Artículo</Button>
           </div>
 
-          <div className="flex gap-4 mt-6 border-t pt-4">
-            <Button type="button" variant="destructive" onClick={handleWithdraw} disabled={withdrawMutation.isPending} className="w-full">
-              {withdrawMutation.isPending ? 'Dando de baja...' : 'Darse de baja'}
-            </Button>
-            <Button type="submit" disabled={updateMutation.isPending} className="w-full">
-              {updateMutation.isPending ? 'Guardando...' : 'Confirmar Cambios'}
-            </Button>
-          </div>
-          <div className="flex mt-4">
-            <Button type="button" variant="secondary" onClick={() => router.push('/profile?tab=postulaciones')} className="w-full">
-              Volver
-            </Button>
+          <div className="flex gap-4">
+            <Button type="button" variant="secondary" onClick={() => router.back()} className="w-full">Cancelar</Button>
+            <Button type="submit" disabled={updateMutation.isPending || isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white">{updateMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}</Button>
           </div>
         </form>
       </div>

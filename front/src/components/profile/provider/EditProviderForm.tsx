@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { categoryService } from '@/service/categoryService';
 
 const completeProviderProfileSchema = providerProfileSchema.merge(userProfileSchema).merge(addressSchema).extend({
-  categoryIds: z.array(z.number()).min(1, "Debes seleccionar al menos una categoría"), // Y la lista no puede estar vacía.
+  categoryIds: z.array(z.number()).optional(),
 });
 
 type CompleteProviderProfileFormData = z.infer<typeof completeProviderProfileSchema>;
@@ -80,11 +80,11 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
   });
   const professions = professionsResponse.data || [];
 
-  const { data: categoriesResponse =  {data: [], error: null } } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
     queryFn: categoryService.getAllCategories
-  })
-  const allCategories = categoriesResponse || [];
+  });
+  const allCategories = categoriesData || [];
 
   // 5. Poblar el formulario y manejar cascada
   useEffect(() => {
@@ -139,6 +139,23 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
   const { data: departments, isLoading: isLoadingDepartments } = useQuery({ queryKey: ['departments', watchedProvinceId], queryFn: () => locationService.getDepartmentsByProvince(watchedProvinceId), enabled: watchedProvinceId > 0 });
   const { data: cities, isLoading: isLoadingCities } = useQuery({ queryKey: ['cities', watchedDepartmentId], queryFn: () => locationService.getCitiesByDepartment(watchedDepartmentId), enabled: watchedDepartmentId > 0 });
 
+  // Manejo de categorías
+  const selectedCategoryIds = watch('categoryIds') || [];
+
+  const handleAddCategory = (val: string | number | null) => {
+    const id = Number(val);
+    if (!id) return;
+    const current = watch('categoryIds') || [];
+    if (!current.includes(id)) {
+      setValue('categoryIds', [...current, id], { shouldValidate: true });
+    }
+  };
+
+  const handleRemoveCategory = (id: number) => {
+    const current = watch('categoryIds') || [];
+    setValue('categoryIds', current.filter(c => c !== id), { shouldValidate: true });
+  };
+
   // 6. Mutación para enviar actualizaciones
   const { mutate: updateProfile, isPending } = useMutation({
     mutationFn: async (data: CompleteProviderProfileFormData) => {
@@ -152,9 +169,10 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
         email: data.email,
       };
 
-      const providerPayload: UpdateProviderPayload = {
+      const providerPayload: UpdateProviderPayload & { categories?: number[] } = {
         id_type_provider: data.id_type_provider,
         id_profession: data.id_profession,
+        categories: data.categoryIds, // Importante: Enviar las categorías al backend
         address: {
           id_address: data?.id_address,
           street: data.street,
@@ -174,6 +192,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
     onSuccess: () => {
       toast.success("Perfil actualizado con éxito!");
       queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
+      router.push('/profile');
     },
     onError: (error) => {
       toast.error(`Error al actualizar: ${error.message}`);
@@ -189,7 +208,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
   if (isError) return <p className="text-red-500">Error al cargar el perfil.</p>;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <form onSubmit={handleSubmit(onSubmit, (e) => console.log("Errores de validación:", e))} className="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-6">Editar Perfil de Proveedor</h2>
 
       {/* User Info */}
@@ -227,6 +246,32 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
           <Controller name="id_type_provider" control={control} render={({ field }) => (<Select label="Tipo de Proveedor" options={mapToOptions(providerTypes, 'name', 'id_type_provider')} onChange={field.onChange} value={field.value} />)} />
           <Controller name="id_profession" control={control} render={({ field }) => (<Select label="Profesión" options={mapToOptions(professions, 'name', 'id_profession')} onChange={field.onChange} value={field.value} />)} />
         </div>
+      </div>
+
+      {/* Categories Info */}
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-2">Categorías de Trabajo</h3>
+        <div className="mb-4">
+           <Select
+            label="Agregar Categoría"
+            options={allCategories.map(c => ({ label: c.name, value: c.id_category }))}
+            onChange={handleAddCategory}
+            value={null}
+            placeholder="Seleccione una categoría para agregar..."
+           />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedCategoryIds.map(id => {
+            const cat = allCategories.find(c => c.id_category === id);
+            return (
+              <span key={id} className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                {cat?.name || 'Cargando...'}
+                <button type="button" onClick={() => handleRemoveCategory(id)} className="hover:text-red-300 font-bold">×</button>
+              </span>
+            );
+          })}
+        </div>
+        {errors.categoryIds && <p className="text-red-500 text-sm mt-1">{errors.categoryIds.message}</p>}
       </div>
 
       <div className="mt-8 flex justify-end gap-4">

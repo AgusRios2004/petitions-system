@@ -138,7 +138,7 @@ exports.createPetition = async (req, res) => {
 exports.updatePetition = async (req, res) => {
     try {
         const { id } = req.params;
-        const { id_customer, id_type_petition, description, date_since, date_until, id_state, id_profession, id_type_provider } = req.body;
+        const { id_customer, id_type_petition, description, date_since, date_until, id_state, id_profession, id_type_provider, categoryIds } = req.body;
 
         // Manteniendo la validación original para los campos centrales
         if (!id_customer || !id_type_petition || !description || !date_since || !date_until || !id_state) {
@@ -155,7 +155,7 @@ exports.updatePetition = async (req, res) => {
             id_profession, // Se actualizará si se proporciona
             id_type_provider, // Se actualizará si se proporciona
             id_user_update: req.user.sub,
-        });
+        }, categoryIds);
 
         if (!petition) return error(res, 'Petición no encontrada', 404);
         return success(res, petition, 'Petición actualizada correctamente');

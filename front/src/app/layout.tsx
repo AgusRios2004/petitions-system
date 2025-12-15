@@ -32,9 +32,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SocketProvider>
               <Toaster />
               <ThemeRegistry>
-                  <div className="min-h-screen">
+                  <div className="min-h-screen flex flex-col bg-gray-950 text-gray-100">
                     <Header />
-                    {children}
+                    <main className="flex-1 flex flex-col">
+                      {children}
+                    </main>
                   </div>
               </ThemeRegistry>
               <div id="portal-root"></div>

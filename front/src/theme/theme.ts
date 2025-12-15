@@ -12,21 +12,23 @@ const roboto = Roboto({
 // Create a theme instance.
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#007BFF',
+      main: '#3b82f6', // blue-500
     },
     secondary: {
-      main: '#6c757d',
+      main: '#6b7280', // gray-500
     },
     error: {
-      main: '#dc3545',
+      main: '#ef4444', // red-500
     },
     background: {
-      default: '#F8F9FA',
+      default: '#030712', // gray-950 (Fondo global oscuro)
+      paper: '#1f2937',   // gray-800
     },
     text: {
-      primary: '#212529',
-      secondary: '#6c757d',
+      primary: '#f3f4f6', // gray-100
+      secondary: '#9ca3af', // gray-400
     }
   },
   typography: {

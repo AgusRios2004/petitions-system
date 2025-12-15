@@ -23,7 +23,8 @@ export const getPetitions = async (params: any) => {
 
 export const getPetitionById = async (id_petition: number) => {
   const response = await apiClient.get(`/petition/${id_petition}`);
-  return response.data;
+  // Si la respuesta viene envuelta en 'data', devolvemos el contenido interno
+  return response.data.data || response.data;
 };
 
 export const updatePetition = async (id_petition: number, payload: any) => {

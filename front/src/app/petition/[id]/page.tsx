@@ -1,107 +1,69 @@
-
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPetitionById, updatePetition } from '@/service/petitionService';
-import { postulationService } from '@/service/postulationService';
-import { useAuth } from '@/context/AuthContext';
 import PetitionDetail from '@/components/petitions/PetitionDetail';
+import PetitionEditForm from '@/components/petitions/PetitionEditForm';
 import toast from 'react-hot-toast';
-// Placeholder for the form component we will create
-import PetitionEditForm from '@/components/petitions/PetitionEditForm'; 
 
-const PetitionDetailPage = () => {
+export default function PetitionPage() {
   const params = useParams();
-  const router = useRouter();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const id = params.id as string;
-  const petitionId = parseInt(id, 10);
-
+  const id = Number(params.id);
   const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
 
-  const { data: apiResponse, isLoading: isLoadingPetition, isError } = useQuery({
-    queryKey: ['petition', petitionId],
-    queryFn: () => getPetitionById(petitionId),
-    enabled: !!petitionId,
+  const { data: petition, isLoading, isError } = useQuery({
+    queryKey: ['petition', id],
+    queryFn: () => getPetitionById(id),
+    enabled: !!id,
   });
-
-  const { data: postulationsData, isLoading: isLoadingPostulations } = useQuery({
-    queryKey: ['providerPostulations', user?.provider?.id_provider],
-    queryFn: () => postulationService.getAllPostulations({ id_provider: user!.provider!.id_provider }),
-    enabled: !!user?.provider,
-  });
-
-  const petition = apiResponse?.data;
-
-  const hasAlreadyPostulated = useMemo(() => {
-    if (!postulationsData?.data) return false;
-    return postulationsData.data.some((p: any) => p.id_petition === petitionId);
-  }, [postulationsData, petitionId]);
-
-  const canPostulate = useMemo(() => {
-    if (!user?.provider || !petition || hasAlreadyPostulated) return false;
-    // Usamos el nombre del estado para no hardcodear el ID.
-    return petition.states.state.toLowerCase() === 'abierta';
-  }, [user, petition, hasAlreadyPostulated]);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: any }) => updatePetition(id, payload),
+    mutationFn: (data: any) => {
+      return updatePetition(id, data);
+    },
     onSuccess: () => {
-      toast.success('Petición actualizada con éxito');
-      queryClient.invalidateQueries({ queryKey: ['petition', petitionId] });
-      queryClient.invalidateQueries({ queryKey: ['petitions'] }); // Invalidate list view
+      toast.success('Petición actualizada correctamente');
       setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ['petition', id] });
     },
     onError: (error) => {
-      console.error("Detalles del error de mutación:", error);
-      toast.error('Error al actualizar. Revisa la consola del navegador para más detalles.');
-    },
+      console.error(error);
+      toast.error('Error al actualizar la petición');
+    }
   });
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-  };
-
-  const handleUpdate = (formData: any) => {
-    updateMutation.mutate({ id: petitionId, payload: formData });
-  };
-
-  if (isLoadingPetition || isLoadingPostulations) {
-    return <div>Cargando...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
-  if (isError) {
-    return <div>Error al cargar la petición.</div>;
+  if (isError || !petition) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-gray-300">
+        <h2 className="text-2xl font-bold mb-2">Error</h2>
+        <p>No se pudo cargar la petición o no existe.</p>
+      </div>
+    );
   }
 
-  if (!petition) {
-    return <div>Petición no encontrada.</div>;
-  }
-
-  return (
-    <div className="max-w-3xl mx-auto py-6">
-      {isEditing ? (
+  if (isEditing) {
+    return (
+      <div className="min-h-screen bg-gray-950 py-8">
         <PetitionEditForm
           petition={petition}
-          onSave={handleUpdate}
-          onCancel={handleCancelEdit}
+          onSave={(data) => updateMutation.mutate(data)}
+          onCancel={() => setIsEditing(false)}
           isLoading={updateMutation.isPending}
         />
-      ) : (
-        <PetitionDetail
-          petition={petition}
-          onEdit={handleEdit}
-        />
-      )}
-    </div>
-  );
-};
+      </div>
+    );
+  }
 
-export default PetitionDetailPage;
+  return <PetitionDetail petition={petition} onEdit={() => setIsEditing(true)} />;
+}
