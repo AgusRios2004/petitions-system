@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
         },
         dni: {
             type: DataTypes.STRING(20),
-            allowNull: false,
+            allowNull: true,
         },
         phone: {
             type: DataTypes.STRING(20),
-            allowNull: false,
+            allowNull: true,
         },
         address_id:{
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
     }, {
         tableName: 'n_customer',
@@ -34,10 +34,7 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_customer',
             as: 'petitions',
         });
-        Customer.hasMany(models.Postulation, {
-            foreignKey: 'id_postulation',
-            as: 'postulations',
-        });
+
         Customer.hasMany(models.Gender, {
             foreignKey: 'id_customer',
             sourceKey: 'id_customer',
@@ -52,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_customer',
             sourceKey: 'id_customer',
             as: 'interests',
+        });
+        Customer.belongsTo(models.Address, {
+            foreignKey: 'address_id',
+            targetKey: 'id_address',
+            as: 'address',
         });
     }
     return Customer;

@@ -11,15 +11,15 @@ module.exports = (sequelize, DataTypes) => {
         },
         id_type_provider: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
         id_profession:{
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
         address_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
         description: {
             type: DataTypes.STRING(255),
@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         Provider.belongsTo(models.Address, {
             foreignKey: 'address_id',
+            targetKey: 'id_address',
             as: 'address',
         });
         Provider.hasMany(models.ProviderCategory, {
@@ -49,12 +50,27 @@ module.exports = (sequelize, DataTypes) => {
         });
         Provider.belongsTo(models.TypeProvider, {
             foreignKey: 'id_type_provider',
-            as: 'typeProviders',
+            as: 'typeProvider',
         });
         Provider.hasMany(models.GradeProvider, {
             foreignKey: 'id_provider',
             sourceKey: 'id_provider',
             as: 'grades',
+        });
+
+        Provider.hasMany(models.Postulation, {
+            foreignKey: 'id_provider',
+            as: 'postulations',
+        });
+
+        Provider.hasMany(models.Availability, {
+            foreignKey: 'id_provider',
+            as: 'availabilities',
+        });
+
+        Provider.belongsTo(models.Profession, {
+            foreignKey: 'id_profession',
+            as: 'profession',
         });
     }
     return Provider;

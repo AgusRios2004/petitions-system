@@ -56,7 +56,7 @@ module.exports = (sequelize, DataTypes) => {
         Grade.hasMany(models.GradeProvider, {
             foreignKey: 'id_grade',
             sourceKey: 'id_grade',
-            as: 'gradeProvider',
+            as: 'gradeProviders',
         });
     };
 

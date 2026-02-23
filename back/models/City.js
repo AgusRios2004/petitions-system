@@ -17,14 +17,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(20),
             allowNull: false,
         },
-        id_user_create: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        id_user_update: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
         date_create: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
@@ -34,26 +26,17 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: DataTypes.NOW,
         },
     },{
-        tableName: 'city',
+        tableName: 'n_city',
         timestamps: false,
     });
     City.associate = (models) => {
         City.hasMany(models.Address, {
             foreignKey: 'id_city',
-            sourceKey: 'id_city',
-            as: 'address',
+            as: 'addresses',
         });
         City.belongsTo(models.Department, {
             foreignKey: 'id_department',
-            as: 'departments',
-        });
-        City.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
-            as: 'createdBy',
-        });
-        City.belongsTo(models.User, {
-            foreingKey: 'id_user_update',
-            as: 'updatedBy',
+            as: 'department',
         });
     }
     return City;

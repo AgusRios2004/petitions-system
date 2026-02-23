@@ -8,46 +8,18 @@ module.exports = (sequelize, DataTypes) => {
         name: {
             type: DataTypes.STRING(255),
             allowNull: false,
-        },
-        id_category: {
-            type: DataTypes.BIGINT(20),
-            allowNull: false,
-        },
-        id_user_create: {
-            type: DataTypes.BIGINT(20),
-            allowNull: false,
-        },
-        id_user_update: {
-            type: DataTypes.BIGINT(20),
-            allowNull: true,
-        },
-        date_create: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        date_update: {
-            type: DataTypes.DATE,
-            allowNull: true,
-        },
+        }
     }, {
-        tableName: 'profession',
+        tableName: 'n_profession',
         timestamps: false,
     });
 
     Profession.associate = (models) => {
-        Profession.belongsTo(models.Category, {
-            foreignKey: 'id_category',
-            as: 'categories',
+        Profession.hasMany(models.Provider, {
+            foreignKey: 'id_profession',
+            as: 'providers',
         });
-        Profession.belongsTo(models.User, {
-            foreignKey: 'id_user_create',
-            as: 'creator',
-        });
-        Profession.belongsTo(models.User, {
-            foreignKey: 'id_user_update',
-            as: 'updater',
-        });
-    };
+    }
 
     return Profession;
 };

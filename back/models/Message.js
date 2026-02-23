@@ -1,57 +1,48 @@
 module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message', {
         id_message: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.BIGINT,
             primaryKey: true,
             autoIncrement: true,
         },
-        id_petition: {
-            type: DataTypes.INTEGER(11),
+        conversation_id: {
+            type: DataTypes.BIGINT,
             allowNull: false,
         },
-        id_sender_user: {
-            type: DataTypes.INTEGER(11),
-            allowNull: false,
-        },
-        id_receiver_user: {
-            type: DataTypes.INTEGER(11),
+        sender_id: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         content: {
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        viewed: {
-            type: DataTypes.TINYINT(1),
-            allowNull: false,
-            defaultValue: 0,
-        },
-        date_create: {
+        created_at: {
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW,
         },
-        date_update: {
-            type: DataTypes.DATE,
-            allowNull: true,
+        read: {
+            type: DataTypes.BOOLEAN, // Sequelize maneja TINYINT(1) como BOOLEAN
+            allowNull: false,
+            defaultValue: false,
         },
     }, {
-        tableName: 'message',
+        tableName: 'n_message',
         timestamps: false,
     });
 
     Message.associate = (models) => {
-        Message.belongsTo(models.Petition, {
-            foreignKey: 'id_petition',
-            as: 'petition',
+        // Un mensaje pertenece a una Conversación
+        Message.belongsTo(models.Conversation, {
+            foreignKey: 'conversation_id',
+            as: 'conversation',
         });
+
+        // Un mensaje pertenece a un Usuario (el que lo envía)
         Message.belongsTo(models.User, {
-            foreignKey: 'id_sender_user',
+            foreignKey: 'sender_id',
             as: 'sender',
-        });
-        Message.belongsTo(models.User, {
-            foreignKey: 'id_receiver_user',
-            as: 'receiver',
         });
     };
 

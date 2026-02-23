@@ -1,11 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
     const Postulation = sequelize.define('Postulation', {
-        idpostulation: {
+        id_postulation: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
-        id_customer:{
+        id_provider: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        wimner: {
+        winner: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
@@ -24,10 +24,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         cost: {
             type: DataTypes.DECIMAL(10, 2),
-            allowNull: false,
-        },
-        current: {
-            type: DataTypes.STRING(255),
             allowNull: false,
         },
         id_state: {
@@ -48,33 +44,47 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_update: {
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
+            allowNull: true,
         },
+        // 🚨 CRÍTICO: NO DEBE HABER NINGÚN CAMPO id_postulation AQUÍ
+        // Si tienes un campo así, ELIMÍNALO
     }, {
         tableName: 'postulation',
-        timestamps: false, 
+        timestamps: false,
     });
+
     Postulation.associate = (models) => {
-        Postulation.belongsTo(models.Customer,{
-            foreignKey: 'id_customer', 
-            as: 'customers',
-        });
         Postulation.belongsTo(models.Petition, {
             foreignKey: 'id_petition',
-            as: 'petitions',
+            as: 'petition',
         });
+
         Postulation.belongsTo(models.User, {
-            foreignKey: 'id_user_creaate',
+            foreignKey: 'id_user_create',
             as: 'createdBy',
         });
+
         Postulation.belongsTo(models.User, {
             foreignKey: 'id_user_update',
             as: 'updatedBy',
         });
+
         Postulation.hasMany(models.Inventory, {
-            foreignKey: 'id_inventory',
+            foreignKey: 'id_postulation',
+            sourceKey: 'id_postulation',  // La PK real
             as: 'inventories',
         });
-    }
+
+        Postulation.belongsTo(models.State, {
+            foreignKey: 'id_state',
+            as: 'states',
+        });
+
+        Postulation.belongsTo(models.Provider, {
+            foreignKey: 'id_provider',
+            as: 'provider',
+        });
+    };
+
     return Postulation;
-}
+};
