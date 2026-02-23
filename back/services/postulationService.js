@@ -108,7 +108,12 @@ class PostulationService {
                 error.statusCode = 403;
                 throw error;
             }
-            const petition = await Petition.findByPk(id_petition, { transaction: t });
+            // MEJORA: Bloqueamos la petición al leerla. 
+            // Si el dueño la está cerrando/cancelando en este instante, esperamos a que termine para ver el estado real.
+            const petition = await Petition.findByPk(id_petition, { 
+                transaction: t,
+                lock: true 
+            });
             if (!petition) {
                 const error = new Error('Petición no encontrada');
                 error.statusCode = 404;
@@ -270,7 +275,10 @@ class PostulationService {
         let petition;
         let postulation; 
         try {
-            postulation = await Postulation.findByPk(id, {transaction: t});
+            postulation = await Postulation.findByPk(id, {
+                transaction: t,
+                lock: true // Bloquea la fila para evitar conflictos concurrentes
+            });
             if(!postulation) {
                 const error = new Error("Postulación no encontrada.")
                 error.statusCode = 404; 
@@ -287,7 +295,10 @@ class PostulationService {
                 date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
 
-            petition = await Petition.findByPk(postulation.id_petition, { transaction: t});
+            petition = await Petition.findByPk(postulation.id_petition, { 
+                transaction: t,
+                lock: true // Bloquea la petición para asegurar su estado
+            });
             if(!petition){
                 const e = new Error("Petición no encontrada");
                 e.statusCode = 404;
