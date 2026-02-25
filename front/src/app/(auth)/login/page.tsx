@@ -32,8 +32,9 @@ export default function LoginPage() {
         // Si falla, mostrar el mensaje de error
         setError(result.message || 'Error al iniciar sesión');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Error de red. Inténtalo de nuevo.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || 'Error de red. Inténtalo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -42,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-950">
       <div className="w-full max-w-md mx-4 bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-800">
-        
+
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             Iniciar sesión

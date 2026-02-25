@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { availabilityService } from '@/service/availabilityService';
 // Asumimos que tienes o crearás estos servicios para obtener las listas de días y horas
-import { weekService } from '@/service/weekService'; 
+import { weekService } from '@/service/weekService';
 import { hourService } from '@/service/hourService';
 import { Button } from '@/components/ui/Button';
+import { IWeek, IHour } from '@/types/common';
 import toast from 'react-hot-toast';
 
 // Interfaz para las props del componente
@@ -65,7 +66,7 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
   // 4. MUTATION: Para enviar la actualización
   const updateMutation = useMutation({
     // La función ahora espera el tipo de dato correcto (lo transformaremos en handleSubmit)
-    mutationFn: (updatedData: { id_week: number; id_from_hour: number; id_until_hour: number; }) => 
+    mutationFn: (updatedData: { id_week: number; id_from_hour: number; id_until_hour: number; }) =>
       availabilityService.updateAvailability(availabilityId, updatedData),
     onSuccess: () => {
       // Invalidamos las queries para refrescar los datos en toda la app
@@ -103,14 +104,14 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
 
   const isLoading = isLoadingAvailability || isLoadingWeeks || isLoadingHours;
 
-  
+
 
   // El JSX del formulario y el modal
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
         <h2 className="text-xl font-bold text-white mb-4">Editar Disponibilidad</h2>
-        
+
         {isLoading ? (
           <p>Cargando datos del formulario...</p>
         ) : (
@@ -125,7 +126,7 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
                   onChange={handleChange}
                   className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
                 >
-                  {weeks?.map((week: any) => (
+                  {weeks?.map((week: IWeek) => (
                     <option key={week.id_week} value={week.id_week}>{week.name}</option>
                   ))}
                 </select>
@@ -140,7 +141,7 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
                   onChange={handleChange}
                   className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
                 >
-                  {hours?.map((hour: any) => (
+                  {hours?.map((hour: IHour) => (
                     <option key={hour.id_hour} value={hour.id_hour}>{hour.name}</option>
                   ))}
                 </select>
@@ -155,7 +156,7 @@ const EditAvailabilityForm: React.FC<EditAvailabilityFormProps> = ({ availabilit
                   onChange={handleChange}
                   className="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2"
                 >
-                  {hours?.map((hour: any) => (
+                  {hours?.map((hour: IHour) => (
                     <option key={hour.id_hour} value={hour.id_hour}>{hour.name}</option>
                   ))}
                 </select>

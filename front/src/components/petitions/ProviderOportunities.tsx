@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from "react";
-import {useQuery} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getPetitions } from "@/service/petitionService";
 import { getProfilePublicProvider } from '@/service/providerService';
 import { stateService } from "@/service/stateService";
@@ -13,16 +13,16 @@ import { IState } from "@/types/common";
 import { useAuth } from '@/context/AuthContext';
 
 type PetitionForProvider = IPetitionCardData & {
-  id_type_provider: number;
-  typeProvider: {
-    name: string;
-  };
+    id_type_provider: number;
+    typeProvider: {
+        name: string;
+    };
 };
 
 const ProviderOportunities = () => {
     const { user } = useAuth();
     const providerId = user?.provider?.id_provider;
-    const providerTypeId = user?.provider?.id_type_provider;
+    const providerTypeId = user?.provider?.typeProvider?.id_type_provider;
 
     const [filterByMyType, setFilterByMyType] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -48,14 +48,14 @@ const ProviderOportunities = () => {
         label: pc.category.name
     })) || [];
 
-    const categoryOptions = rawCategories.length > 0 
-        ? [{ value: 0, label: 'Todas las categorías' }, ...rawCategories] 
+    const categoryOptions = rawCategories.length > 0
+        ? [{ value: 0, label: 'Todas las categorías' }, ...rawCategories]
         : [];
 
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['openPetitions', providerId, selectedCategoryId, pendingStateId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
-            const params: any = { 
+            const params: Record<string, unknown> = {
                 id_state: pendingStateId
             };
             // Añadimos el providerId a los parámetros si existe
@@ -76,8 +76,8 @@ const ProviderOportunities = () => {
         let availablePetitions = data || [];
 
         if (selectedCategoryId) {
-            availablePetitions = availablePetitions.filter((p: any) => 
-                p.petitionCategories?.some((pc: any) => pc.category.id_category === selectedCategoryId)
+            availablePetitions = availablePetitions.filter((p: IPetitionCardData) =>
+                p.petitionCategories?.some((pc: { category: { id_category: number } }) => pc.category.id_category === selectedCategoryId)
             );
         }
 
@@ -86,7 +86,7 @@ const ProviderOportunities = () => {
         }
         return availablePetitions;
     }, [data, filterByMyType, providerTypeId, selectedCategoryId]);
-        
+
     if (isLoading) {
         return <p className="text-white text-center">Cargando oportunidades...</p>;
     }
@@ -110,7 +110,7 @@ const ProviderOportunities = () => {
                         </Button>
                     )}
                 </div>
-                
+
                 {user?.provider && (
                     <div className="w-full sm:w-72">
                         <Select
@@ -124,24 +124,24 @@ const ProviderOportunities = () => {
                     </div>
                 )}
             </div>
-                {petitions.length === 0 ? (
-                    <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">
-                        <p className="text-gray-400 text-lg">
-                            {filterByMyType 
-                                ? 'No hay peticiones que coincidan con tu tipo de proveedor.' 
-                                : selectedCategoryId 
-                                    ? 'No hay peticiones para la categoría seleccionada.'
-                                    : 'No hay peticiones abiertas que coincidan con tus intereses.'}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-2">Intenta cambiar los filtros.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {petitions.map((petition: PetitionForProvider) => (
-                            <PetitionCard key={petition.id_petition} petition={petition} />
-                        ))}
-                    </div>
-                )}
+            {petitions.length === 0 ? (
+                <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <p className="text-gray-400 text-lg">
+                        {filterByMyType
+                            ? 'No hay peticiones que coincidan con tu tipo de proveedor.'
+                            : selectedCategoryId
+                                ? 'No hay peticiones para la categoría seleccionada.'
+                                : 'No hay peticiones abiertas que coincidan con tus intereses.'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">Intenta cambiar los filtros.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {petitions.map((petition: PetitionForProvider) => (
+                        <PetitionCard key={petition.id_petition} petition={petition} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -28,7 +28,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     queryKey: ['customerProfile', customerId],
     queryFn: ({ queryKey }) => {
       const [, id] = queryKey;
-      const customerIdFromKey = id as number; 
+      const customerIdFromKey = id as number;
 
       if (typeof customerIdFromKey !== 'number') {
         return Promise.reject(new Error('Customer ID no válido.'));
@@ -82,8 +82,8 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
   ];
 
   const renderTabContent = () => {
-    if (activeTab === 'peticiones'){
-      return customerId ? <CustomerPetitions customerId={customerId}/> : null;
+    if (activeTab === 'peticiones') {
+      return customerId ? <CustomerPetitions customerId={customerId} /> : null;
     }
 
     if (activeTab === 'ofertas') {
@@ -106,23 +106,23 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
         return (
           <div className="space-y-8">
             <CustomerHistory customer={detailedCustomer} />
-            
+
             <div className="border-t border-gray-700 pt-6">
               <h3 className="text-xl font-bold text-white mb-4">Calificaciones Realizadas</h3>
               {isLoadingGrades ? (
                 <p className="text-gray-400">Cargando historial de calificaciones...</p>
               ) : givenGrades && givenGrades.length > 0 ? (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                  {givenGrades.map((grade: any) => (
+                  {givenGrades.map((grade: IGrade) => (
                     <div key={grade.id_grade} className="bg-gray-700/30 p-4 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-colors">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="text-cyan-400 font-semibold text-sm uppercase tracking-wide">
-                            A: {grade.provider 
-                                  ? `${grade.provider.user.name} ${grade.provider.user.lastname}` 
-                                  : grade.customer 
-                                    ? `${grade.customer.user.name} ${grade.customer.user.lastname}`
-                                    : 'Usuario'}
+                            A: {grade.provider
+                              ? `${grade.provider.user.name} ${grade.provider.user.lastname}`
+                              : grade.customer
+                                ? `${grade.customer.user.name} ${grade.customer.user.lastname}`
+                                : 'Usuario'}
                           </p>
                           <p className="text-xs text-gray-500">{new Date(grade.date_create).toLocaleDateString()}</p>
                         </div>
@@ -130,7 +130,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
                           ★ {grade.grade_number}
                         </div>
                       </div>
-                      <p className="text-gray-300 text-sm italic">"{grade.comment}"</p>
+                      <p className="text-gray-300 text-sm italic">&quot;{grade.comment}&quot;</p>
                     </div>
                   ))}
                 </div>
@@ -146,7 +146,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
 
   return (
     <div>
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{ className: 'bg-gray-700 text-white' }}
       />
@@ -156,11 +156,10 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === tab.id
                   ? 'border-blue-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
+                }`}>
               {tab.label}
             </button>
           ))}

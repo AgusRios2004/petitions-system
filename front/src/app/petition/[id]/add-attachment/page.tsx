@@ -8,6 +8,12 @@ import { deleteAttachment } from '@/service/attachmentService';
 import { getPetitionById } from '@/service/petitionService';
 import toast from 'react-hot-toast';
 
+interface IAttachmentItem {
+  id_attachment: number;
+  path: string;
+  name: string;
+}
+
 export default function ManageAttachmentsPage() {
   const params = useParams();
   const router = useRouter();
@@ -19,7 +25,7 @@ export default function ManageAttachmentsPage() {
     queryFn: () => getPetitionById(petitionId),
     enabled: !!petitionId,
   });
-  
+
   const deleteMutation = useMutation({
     mutationFn: (attachmentId: number) => deleteAttachment(attachmentId),
     onSuccess: () => {
@@ -41,10 +47,10 @@ export default function ManageAttachmentsPage() {
   const handleFinalize = () => {
     router.push(`/petition/${petitionId}`); // Navegar de vuelta a los detalles
   };
-  
+
   const handleDelete = (attachmentId: number) => {
     // Corregido: window.confirm es una función
-    if(window.confirm('¿Estás seguro de que deseas eliminar este adjunto?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este adjunto?')) {
       deleteMutation.mutate(attachmentId);
     }
   }
@@ -67,14 +73,14 @@ export default function ManageAttachmentsPage() {
           <h2 className="text-xl font-semibold mb-4 text-white">Adjuntos Actuales</h2>
           {attachments.length > 0 ? (
             <ul className="space-y-3">
-              {attachments.map((attachment: any) => (
+              {attachments.map((attachment: IAttachmentItem) => (
                 <li key={attachment.id_attachment} className="flex items-center justify-between bg-gray-700 p-3 rounded-md">
                   <a href={`http://localhost:3000/${attachment.path}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate pr-4">
                     {attachment.name}
                   </a>
-                  <Button 
-                    onClick={() => handleDelete(attachment.id_attachment)} 
-                    variant="secondary" 
+                  <Button
+                    onClick={() => handleDelete(attachment.id_attachment)}
+                    variant="secondary"
                     size="sm"
                     disabled={deleteMutation.isPending}
                   >
@@ -90,7 +96,7 @@ export default function ManageAttachmentsPage() {
 
         {/* --- Sección para Añadir Nuevos Adjuntos --- */}
         <div className="bg-gray-800 border border-white/10 rounded-lg p-6">
-           <h2 className="text-xl font-semibold mb-4 text-white">Añadir Nuevo Adjunto</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white">Añadir Nuevo Adjunto</h2>
           <AttachmentUploader petitionId={petitionId} onUploadSuccess={handleUploadSuccess} />
         </div>
 

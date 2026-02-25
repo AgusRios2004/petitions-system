@@ -30,7 +30,7 @@ export default function PostulationDetailPage() {
     confirmButtonVariant: 'primary' | 'destructive';
   } | null>(null);
 
-  const { data: postulationData, isLoading, error } = useQuery<{ data: IPostulation }>({ 
+  const { data: postulationData, isLoading, error } = useQuery<{ data: IPostulation }>({
     queryKey: ['postulation', postulationId],
     queryFn: () => postulationService.getPostulationById(postulationId),
     enabled: !!postulationId,
@@ -46,8 +46,9 @@ export default function PostulationDetailPage() {
 
       router.push('/profile');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al aceptar la postulación');
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || 'Error al aceptar la postulación');
     },
   });
 
@@ -59,8 +60,9 @@ export default function PostulationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['postulations'] });
       router.push('/profile');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al rechazar la postulación');
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || 'Error al rechazar la postulación');
     },
   });
 
@@ -73,8 +75,9 @@ export default function PostulationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['openPetitions'] });
       router.push('/profile');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al retirar la postulación');
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || 'Error al retirar la postulación');
     },
   });
 
@@ -130,128 +133,128 @@ export default function PostulationDetailPage() {
   const isProviderPostulant = user?.provider?.id_provider === postulation.id_provider;
 
   console.log('Postulation Data:', postulation);
-  
+
   return (
     <>
-    <div className="container mx-auto p-6">
-      <div className="max-w-3xl mx-auto bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
-        
-        <h1 className="text-3xl font-bold mb-6 text-white">Detalles de la Postulación</h1>
+      <div className="container mx-auto p-6">
+        <div className="max-w-3xl mx-auto bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
 
-        <div className="border-b border-gray-700 pb-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-200 mb-2">Petición Original</h2>
-          <p className="text-gray-300 mb-2 line-clamp-3">{postulation.petition.description}</p>
-          <Link href={`/petition/${postulation.petition.id_petition}`} className="text-sm text-blue-400 hover:underline">
-            Ver petición completa
-          </Link>
-        </div>
+          <h1 className="text-3xl font-bold mb-6 text-white">Detalles de la Postulación</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <p className="text-gray-400 text-sm">Estado</p>
-            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
-              {postulation.states.state}
-            </span>
+          <div className="border-b border-gray-700 pb-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-200 mb-2">Petición Original</h2>
+            <p className="text-gray-300 mb-2 line-clamp-3">{postulation.petition.description}</p>
+            <Link href={`/petition/${postulation.petition.id_petition}`} className="text-sm text-blue-400 hover:underline">
+              Ver petición completa
+            </Link>
           </div>
-          <div>
-            <p className="text-gray-400 text-sm">Costo Ofertado</p>
-            <p className="text-2xl font-bold text-white">${postulation.cost}</p>
-          </div>
-        </div>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-200 mb-4">Propuesta del Proveedor</h2>
-          <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
-            <div className="flex items-center mb-2">
-              <p className="font-semibold text-gray-200">{postulation.createdBy.name} {postulation.createdBy.lastname}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <p className="text-gray-400 text-sm">Estado</p>
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
+                {postulation.states.state}
+              </span>
             </div>
-            <p className="text-gray-300 whitespace-pre-wrap">{postulation.proposal}</p>
+            <div>
+              <p className="text-gray-400 text-sm">Costo Ofertado</p>
+              <p className="text-2xl font-bold text-white">${postulation.cost}</p>
+            </div>
           </div>
-        </div>
 
-        {postulation.inventories && postulation.inventories.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-200 mb-2">Artículos Incluidos</h3>
-            <ul className="list-disc list-inside space-y-1 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
-              {postulation.inventories.map((item: any) => (
-                <li key={item.id_inventory} className="text-gray-300">
-                  <span className="font-semibold">{item.article.name}</span> - Cantidad: {item.quantity} - Costo: ${item.cost}
-                </li>
-              ))}
-            </ul>
+            <h2 className="text-xl font-semibold text-gray-200 mb-4">Propuesta del Proveedor</h2>
+            <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+              <div className="flex items-center mb-2">
+                <p className="font-semibold text-gray-200">{postulation.createdBy.name} {postulation.createdBy.lastname}</p>
+              </div>
+              <p className="text-gray-300 whitespace-pre-wrap">{postulation.proposal}</p>
+            </div>
           </div>
-        )}
 
-        <div className="text-xs text-gray-400 space-y-1 mb-8">
-          <p>Postulación creada el: {new Date(postulation.date_create).toLocaleString()}</p>
-        </div>
-
-        {/* --- SECCIÓN DE ACCIONES --- */}
-        <div className="mt-8 pt-6 border-t border-gray-700 space-y-6">
-          {/* --- ACCIONES DEL PROVEEDOR --- */}
-          {/* Las acciones de editar/retirar solo están disponibles si el proveedor es el postulante y el estado es 'Pendiente' (ID 3) */}
-          {isProviderPostulant && postulation.states.id_state === 3 && (
-            <div>
-              <h2 className="text-xl font-semibold text-white mb-4">Tus Acciones</h2>
-              <div className="flex gap-4">
-                <Link href={`/postulation/edit/${postulation.id_postulation}`} className="flex-1">
-                  <Button variant="primary" className="w-full">Editar Postulación</Button>
-                </Link>
-                <Button
-                  onClick={handleWithdraw}
-                  variant="destructive"
-                  disabled={withdrawMutation.isPending}
-                  className="flex-1"
-                >
-                  {withdrawMutation.isPending ? 'Retirando...' : 'Retirar Postulación'}
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {/* --- ACCIONES DEL CLIENTE --- */}
-          {isOwner && postulation.states.id_state === 3 && (
-            <div>
-              <h2 className="text-xl font-semibold text-white mb-4">Acciones</h2>
-              
-              {/* Botón de Perfil de Proveedor */}
-              <div className="mb-4">
-                <Link href={`/provider/${postulation.id_provider}`}>
-                  <Button variant="ghost">Ver Perfil del Proveedor</Button>
-                </Link>
-              </div>
-
-              {/* Contenedor Flex para que los botones se dividan el espacio 50/50 */}
-              <div className="flex gap-4">
-                <Button onClick={handleAccept} variant="primary" className="bg-green-600 hover:bg-green-700 flex-1" disabled={acceptMutation.isPending}>
-                  {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
-                </Button>
-                <Button onClick={handleDecline} variant="destructive" className="flex-1" disabled={declineMutation.isPending}>
-                  {declineMutation.isPending ? 'Rechazando...' : 'Rechazar'}
-                </Button>
-              </div>
+          {postulation.inventories && postulation.inventories.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-200 mb-2">Artículos Incluidos</h3>
+              <ul className="list-disc list-inside space-y-1 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                {postulation.inventories.map((item) => (
+                  <li key={item.id_inventory} className="text-gray-300">
+                    <span className="font-semibold">{item.article?.name}</span> - Cantidad: {item.quantity} - Costo: ${item.cost}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
-          {/* --- NAVEGACIÓN Y ACCIONES GENERALES --- */}
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <Button onClick={() => router.back()} variant="secondary">Volver</Button>
+          <div className="text-xs text-gray-400 space-y-1 mb-8">
+            <p>Postulación creada el: {new Date(postulation.date_create).toLocaleString()}</p>
+          </div>
+
+          {/* --- SECCIÓN DE ACCIONES --- */}
+          <div className="mt-8 pt-6 border-t border-gray-700 space-y-6">
+            {/* --- ACCIONES DEL PROVEEDOR --- */}
+            {/* Las acciones de editar/retirar solo están disponibles si el proveedor es el postulante y el estado es 'Pendiente' (ID 3) */}
+            {isProviderPostulant && postulation.states.id_state === 3 && (
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-4">Tus Acciones</h2>
+                <div className="flex gap-4">
+                  <Link href={`/postulation/edit/${postulation.id_postulation}`} className="flex-1">
+                    <Button variant="primary" className="w-full">Editar Postulación</Button>
+                  </Link>
+                  <Button
+                    onClick={handleWithdraw}
+                    variant="destructive"
+                    disabled={withdrawMutation.isPending}
+                    className="flex-1"
+                  >
+                    {withdrawMutation.isPending ? 'Retirando...' : 'Retirar Postulación'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* --- ACCIONES DEL CLIENTE --- */}
+            {isOwner && postulation.states.id_state === 3 && (
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-4">Acciones</h2>
+
+                {/* Botón de Perfil de Proveedor */}
+                <div className="mb-4">
+                  <Link href={`/provider/${postulation.id_provider}`}>
+                    <Button variant="ghost">Ver Perfil del Proveedor</Button>
+                  </Link>
+                </div>
+
+                {/* Contenedor Flex para que los botones se dividan el espacio 50/50 */}
+                <div className="flex gap-4">
+                  <Button onClick={handleAccept} variant="primary" className="bg-green-600 hover:bg-green-700 flex-1" disabled={acceptMutation.isPending}>
+                    {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
+                  </Button>
+                  <Button onClick={handleDecline} variant="destructive" className="flex-1" disabled={declineMutation.isPending}>
+                    {declineMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* --- NAVEGACIÓN Y ACCIONES GENERALES --- */}
+            <div className="flex flex-wrap justify-between items-center gap-4">
+              <Button onClick={() => router.back()} variant="secondary">Volver</Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    {confirmation && (
-      <ConfirmationModal
-        isOpen={confirmation.isOpen}
-        onClose={() => setConfirmation(null)}
-        onConfirm={confirmation.onConfirm}
-        title={confirmation.title}
-        message={confirmation.message}
-        confirmText={confirmation.confirmText}
-        isConfirming={acceptMutation.isPending || declineMutation.isPending || withdrawMutation.isPending}
-        confirmButtonVariant={confirmation.confirmButtonVariant}
-      />
-    )}
+      {confirmation && (
+        <ConfirmationModal
+          isOpen={confirmation.isOpen}
+          onClose={() => setConfirmation(null)}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          isConfirming={acceptMutation.isPending || declineMutation.isPending || withdrawMutation.isPending}
+          confirmButtonVariant={confirmation.confirmButtonVariant}
+        />
+      )}
     </>
   );
 }

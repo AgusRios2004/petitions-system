@@ -253,6 +253,7 @@ export interface IPetitionCardData {
     average_rating: number | null;
   };
   postulations: Pick<IPostulation, 'id_provider' | 'states' | 'provider'>[];
+  petitionCategories?: { category: ICategory }[];
 }
 
 export interface IProfile extends IUser {
@@ -265,12 +266,13 @@ export interface UserProfile {
   name: string;
   lastname: string;
   email: string;
-  address: {
+  address?: {
     address: IAddress;
   };
   customer: ICustomer | null;
   provider: {
     id_provider: number;
+    id_type_provider?: number;
   } | null;
   profile_picture_url?: string | null;
   role: 'customer' | 'provider' | 'admin' | 'unknown';
@@ -350,6 +352,8 @@ export interface IGrade {
   comment: string;
   grade_number: number;
   date_create: string;
+  provider?: IProvider;
+  customer?: ICustomer;
 };
 
 export interface Notification {

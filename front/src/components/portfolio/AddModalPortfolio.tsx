@@ -32,7 +32,7 @@ export default function AddPortfolioModal({ onClose, providerId }: AddPortfolioM
       toast.success('Portfolio agregado con éxito!');
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error(error);
       setError('Error al subir el portfolio. Intentelo nuevamente');
     },

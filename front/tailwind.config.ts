@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import plugin from 'tailwindcss/plugin'
 
 const config: Config = {
   content: [
@@ -16,9 +17,9 @@ const config: Config = {
     },
   },
   plugins: [
-    function ({ addVariant }) {
+    plugin(function ({ addVariant }) {
       addVariant('not-placeholder-shown', '&:not(:placeholder-shown)')
-    },
+    }),
   ],
 }
 export default config

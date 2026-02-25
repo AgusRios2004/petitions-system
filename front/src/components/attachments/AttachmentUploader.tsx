@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 
 interface AttachmentUploaderProps {
   petitionId: number;
-  onUploadSuccess?: (result: any) => void; // Callback opcional para notificar al padre
+  onUploadSuccess?: (result: unknown) => void; // Callback opcional para notificar al padre
 }
 
 const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({ petitionId, onUploadSuccess }) => {
@@ -61,11 +61,12 @@ const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({ petitionId, onU
       setName('');
       // Resetear el input de archivo
       const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-      if(fileInput) fileInput.value = '';
+      if (fileInput) fileInput.value = '';
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al subir el archivo:', err);
-      const errorMessage = err.response?.data?.message || 'Hubo un problema al subir el archivo.';
+      const e = err as { response?: { data?: { message?: string } } };
+      const errorMessage = e.response?.data?.message || 'Hubo un problema al subir el archivo.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -83,7 +84,7 @@ const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({ petitionId, onU
         disabled={isUploading}
         className="w-full px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-      
+
       <div>
         <label htmlFor="file-upload" className="cursor-pointer bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg inline-block">
           Seleccionar Archivo

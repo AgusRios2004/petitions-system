@@ -6,6 +6,8 @@ import Modal from '@/components/ui/Modal';
 import StarRating from '@/components/ui/StarRating';
 import { gradeService } from '@/service/gradeService';
 import toast from 'react-hot-toast';
+import { AxiosError } from 'axios';
+import { IGradeForm } from '@/types/common';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -28,9 +30,10 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       queryClient.invalidateQueries({ queryKey: ['postulations'] });
       onClose();
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       // Captura el mensaje de error específico del backend.
-      const errorMessage = (error as any).response?.data?.message || 'Ocurrió un error al enviar la calificación.';
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Ocurrió un error al enviar la calificación.';
       toast.error(errorMessage);
     },
   });
@@ -47,16 +50,16 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       colorId = 1;
     } else if (rating === 2) {
       colorId = 2;
-    } else if (rating === 3){
+    } else if (rating === 3) {
       colorId = 3;
-    } else if (rating === 4){
+    } else if (rating === 4) {
       colorId = 31;
     } else {
       colorId = 28;
     }
 
     // Construimos el payload dinámicamente según a quién se califica.
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       grade_number: rating,
       id_color: colorId,
       comment,
@@ -70,7 +73,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       payload.id_customer = customerId;
     }
 
-    mutate(payload);
+    mutate(payload as unknown as IGradeForm);
   };
 
   return (

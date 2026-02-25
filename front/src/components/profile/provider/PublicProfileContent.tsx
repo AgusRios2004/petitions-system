@@ -43,12 +43,12 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
   });
 
   const deletePortfolioMutation = useMutation({
-    mutationFn: ({ id_portfolio, id_provider }: { id_portfolio: number; id_provider: number }) => 
+    mutationFn: ({ id_portfolio, id_provider }: { id_portfolio: number; id_provider: number }) =>
       portfolioService.deletePortfolio(id_portfolio, id_provider),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error al eliminar el portafolio:', error);
     },
   });
@@ -202,23 +202,23 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           </div>
         )}
 
-      {provider.availabilities && provider.availabilities.length > 0 && (
-        <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
-          <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
-            <FiClock className="mr-3 text-blue-400" size={24} />
-            Disponibildades
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAvailabilities?.map((availability: IAvailability) => (
-              <AvailabilityCard
-                key={availability.id_availability}
-                availability={availability}
-                showControls={false}
-              />
-            ))}
+        {provider.availabilities && provider.availabilities.length > 0 && (
+          <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
+              <FiClock className="mr-3 text-blue-400" size={24} />
+              Disponibildades
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredAvailabilities?.map((availability: IAvailability) => (
+                <AvailabilityCard
+                  key={availability.id_availability}
+                  availability={availability}
+                  showControls={false}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
           <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
@@ -239,7 +239,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
             )
           )}
         </div>
-        
+
         {provider.portfolios && provider.portfolios.length > 0 && (
           <div className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 mb-8 transition hover:-translate-y-1 hover:-shadow-2xl hover:shadow-black/50">
             <h2 className="text-2xl font-semibold mb-4 text-cyan-400 border-b border-cyan-600/40 pb-2 flex items-center">
@@ -247,9 +247,9 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
               Portafolio
             </h2>
             {provider.portfolios.map((item) => (
-              <PortfolioCard 
-                key={item.id_portfolio} 
-                item={item} 
+              <PortfolioCard
+                key={item.id_portfolio}
+                item={item}
                 isOwner={isOwner}
                 onDelete={handleDeletePortfolio}
               />
@@ -273,28 +273,28 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           </div>
         )}
         <div className="space-y-4">
-      {provider.grades && provider.grades.length > 0 && provider.grades.map((grade, index) => (
-        <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-600">
-          <div className="flex justify-between mb-2">
-            <div className="flex items-center gap-1 text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <FiStar key={i} size={14} fill={i < grade.grades.grade_number ? "currentColor" : "none"} />
-              ))}
+          {provider.grades && provider.grades.length > 0 && provider.grades.map((grade, index) => (
+            <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-600">
+              <div className="flex justify-between mb-2">
+                <div className="flex items-center gap-1 text-yellow-400">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar key={i} size={14} fill={i < grade.grades.grade_number ? "currentColor" : "none"} />
+                  ))}
+                </div>
+                <span className="text-xs text-gray-500">
+                  {/* Si tienes fecha en el grade, úsala aquí: new Date(grade.createdAt).toLocaleDateString() */}
+                  Reseña verificada
+                </span>
+              </div>
+
+              {/* EL COMENTARIO (Lo más importante) */}
+              <p className="text-gray-200 italic">
+                &quot;{grade.coment || 'Sin comentario escrito.'}&quot;
+              </p>
+
             </div>
-            <span className="text-xs text-gray-500">
-              {/* Si tienes fecha en el grade, úsala aquí: new Date(grade.createdAt).toLocaleDateString() */}
-              Reseña verificada
-            </span>
-          </div>
-          
-          {/* EL COMENTARIO (Lo más importante) */}
-          <p className="text-gray-200 italic">
-            "{grade.coment || 'Sin comentario escrito.'}"
-          </p>
-          
+          ))}
         </div>
-      ))}
-    </div>
 
         <div className="mt-8">
           <Button

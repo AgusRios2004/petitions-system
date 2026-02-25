@@ -90,11 +90,12 @@ export default function CreatePostulationPage() {
       }
       router.push(`/profile?tab=oportunidades`); // Redirigir a la página de oportunidades del perfil
     },
-    onError: (error: any) => {
-      if (error.response && error.response.status === 409) {
+    onError: (error: unknown) => {
+      const err = error as { response?: { status?: number }, message?: string };
+      if (err.response && err.response.status === 409) {
         toast.error('No se puede postular 2 veces a la misma petición.');
       } else {
-        toast.error(error.message || 'Error al crear la postulación');
+        toast.error(err.message || 'Error al crear la postulación');
       }
     },
   });
@@ -176,7 +177,7 @@ export default function CreatePostulationPage() {
 
             {fields.map((item, index) => (
               <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-gray-600 rounded-lg bg-gray-700/50">
-                
+
                 <div className="flex-1">
                   <Controller
                     control={control}

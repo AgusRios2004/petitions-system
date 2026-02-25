@@ -106,7 +106,7 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
       setValue('id_type_provider', p.typeProvider?.id_type_provider || 0);
       setValue('id_profession', p.profession?.id_profession || 0);
       setValue('categoryIds', p.providerCategories?.map(pc => pc.category.id_category) || []);
-      
+
       setTimeout(() => {
         isInitialLoad.current = false;
       }, 500);
@@ -201,8 +201,6 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
 
   const onSubmit = (data: CompleteProviderProfileFormData) => updateProfile(data);
 
-  const mapToOptions = (items: any[] = [], labelKey: string, valueKey: string): SelectOption[] =>
-    items.map(item => ({ label: item[labelKey], value: item[valueKey] }));
 
   if (isLoadingProvider) return <p className="text-white">Cargando perfil...</p>;
   if (isError) return <p className="text-red-500">Error al cargar el perfil.</p>;
@@ -224,27 +222,27 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
       </div>
 
       {/* Address Info */}
-            <div className="pb-6">
-              <h4 className="text-2xl font-bold text-white mb-6">Dirección</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Controller name="id_country" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="País" options={countries?.map(c => ({ value: c.id_country, label: c.name })) || []} disabled={isLoadingCountries} placeholder="Seleccione un país..." error={errors.id_country?.message} /> )} />
-                <Controller name="id_province" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Provincia" options={provinces?.map(p => ({ value: p.id_province, label: p.name })) || []} disabled={!watchedCountryId || isLoadingProvinces} placeholder="Seleccione una provincia..." error={errors.id_province?.message} /> )} />
-                <Controller name="id_department" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Departamento" options={departments?.map(d => ({ value: d.id_department, label: d.name })) || []} disabled={!watchedProvinceId || isLoadingDepartments} placeholder="Seleccione un departamento..." error={errors.id_department?.message} /> )} />
-                <Controller name="id_city" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Ciudad" options={cities?.map(c => ({ value: c.id_city, label: c.name })) || []} disabled={!watchedDepartmentId || isLoadingCities} placeholder="Seleccione una ciudad..." error={errors.id_city?.message} /> )} />
-                <Controller name="street" control={control} render={({ field }) => <Input {...field} label="Calle" error={errors.street?.message} />} />
-                <Controller name="number" control={control} render={({ field }) => <Input {...field} label="Número" error={errors.number?.message} />} />
-                <Controller name="postal_code" control={control} render={({ field }) => <Input {...field} label="Código Postal" error={errors.postal_code?.message} />} />
-                <Controller name="floor" control={control} render={({ field }) => <Input {...field} label="Piso (Opcional)" error={errors.floor?.message} />} />
-                <Controller name="apartment" control={control} render={({ field }) => <Input {...field} label="Depto (Opcional)" error={errors.apartment?.message} />} />
-              </div>
-            </div>
+      <div className="pb-6">
+        <h4 className="text-2xl font-bold text-white mb-6">Dirección</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Controller name="id_country" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="País" options={countries?.map(c => ({ value: c.id_country, label: c.name })) || []} disabled={isLoadingCountries} placeholder="Seleccione un país..." error={errors.id_country?.message} />)} />
+          <Controller name="id_province" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Provincia" options={provinces?.map(p => ({ value: p.id_province, label: p.name })) || []} disabled={!watchedCountryId || isLoadingProvinces} placeholder="Seleccione una provincia..." error={errors.id_province?.message} />)} />
+          <Controller name="id_department" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Departamento" options={departments?.map(d => ({ value: d.id_department, label: d.name })) || []} disabled={!watchedProvinceId || isLoadingDepartments} placeholder="Seleccione un departamento..." error={errors.id_department?.message} />)} />
+          <Controller name="id_city" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Ciudad" options={cities?.map(c => ({ value: c.id_city, label: c.name })) || []} disabled={!watchedDepartmentId || isLoadingCities} placeholder="Seleccione una ciudad..." error={errors.id_city?.message} />)} />
+          <Controller name="street" control={control} render={({ field }) => <Input {...field} label="Calle" error={errors.street?.message} />} />
+          <Controller name="number" control={control} render={({ field }) => <Input {...field} label="Número" error={errors.number?.message} />} />
+          <Controller name="postal_code" control={control} render={({ field }) => <Input {...field} label="Código Postal" error={errors.postal_code?.message} />} />
+          <Controller name="floor" control={control} render={({ field }) => <Input {...field} label="Piso (Opcional)" error={errors.floor?.message} />} />
+          <Controller name="apartment" control={control} render={({ field }) => <Input {...field} label="Depto (Opcional)" error={errors.apartment?.message} />} />
+        </div>
+      </div>
 
       {/* Work Info */}
       <div>
         <h3 className="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-2">Información Laboral</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Controller name="id_type_provider" control={control} render={({ field }) => (<Select label="Tipo de Proveedor" options={mapToOptions(providerTypes, 'name', 'id_type_provider')} onChange={field.onChange} value={field.value} />)} />
-          <Controller name="id_profession" control={control} render={({ field }) => (<Select label="Profesión" options={mapToOptions(professions, 'name', 'id_profession')} onChange={field.onChange} value={field.value} />)} />
+          <Controller name="id_type_provider" control={control} render={({ field }) => (<Select label="Tipo de Proveedor" options={providerTypes.map(pt => ({ label: pt.name, value: pt.id_type_provider }))} onChange={field.onChange} value={field.value} />)} />
+          <Controller name="id_profession" control={control} render={({ field }) => (<Select label="Profesión" options={professions.map(p => ({ label: p.name, value: p.id_profession }))} onChange={field.onChange} value={field.value} />)} />
         </div>
       </div>
 
@@ -252,13 +250,13 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
       <div className="mt-6">
         <h3 className="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-2">Categorías de Trabajo</h3>
         <div className="mb-4">
-           <Select
+          <Select
             label="Agregar Categoría"
             options={allCategories.map(c => ({ label: c.name, value: c.id_category }))}
             onChange={handleAddCategory}
             value={null}
             placeholder="Seleccione una categoría para agregar..."
-           />
+          />
         </div>
         <div className="flex flex-wrap gap-2">
           {selectedCategoryIds.map(id => {

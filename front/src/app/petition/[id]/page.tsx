@@ -21,7 +21,7 @@ export default function PetitionPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: Record<string, unknown>) => {
       return updatePetition(id, data);
     },
     onSuccess: () => {

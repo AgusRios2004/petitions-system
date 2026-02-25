@@ -30,7 +30,10 @@ export const ProviderCategoriesManager: React.FC<ProviderCategoriesManagerProps>
       setCategoryToAdd(0);
       queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
     },
-    onError: (error: any) => toast.error(`Error: ${error.message}`),
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(`Error: ${err.message}`);
+    },
   });
 
   const deleteCategoryMutation = useMutation({
@@ -39,7 +42,10 @@ export const ProviderCategoriesManager: React.FC<ProviderCategoriesManagerProps>
       toast.success('Categoría eliminada');
       queryClient.invalidateQueries({ queryKey: ['providerPublicProfile', providerId] });
     },
-    onError: (error: any) => toast.error(`Error: ${error.message}`),
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(`Error: ${err.message}`);
+    },
   });
 
   const handleAddCategory = () => {
@@ -59,14 +65,14 @@ export const ProviderCategoriesManager: React.FC<ProviderCategoriesManagerProps>
           currentCategories.map((pc) => (
             <div key={pc.id} className="flex items-center bg-sky-600 text-white px-4 py-2 rounded-full text-md font-medium">
               <span>{pc.category.name}</span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
                   if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
                     deleteCategoryMutation.mutate(pc.id);
                   }
-                }} 
-                className="ml-3 font-bold text-xl text-white hover:text-gray-200 cursor-pointer" 
+                }}
+                className="ml-3 font-bold text-xl text-white hover:text-gray-200 cursor-pointer"
                 disabled={deleteCategoryMutation.isPending}
               >
                 &times;
@@ -77,25 +83,25 @@ export const ProviderCategoriesManager: React.FC<ProviderCategoriesManagerProps>
           <p className="text-gray-400">Este proveedor aún no ha añadido ninguna categoría.</p>
         )}
       </div>
-      
+
       <div className="pt-6 border-t border-gray-700">
         <h4 className="text-xl font-semibold text-white mb-4">Añadir Nueva Categoría</h4>
         <div className="flex items-end gap-4">
           <div className="w-3/4">
-            <Select 
-              label="Seleccione una categoría" 
+            <Select
+              label="Seleccione una categoría"
               options={availableCategoriesToAdd?.map(c => ({ value: c.id_category, label: c.name })) || []}
               value={categoryToAdd || 0}
               onChange={(value) => setCategoryToAdd(Number(value) || 0)}
               disabled={isLoadingAllCategories || addCategoryMutation.isPending}
-              placeholder="Ver categorías disponibles..." 
+              placeholder="Ver categorías disponibles..."
             />
           </div>
           <div className="w-1/4">
-            <Button 
-              type="button" 
-              onClick={handleAddCategory} 
-              disabled={!categoryToAdd || addCategoryMutation.isPending} 
+            <Button
+              type="button"
+              onClick={handleAddCategory}
+              disabled={!categoryToAdd || addCategoryMutation.isPending}
               variant="secondary"
               fullWidth={true}
               size="md"
