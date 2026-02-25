@@ -5,8 +5,9 @@ export async function getTypeProviders(): Promise<ApiResponse<TypeProvider[]>> {
     try {
         const response = await apiClient.get('/type-providers');
         return { data: response.data.data, error: null };
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message || "An unknown error occurred";
+    } catch (error: unknown) {
+        const err = error as any;
+        const errorMessage = err.response?.data?.message || err.message || "An unknown error occurred";
         return { data: null, error: errorMessage };
     }
 }
