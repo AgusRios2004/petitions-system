@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal';
 import StarRating from '@/components/ui/StarRating';
 import { gradeService } from '@/service/gradeService';
 import toast from 'react-hot-toast';
+import { AxiosError } from 'axios';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -30,7 +31,8 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
     },
     onError: (error) => {
       // Captura el mensaje de error específico del backend.
-      const errorMessage = (error as any).response?.data?.message || 'Ocurrió un error al enviar la calificación.';
+      const axiosError = error as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Ocurrió un error al enviar la calificación.';
       toast.error(errorMessage);
     },
   });
@@ -56,7 +58,13 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
     }
 
     // Construimos el payload dinámicamente según a quién se califica.
-    const payload: any = {
+    const payload: {
+      grade_number: number;
+      id_color: number;
+      comment: string;
+      id_provider?: number;
+      id_customer?: number;
+    } = {
       grade_number: rating,
       id_color: colorId,
       comment,

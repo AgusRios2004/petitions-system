@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { ICustomer, IProvider } from '@/types/common';
 
 // --- TIPOS ---
 interface User {
@@ -9,8 +10,8 @@ interface User {
   lastname: string;
   email: string;
   profile_image?: string | null;
-  customer?: any | null;
-  provider?: any | null;
+  customer?: ICustomer | null;
+  provider?: IProvider | null;
   role: 'provider' | 'customer' | 'admin' | 'unknown';
   is_staff?: boolean | number;
 }
@@ -19,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (payload: any) => Promise<{ success: boolean; message?: string }>;
+  register: (payload: Record<string, unknown>) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateUser: (updatedData: Partial<User>) => void;
 }
@@ -28,8 +29,10 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 // --- API ---
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const authApi = axios.create({ baseURL: `${API_BASE}/api/auth` });
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+const authApi = axios.create({ baseURL: `${API_BASE}/auth` });
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -99,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.provider) {
         newUser.provider = { ...prevUser.provider, ...updatedData.provider };
       }
-      
+
       saveUserToStorage(newUser);
       return newUser;
     });
@@ -136,19 +139,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       saveUserToStorage(u);
 
       return { success: true };
-    } catch (error: any) {
-      console.error('Error en el login:', error.response?.data || error.message);
-      return { success: false, message: error.response?.data?.message || 'Error al iniciar sesión' };
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      console.error('Error en el login:', axiosError.response?.data || axiosError.message);
+      return { success: false, message: axiosError.response?.data?.message || 'Error al iniciar sesión' };
     }
   };
 
-  const register = async (payload: any) => {
+  const register = async (payload: Record<string, unknown>) => {
     try {
       await authApi.post('/register', payload);
       return { success: true };
-    } catch (error: any) {
-      console.error('Error en el registro:', error.response?.data || error.message);
-      return { success: false, message: error.response?.data?.message || 'Error al registrarse' };
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      console.error('Error en el registro:', axiosError.response?.data || axiosError.message);
+      return { success: false, message: axiosError.response?.data?.message || 'Error al registrarse' };
     }
   };
 

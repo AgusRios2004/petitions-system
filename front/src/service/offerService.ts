@@ -6,7 +6,7 @@ export const offerService = {
     const response = await apiClient.get(`/offer/${providerId}/provider`);
     return response.data;
   },
-  getAllOffers: async (filters: any = {}): Promise<ApiResponse<{ offers: IOffer[], totalItems: number }>> => {
+  getAllOffers: async (filters: Record<string, string | number | boolean | null | undefined> = {}): Promise<ApiResponse<{ offers: IOffer[], totalItems: number }>> => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {

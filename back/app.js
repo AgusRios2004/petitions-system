@@ -7,7 +7,7 @@ require('dotenv').config();
 const { sequelize } = require('./models');
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const providerRoutes =  require('./routes/providerRoutes');
+const providerRoutes = require('./routes/providerRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const petitionRoutes = require('./routes/petitionRoutes');
@@ -86,8 +86,17 @@ app.use('/api/type-offer', typeOfferRoutes);
 app.use('/api/week', require('./routes/weekRoutes'));
 app.use('/api/provider-category', require('./routes/providerCategoryRoutes'));
 
+// Manejo de rutas no encontradas (404)
+app.use((req, res, next) => {
+  res.status(404).json({
+    status: 'error',
+    message: `La ruta [${req.method}] ${req.originalUrl} no existe en este servidor.`
+  });
+});
+
 // Middleware para manejo de errores
 app.use(errorHandler);
+
 
 (async () => {
   try {

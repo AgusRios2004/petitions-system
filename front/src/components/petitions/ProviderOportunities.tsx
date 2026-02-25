@@ -17,12 +17,18 @@ type PetitionForProvider = IPetitionCardData & {
   typeProvider: {
     name: string;
   };
+  petitionCategories?: {
+    category: {
+      id_category: number;
+      name: string;
+    }
+  }[];
 };
 
 const ProviderOportunities = () => {
     const { user } = useAuth();
     const providerId = user?.provider?.id_provider;
-    const providerTypeId = user?.provider?.id_type_provider;
+    const providerTypeId = user?.provider?.typeProvider?.id_type_provider;
 
     const [filterByMyType, setFilterByMyType] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -55,7 +61,7 @@ const ProviderOportunities = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['openPetitions', providerId, selectedCategoryId, pendingStateId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
-            const params: any = { 
+            const params: Record<string, number | undefined> = { 
                 id_state: pendingStateId
             };
             // Añadimos el providerId a los parámetros si existe
@@ -76,8 +82,8 @@ const ProviderOportunities = () => {
         let availablePetitions = data || [];
 
         if (selectedCategoryId) {
-            availablePetitions = availablePetitions.filter((p: any) => 
-                p.petitionCategories?.some((pc: any) => pc.category.id_category === selectedCategoryId)
+            availablePetitions = availablePetitions.filter((p: PetitionForProvider) => 
+                p.petitionCategories?.some((pc) => pc.category.id_category === selectedCategoryId)
             );
         }
 
