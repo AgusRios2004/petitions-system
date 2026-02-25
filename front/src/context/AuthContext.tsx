@@ -1,27 +1,29 @@
 'use client';
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import {
+  ICustomer,
+  IProvider,
+  IUser,
+  IRegisterPayload,
+  ILoginResponse
+} from '@/types/common';
 
 // --- TIPOS ---
-interface User {
-  id_user: number;
-  name: string;
-  lastname: string;
-  email: string;
-  profile_image?: string | null;
-  customer?: any | null;
-  provider?: any | null;
+export interface AuthUser extends IUser {
+  customer?: ICustomer | null;
+  provider?: IProvider | null;
   role: 'provider' | 'customer' | 'admin' | 'unknown';
   is_staff?: boolean | number;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (payload: any) => Promise<{ success: boolean; message?: string }>;
+  register: (payload: IRegisterPayload) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  updateUser: (updatedData: Partial<User>) => void;
+  updateUser: (updatedData: Partial<AuthUser>) => void;
 }
 
 // --- CONTEXTO ---
@@ -34,7 +36,7 @@ const authApi = axios.create({ baseURL: `${API_BASE}/auth` });
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Inicializa desde localStorage (token + user)
@@ -65,6 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             provider: parsed.provider ?? null,
             role,
             is_staff: parsed.is_staff ?? false,
+            date_create: parsed.date_create ?? '',
           });
         } catch (err) {
           console.warn('No se pudo parsear user desde localStorage', err);
@@ -80,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initFromStorage();
   }, []);
 
-  const saveUserToStorage = (u: User) => {
+  const saveUserToStorage = (u: AuthUser) => {
     try {
       localStorage.setItem('user', JSON.stringify(u));
     } catch (err) {
@@ -88,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUser = (updatedData: Partial<User>) => {
+  const updateUser = (updatedData: Partial<AuthUser>) => {
     setUser(prevUser => {
       if (!prevUser) return null;
 
@@ -96,10 +99,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Deep merge for customer and provider objects
       if (updatedData.customer) {
-        newUser.customer = { ...prevUser.customer, ...updatedData.customer };
+        newUser.customer = { ...prevUser.customer, ...updatedData.customer } as ICustomer;
       }
       if (updatedData.provider) {
-        newUser.provider = { ...prevUser.provider, ...updatedData.provider };
+        newUser.provider = { ...prevUser.provider, ...updatedData.provider } as IProvider;
       }
 
       saveUserToStorage(newUser);
@@ -110,7 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // --- AUTH ACTIONS ---
   const login = async (email: string, password: string) => {
     try {
-      const response = await authApi.post('/login', { email, password });
+      const response = await authApi.post<ILoginResponse>('/login', { email, password });
       const { accessToken, refreshToken, user: basicUser } = response.data;
 
       localStorage.setItem('accessToken', accessToken);
@@ -122,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ? 'provider'
           : 'customer';
 
-      const u: User = {
+      const u: AuthUser = {
         id_user: basicUser.id_user,
         name: basicUser.name,
         lastname: basicUser.lastname,
@@ -131,6 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         customer: basicUser.customer ?? null,
         provider: basicUser.provider ?? null,
         is_staff: basicUser.is_staff ?? false,
+        date_create: basicUser.date_create,
         role,
       };
 
@@ -138,19 +142,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       saveUserToStorage(u);
 
       return { success: true };
-    } catch (error: any) {
-      console.error('Error en el login:', error.response?.data || error.message);
-      return { success: false, message: error.response?.data?.message || 'Error al iniciar sesión' };
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message?: string }>;
+      console.error('Error en el login:', err.response?.data || err.message);
+      return { success: false, message: err.response?.data?.message || 'Error al iniciar sesión' };
     }
   };
 
-  const register = async (payload: any) => {
+  const register = async (payload: IRegisterPayload) => {
     try {
       await authApi.post('/register', payload);
       return { success: true };
-    } catch (error: any) {
-      console.error('Error en el registro:', error.response?.data || error.message);
-      return { success: false, message: error.response?.data?.message || 'Error al registrarse' };
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message?: string }>;
+      console.error('Error en el registro:', err.response?.data || err.message);
+      return { success: false, message: err.response?.data?.message || 'Error al registrarse' };
     }
   };
 
@@ -183,3 +189,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

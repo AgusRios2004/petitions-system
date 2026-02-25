@@ -6,9 +6,10 @@ export const articleService = {
         try {
             const response = await apiClient.get('/article', { params: filters });
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error fetching all articles:', error);
-            return { data: null, error: error.message || 'Error al obtener los artículos' };
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error fetching all articles:', err);
+            return { data: null, error: err.message || 'Error al obtener los artículos' };
         }
     },
 

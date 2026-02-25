@@ -7,9 +7,10 @@ export const categoryService = {
         try {
             const response = await apiClient.get('/category');
             return response.data.data;
-        } catch (error: any) {
-            console.error('Error fetching all categories:', error);
-            throw new Error(error.response?.data?.error || 'Error al obtener las categorías');
+        } catch (error: unknown) {
+            const err = error as any;
+            console.error('Error fetching all categories:', err);
+            throw new Error(err.response?.data?.error || 'Error al obtener las categorías');
         }
     },
 };

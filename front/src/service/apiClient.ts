@@ -22,15 +22,23 @@ apiClient.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error)
 );
 
+interface ApiErrorResponse {
+  message?: string;
+}
+
+interface CustomAxiosError extends AxiosError<ApiErrorResponse> {
+  friendlyMessage?: string;
+}
+
 // Interceptor de respuestas para manejo centralizado de errores
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: any) => {
+  (error: AxiosError<ApiErrorResponse>) => {
     let message = 'Ocurrió un error inesperado';
 
     if (error.response) {
       // El servidor respondió con un status fuera del rango 2xx
-      const data = error.response.data as any;
+      const data = error.response.data;
       message = data?.message || `Error ${error.response.status}: ${error.response.statusText}`;
 
       if (error.response.status === 404) {
@@ -45,10 +53,11 @@ apiClient.interceptors.response.use(
     }
 
     // Podemos crear una propiedad personalizada 'friendlyMessage'
-    error.friendlyMessage = message;
+    (error as CustomAxiosError).friendlyMessage = message;
     return Promise.reject(error);
   }
 );
+
 
 export default apiClient;
 
