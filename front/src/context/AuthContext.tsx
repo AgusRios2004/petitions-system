@@ -28,8 +28,10 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 // --- API ---
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const authApi = axios.create({ baseURL: `${API_BASE}/api/auth` });
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+const authApi = axios.create({ baseURL: `${API_BASE}/auth` });
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -99,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.provider) {
         newUser.provider = { ...prevUser.provider, ...updatedData.provider };
       }
-      
+
       saveUserToStorage(newUser);
       return newUser;
     });
