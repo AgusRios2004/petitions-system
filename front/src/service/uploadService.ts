@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import apiClient from './apiClient';
 import { ApiResponse } from '@/types/common';
 
@@ -17,7 +18,8 @@ export const uploadService = {
         },
       });
       return { data: response.data.imageUrl, error: null };
-    } catch (e: any) {
+    } catch (error: unknown) {
+      const e = error as AxiosError<{ message?: string }>;
       const errorMessage = e.response?.data?.message || e.message || 'Ocurrió un error al subir la imagen.';
       console.error('Error uploading image: ', e);
       return { data: null, error: errorMessage };

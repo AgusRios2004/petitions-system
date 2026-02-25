@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import apiClient from "./apiClient";
 import { ApiResponse, IState } from "@/types/common";
 
@@ -6,9 +7,10 @@ export const stateService = {
         try {
             const response = await apiClient.get('/states');
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error fetching states:', error);
-            return { data: null, error: error.message || 'Error al obtener los estados' };
+        } catch (error: unknown) {
+            const err = error as AxiosError;
+            console.error('Error fetching states:', err);
+            return { data: null, error: err.message || 'Error al obtener los estados' };
         }
     }
 };

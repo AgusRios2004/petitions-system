@@ -27,8 +27,9 @@ export async function updateProvider(providerId: number, payload: UpdateProvider
     try {
         const response = await apiClient.put(`/provider/${providerId}`, payload);
         return response.data.data;
-    } catch (e: any) {
-        console.error('Error: ', e.message);
-        throw e;
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error('Error: ', err.message);
+        throw err;
     }
 }

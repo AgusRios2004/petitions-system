@@ -1,13 +1,14 @@
 import apiClient from './apiClient';
 import { ApiResponse, IProfile, IUser } from '@/types/common';
 
-export async function getProfile():  Promise<ApiResponse<IProfile>>{
+export async function getProfile(): Promise<ApiResponse<IProfile>> {
     try {
         const response = await apiClient.get('/profile/me');
-        return {data: response.data, error: null}
-    } catch (e: any) {
-        const errorMessage = e.response?.data?.message || e.message || 'Ocurrió un error desconocido.'
-        console.error('Eror: ', e);
+        return { data: response.data, error: null }
+    } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } }, message?: string };
+        const errorMessage = err.response?.data?.message || err.message || 'Ocurrió un error desconocido.';
+        console.error('Error: ', e);
         return { data: null, error: errorMessage };
     }
 }
@@ -21,9 +22,11 @@ export async function updateUser(userId: number, payload: Partial<IUser>): Promi
         } else {
             throw new Error(response.data?.error || 'La API no retornó datos actualizados del usuario.');
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error al actualizar el usuario:', e);
-        const errorMessage = e.response?.data?.error || 'No se pudo actualizar el perfil del usuario.';
+        const err = e as { response?: { data?: { error?: string } } };
+        const errorMessage = err.response?.data?.error || 'No se pudo actualizar el perfil del usuario.';
         throw new Error(errorMessage);
     }
 }
+

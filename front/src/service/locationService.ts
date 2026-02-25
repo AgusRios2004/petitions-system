@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import apiClient from "./apiClient";
 import { Country, Province, City, Department } from '@/types/common';
 
@@ -8,7 +9,7 @@ export const locationService = {
       const response = await apiClient.get('/countries');
       return response.data.data;
     } catch (error: unknown) {
-      const err = error as any;
+      const err = error as AxiosError<{ error: string }>;
       console.error('Error fetching countries:', err);
       throw new Error(err.response?.data?.error || 'Error al obtener los países');
     }
@@ -18,7 +19,7 @@ export const locationService = {
       const response = await apiClient.get(`/provinces/${countryId}/countries`);
       return response.data.data;
     } catch (error: unknown) {
-      const err = error as any;
+      const err = error as AxiosError<{ error: string }>;
       console.error('Error fetching provinces by country:', err);
       throw new Error(err.response?.data?.error || 'Error al obtener las provincias');
     }
@@ -28,7 +29,7 @@ export const locationService = {
       const response = await apiClient.get(`/departments/${provinceId}/provinces`);
       return response.data.data;
     } catch (error: unknown) {
-      const err = error as any;
+      const err = error as AxiosError<{ error: string }>;
       console.error('Error fetching departments by province:', err);
       throw new Error(err.response?.data?.error || 'Error al obtener los departamentos');
     }
@@ -38,7 +39,7 @@ export const locationService = {
       const response = await apiClient.get(`/cities/${departmentId}/departments`);
       return response.data.data;
     } catch (error: unknown) {
-      const err = error as any;
+      const err = error as AxiosError<{ error: string }>;
       console.error('Error fetching cities by department:', err);
       throw new Error(err.response?.data?.error || 'Error al obtener las ciudades');
     }

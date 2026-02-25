@@ -9,35 +9,38 @@ export const portfolioService = {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            
+
             return response.data.data;
-        } catch (e: any) {
+        } catch (error: unknown) {
+            const e = error as Error;
             console.error("Error: ", e.message);
             throw e.message;
         }
     },
 
-    getPortfolios: async(id_provider: number): Promise<ApiResponse<IPortfolioItem[]>> => {
+    getPortfolios: async (id_provider: number): Promise<ApiResponse<IPortfolioItem[]>> => {
         try {
             const response = await apiClient.get(`/portfolio/${id_provider}`);
 
             return response.data.data;
-        } catch (e: any) {
+        } catch (error: unknown) {
+            const e = error as Error;
             console.error("Error: ", e.message);
             throw e.message;
         }
     },
-    
-    deletePortfolio: async(id_portfolio: number, id_provider: number) => {
+
+    deletePortfolio: async (id_portfolio: number, id_provider: number) => {
         try {
             const response = await apiClient.delete(`/portfolio/${id_portfolio}`, {
                 data: { id_provider }
             });
-            
+
             return response.data.data;
-        } catch (e: any) {
-            console.error("Error: ", e)
+        } catch (error: unknown) {
+            const e = error as Error;
+            console.error("Error: ", e);
             throw e.message;
         }
     }
-}
+};

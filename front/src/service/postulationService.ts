@@ -21,7 +21,7 @@ export const postulationService = {
         }
     },
 
-    createPostulation: async (data: any) => {
+    createPostulation: async (data: Record<string, unknown>) => {
         try {
             const response = await apiClient.post('/postulation', data);
             return response.data;
@@ -31,7 +31,7 @@ export const postulationService = {
         }
     },
 
-    updatePostulation: async (id: string, payload: any) => {
+    updatePostulation: async (id: string, payload: Record<string, unknown>) => {
         try {
             const response = await apiClient.put(`/postulation/${id}`, payload);
             return response.data;
@@ -62,7 +62,7 @@ export const postulationService = {
         }
     },
 
-    rejectPostulation: async (id: string, payload: {id_user_update: number}) =>{
+    rejectPostulation: async (id: string, payload: { id_user_update: number }) => {
         try {
             const response = await apiClient.patch(`/postulation/${id}/reject`, payload);
             return response.data;
@@ -72,7 +72,7 @@ export const postulationService = {
         }
     },
 
-    withdrawPostulation: async (id: string, payload: {id_user_update: number}) => {
+    withdrawPostulation: async (id: string, payload: { id_user_update: number }) => {
         try {
             const response = await apiClient.patch(`/postulation/${id}/cancel`, payload);
             return response.data;

@@ -1,4 +1,4 @@
-
+import axios, { AxiosError } from "axios";
 import apiClient from "./apiClient";
 import { ApiResponse, ICategory } from '@/types/common';
 
@@ -8,7 +8,7 @@ export const categoryService = {
             const response = await apiClient.get('/category');
             return response.data.data;
         } catch (error: unknown) {
-            const err = error as any;
+            const err = error as AxiosError<{ error: string }>;
             console.error('Error fetching all categories:', err);
             throw new Error(err.response?.data?.error || 'Error al obtener las categorías');
         }
