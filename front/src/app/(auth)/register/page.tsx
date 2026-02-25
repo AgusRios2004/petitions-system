@@ -9,13 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import axios from 'axios';
+import apiClient from '@/service/apiClient';
 import { Country, Province, Department, City, Profession, TypeProvider } from '@/types/common';
 
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
-});
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
@@ -59,9 +55,9 @@ export default function RegisterPage() {
     const fetchData = async () => {
       try {
         const [profRes, typeProvRes, countryRes] = await Promise.all([
-          api.get('/professions'),
-          api.get('/type-providers'),
-          api.get('/countries'),
+          apiClient.get('/professions'),
+          apiClient.get('/type-providers'),
+          apiClient.get('/countries'),
         ]);
         setProfessions(profRes.data.data || []);
         setTypeProviders(typeProvRes.data.data || []);
@@ -82,7 +78,7 @@ export default function RegisterPage() {
     if (countryId) {
       const fetchProvinces = async () => {
         try {
-          const res = await api.get(`/provinces/${countryId}/countries`);
+          const res = await apiClient.get(`/provinces/${countryId}/countries`);
           setProvinces(res.data.data || []);
           setProvinceId(''); // Reset province selection
           setDepartmentId(''); // Reset department selection
@@ -108,7 +104,7 @@ export default function RegisterPage() {
     if (provinceId) {
       const fetchDepartments = async () => {
         try {
-          const res = await api.get(`/departments/${provinceId}/provinces`);
+          const res = await apiClient.get(`/departments/${provinceId}/provinces`);
           setDepartments(res.data.data || []);
           setDepartmentId(''); // Reset department selection
           setCities([]); // Clear cities
@@ -130,7 +126,7 @@ export default function RegisterPage() {
     if (departmentId) {
       const fetchCities = async () => {
         try {
-          const res = await api.get(`/cities/${departmentId}/departments`);
+          const res = await apiClient.get(`/cities/${departmentId}/departments`);
           setCities(res.data.data || []);
           setCityId(''); // Reset city selection
         } catch (err) {
@@ -145,6 +141,7 @@ export default function RegisterPage() {
     }
   }, [departmentId]);
 
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -155,7 +152,7 @@ export default function RegisterPage() {
       if (!typeProviderId) { setError("Debes seleccionar un tipo de proveedor."); setIsSubmitting(false); return; }
       if (!professionId) { setError("Debes seleccionar una profesión."); setIsSubmitting(false); return; }
     }
-    
+
     if (!countryId) { setError("Debes seleccionar un país."); setIsSubmitting(false); return; }
     if (!provinceId) { setError("Debes seleccionar una provincia."); setIsSubmitting(false); return; }
     if (!departmentId) { setError("Debes seleccionar un departamento."); setIsSubmitting(false); return; }
@@ -192,7 +189,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950 py-12">
       <div className="w-full max-w-2xl mx-4 bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-800">
-        
+
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-gray-100">Crear una cuenta</h1>
           <p className="mt-1 text-sm text-gray-400">Únete a nuestra comunidad.</p>
