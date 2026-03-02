@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteAttachment } from '@/service/attachmentService';
 import { getPetitionById } from '@/service/petitionService';
 import toast from 'react-hot-toast';
+import { SOCKET_URL } from '@/service/socketService';
 
 interface IAttachmentItem {
   id_attachment: number;
@@ -75,7 +76,7 @@ export default function ManageAttachmentsPage() {
             <ul className="space-y-3">
               {attachments.map((attachment: IAttachmentItem) => (
                 <li key={attachment.id_attachment} className="flex items-center justify-between bg-gray-700 p-3 rounded-md">
-                  <a href={`http://localhost:3000/${attachment.path}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate pr-4">
+                  <a href={`${SOCKET_URL}/${attachment.path}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate pr-4">
                     {attachment.name}
                   </a>
                   <Button

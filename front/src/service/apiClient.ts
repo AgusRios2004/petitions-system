@@ -1,8 +1,13 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-// Aseguramos que el baseURL siempre termine en /api
-const API_BASE_URL = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+if (!baseUrl && typeof window !== 'undefined') {
+  console.warn('⚠️ NEXT_PUBLIC_API_URL is not defined. Falling back to http://localhost:3000');
+}
+
+const finalBaseUrl = baseUrl || 'http://localhost:3000';
+export const API_BASE_URL = finalBaseUrl.endsWith('/api') ? finalBaseUrl : `${finalBaseUrl}/api`;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

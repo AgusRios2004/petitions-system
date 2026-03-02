@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import axios, { AxiosError } from 'axios';
+import { API_BASE_URL } from '@/service/apiClient';
 import {
   ICustomer,
   IProvider,
@@ -30,9 +31,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 // --- API ---
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const API_BASE = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-const authApi = axios.create({ baseURL: `${API_BASE}/auth` });
+const authApi = axios.create({ baseURL: `${API_BASE_URL}/auth` });
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

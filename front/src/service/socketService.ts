@@ -3,8 +3,8 @@
 import { io, Socket } from "socket.io-client";
 
 // 1. Definimos la URL base del servidor, igual que en apiClient pero sin '/api'.
-const URL = process.env.NEXT_PUBLIC_API_URL 
-  ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') 
+export const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '')
   : "http://localhost:3000";
 
 // 2. Esta variable guardará la única instancia de nuestro socket.
@@ -20,8 +20,8 @@ export const connectSocket = (token: string) => {
   }
 
   // Creamos la nueva instancia con la autenticación.
-  console.log(`Conectando socket a ${URL}`);
-  socket = io(URL, {
+  console.log(`Conectando socket a ${SOCKET_URL}`);
+  socket = io(SOCKET_URL, {
     auth: { token },
     transports: ['websocket'], // Forzar WebSocket para mayor estabilidad
     autoConnect: true, // Asegura que intente conectar automáticamente.

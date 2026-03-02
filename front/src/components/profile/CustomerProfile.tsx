@@ -12,6 +12,7 @@ import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 import CustomerInfo from './customer/CustomerInfo';
 import CustomerHistory from './customer/CustomerHistory';
 import CustomerOffers from './customer/CustomerOffers';
+import { SOCKET_URL } from '@/service/socketService';
 
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
@@ -54,7 +55,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     if (!token) return; // No intentar conectar si no hay token
 
     // Conecta al backend, enviando el token para la autenticación
-    const socket: Socket = io('http://localhost:3000', {
+    const socket: Socket = io(SOCKET_URL, {
       auth: {
         token: token,
       },
@@ -157,8 +158,8 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === tab.id
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                ? 'border-blue-500 text-white'
+                : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
                 }`}>
               {tab.label}
             </button>
