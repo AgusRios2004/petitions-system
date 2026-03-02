@@ -6,8 +6,18 @@ if (!baseUrl && typeof window !== 'undefined') {
   console.warn('⚠️ NEXT_PUBLIC_API_URL is not defined. Falling back to http://localhost:3000');
 }
 
-const finalBaseUrl = baseUrl || 'http://localhost:3000';
+let finalBaseUrl = baseUrl || 'http://localhost:3000';
+
+// Asegurar que tenga protocolo si no es una ruta relativa
+if (finalBaseUrl && !finalBaseUrl.startsWith('http') && !finalBaseUrl.startsWith('/')) {
+  finalBaseUrl = `https://${finalBaseUrl}`;
+}
+
 export const API_BASE_URL = finalBaseUrl.endsWith('/api') ? finalBaseUrl : `${finalBaseUrl}/api`;
+
+if (typeof window !== 'undefined') {
+  console.log('🚀 API Base URL:', API_BASE_URL);
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
