@@ -6,7 +6,7 @@ exports.getTypeProviders = async (req, res) => {
         const typeProviders = await service.getTypeProviders();
         return success(res, typeProviders);
     } catch (e) {
-        console.error('Error: ', e);
-        return error(res, 'Error obteniendo tipos de proveedor');
+        console.error('Error al obtener tipos de proveedor:', e);
+        return error(res, `Error obteniendo tipos de proveedor: ${e.message}`);
     }
 }

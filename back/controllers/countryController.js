@@ -6,7 +6,7 @@ exports.getCountries = async (req, res) => {
         const countries = await service.getCountries();
         return success(res, countries);
     } catch (e) {
-        console.error('Error al obtener países:', e); // Mostrar el error completo para facilitar el diagnóstico
-        return error(res, 'Error obteniendo países');
+        console.error('Error al obtener países:', e);
+        return error(res, `Error obteniendo países: ${e.message}`);
     }
 }
