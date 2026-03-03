@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
 import { useState, Fragment, useMemo, useEffect } from 'react';
-import RatingModal from '../../components/petitions/RatingModal'; 
+import RatingModal from '../../components/petitions/RatingModal';
 import StarRatingDisplay from '../ui/StarRatingDisplay';
 import { IPetitionCardData } from '@/types/common';
 import { useAuth } from '@/context/AuthContext';
@@ -42,7 +42,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
   useEffect(() => {
     if (petition.customers && petition.customers.average_rating !== undefined) {
       const rating = petition.customers.average_rating
-        ? parseFloat(petition.customers.average_rating as any)
+        ? parseFloat(petition.customers.average_rating as unknown as string)
         : null;
       setCustomerRating(rating);
     }
@@ -51,7 +51,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
   return (
     <Fragment>
       <div className="group relative rounded-xl border border-white/10 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col justify-between h-full">
-        
+
         {/* Cantidad de postulaciones - Solo visible para el dueño */}
         {postulationCount > 0 && isOwner && (
           <div className="absolute top-0 right-0 -mt-2 -mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500 text-xs font-bold text-white shadow-lg">
@@ -60,15 +60,15 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
         )}
 
         <div>
-          { !isOwner && (
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-white">
-              {petition.customers?.user?.name} {petition.customers?.user?.lastname}
-            </h3>
-            {customerRating !== null && customerRating > 0 && (
-              <StarRatingDisplay rating={customerRating} size={18} />
-            )}
-          </div>
+          {!isOwner && (
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold text-white">
+                {petition.customers?.user?.name} {petition.customers?.user?.lastname}
+              </h3>
+              {customerRating !== null && customerRating > 0 && (
+                <StarRatingDisplay rating={customerRating} size={18} />
+              )}
+            </div>
           )}
 
           <div className="flex justify-between items-start mb-3">

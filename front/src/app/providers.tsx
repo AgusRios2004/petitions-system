@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeRegistry } from "@/theme/ThemeRegistry";
+import ThemeRegistry from "@/theme/ThemeRegistry";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 

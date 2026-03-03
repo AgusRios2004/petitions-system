@@ -159,7 +159,7 @@ export default function RegisterPage() {
     if (!cityId) { setError("Debes seleccionar una ciudad."); setIsSubmitting(false); return; }
 
     const userData = { name, lastname, email, password, role };
-    const addressData = { street, number, floor, apartment, postal_code: postalCode, id_city: cityId };
+    const addressData = { street, number, floor, apartment, postal_code: postalCode, id_city: Number(cityId) };
     const customerData = { dni, phone };
     const providerData = { professionId, typeProviderId, description };
 
@@ -179,8 +179,9 @@ export default function RegisterPage() {
       } else {
         setError(result.message || 'Error al registrarse');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Error de red. Inténtalo de nuevo.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || 'Error de red. Inténtalo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,81 +1,81 @@
 export interface ApiResponse<T> {
-    data: T | null;
-    error: string | null;
+  data: T | null;
+  error: string | null;
 };
 
 export interface Profession {
-    id_profession: number;
-    name: string;
+  id_profession: number;
+  name: string;
 };
 
 export interface TypePetition {
-    id_type_petition: number;
-    name: string;
+  id_type_petition: number;
+  name: string;
 };
 
 export interface TypeProvider {
-    id_type_provider: number;
-    name: string;
+  id_type_provider: number;
+  name: string;
 };
 
 export interface Country {
-    id_country: number;
-    name: string;
+  id_country: number;
+  name: string;
 };
 
 export interface Province {
-    id_province: number;
-    name: string;
-    country: Country;
+  id_province: number;
+  name: string;
+  country: Country;
 };
 
 export interface Department {
-    id_department: number;
-    name: string;
-    province: Province;
+  id_department: number;
+  name: string;
+  province: Province;
 };
 
 export interface City {
-    id_city: number;
-    name: string;
-    department: Department;
+  id_city: number;
+  name: string;
+  department: Department;
 };
 
 export interface IArticle {
-    id_article: number;
-    name: string | null;
-    id_category: number;
-    id_user_create: number;
-    id_user_update?: number | null;
-    date_create: string; 
-    date_update: string;
-    // Associations
-    category?: any; 
-    createdBy?: any; 
-    updatedBy?: any; 
-    inventories?: IInventory[];
-  }
-  
+  id_article: number;
+  name: string | null;
+  id_category: number;
+  id_user_create: number;
+  id_user_update?: number | null;
+  date_create: string;
+  date_update: string;
+  // Associations
+  category?: ICategory;
+  createdBy?: IUser;
+  updatedBy?: IUser;
+  inventories?: IInventory[];
+}
+
 export interface IInventory {
-    id_inventory: number;
-    id_article: number;
-    cost: number;
-    id_postulation?: number | null;
-    id_user_update?: number | null;
-    id_user_create?: number | null;
-    date_update?: string | null;
-    date_create?: string | null;
-    quantity: number;
-    // Associations
-    article?: IArticle;
-    postulation?: any; 
-    userUpdate?: any; 
-    userCreate?: any; 
+  id_inventory: number;
+  id_article: number;
+  cost: number;
+  id_postulation?: number | null;
+  id_user_update?: number | null;
+  id_user_create?: number | null;
+  date_update?: string | null;
+  date_create?: string | null;
+  quantity: number;
+  // Associations
+  article?: IArticle;
+  postulation?: IPostulation;
+  userUpdate?: IUser;
+  userCreate?: IUser;
 }
 
 export interface ICategory {
-    id_category: number,
-    name: string,
+  id_category: number;
+  name: string;
 }
 
 export interface IPostulation {
@@ -89,10 +89,9 @@ export interface IPostulation {
   createdBy: {
     id_user: number;
     name: string;
-    lastname: string,
+    lastname: string;
     provider: {
       id_provider: number;
-
     };
   };
   states: {
@@ -111,6 +110,35 @@ export interface IPostulation {
   inventories: IInventory[];
   id_provider: number;
 }
+export interface ILoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface ILoginResponse {
+  accessToken: string;
+  refreshToken?: string;
+  user: IUser & {
+    customer?: ICustomer | null;
+    provider?: IProvider | null;
+    is_staff: boolean | number;
+  };
+}
+
+export interface IRegisterPayload {
+  name: string;
+  lastname: string;
+  email: string;
+  password: string;
+  role: string;
+  address: AddressPayload;
+  dni?: string;
+  phone?: string;
+  professionId?: string | number;
+  typeProviderId?: string | number;
+  description?: string;
+}
+
 
 export interface IWeek {
   id_week: number;
@@ -168,7 +196,7 @@ export interface IUser {
   email: string;
   lastname: string;
   profile_image?: string | null;
-  role_id?: number; 
+  role_id?: number;
   date_create: string;
 }
 
@@ -225,6 +253,7 @@ export interface IPetitionCardData {
     average_rating: number | null;
   };
   postulations: Pick<IPostulation, 'id_provider' | 'states' | 'provider'>[];
+  petitionCategories?: { category: ICategory }[];
 }
 
 export interface IProfile extends IUser {
@@ -233,16 +262,17 @@ export interface IProfile extends IUser {
 }
 
 export interface UserProfile {
-  id_user: number; 
+  id_user: number;
   name: string;
   lastname: string;
   email: string;
-  address: {
+  address?: {
     address: IAddress;
   };
   customer: ICustomer | null;
   provider: {
     id_provider: number;
+    id_type_provider?: number;
   } | null;
   profile_picture_url?: string | null;
   role: 'customer' | 'provider' | 'admin' | 'unknown';
@@ -322,6 +352,8 @@ export interface IGrade {
   comment: string;
   grade_number: number;
   date_create: string;
+  provider?: IProvider;
+  customer?: ICustomer;
 };
 
 export interface Notification {

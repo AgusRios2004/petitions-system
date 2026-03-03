@@ -50,7 +50,10 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
       queryClient.invalidateQueries({ queryKey: ['providerOffers', providerId] });
       reset();
     },
-    onError: (error: any) => toast.error(error.message || 'Error al crear la oferta'),
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || 'Error al crear la oferta');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -87,15 +90,15 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
         <h3 className="text-xl font-bold text-white mb-4">Crear Nueva Oferta</h3>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Input 
-              label="Título" 
-              {...register('title')} 
-              error={errors.title?.message} 
+            <Input
+              label="Título"
+              {...register('title')}
+              error={errors.title?.message}
               placeholder="Ej: Mantenimiento de PC"
               className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
-          
+
           <div>
             <Select
               label="Tipo de Oferta"
@@ -108,23 +111,23 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="Fecha Inicio" 
+            <Input
+              label="Fecha Inicio"
               type="date"
-              {...register('date_open')} 
+              {...register('date_open')}
               className="bg-gray-800 border-gray-700 text-white [color-scheme:dark]"
             />
-            <Input 
-              label="Fecha Fin" 
+            <Input
+              label="Fecha Fin"
               type="date"
-              {...register('date_close')} 
+              {...register('date_close')}
               className="bg-gray-800 border-gray-700 text-white [color-scheme:dark]"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-            <Textarea 
-              {...register('description')} 
+            <Textarea
+              {...register('description')}
               variant="dark"
               placeholder="Describe detalladamente qué incluye tu oferta..."
             />
@@ -140,7 +143,7 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
       {/* Columna Derecha: Listado de Ofertas */}
       <div className="lg:col-span-2 space-y-6">
         <h3 className="text-2xl font-bold text-white mb-4">Mis Ofertas Activas</h3>
-        
+
         {isLoadingOffers ? (
           <p className="text-gray-400">Cargando ofertas...</p>
         ) : offers.length === 0 ? (
@@ -152,22 +155,23 @@ const ProviderOffers: React.FC<ProviderOffersProps> = ({ providerId }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {offers.map((offer: IOffer) => {
               const isExpired = offer.date_close ? new Date(offer.date_close) < new Date() : false;
-              
+
               return (
-              <div key={offer.offer_id} className={`bg-gray-800 p-5 rounded-lg border ${isExpired ? 'border-red-900/40 opacity-75' : 'border-gray-700 hover:border-blue-500'} transition-colors relative group`}>
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex gap-2">
-                    <span className="bg-blue-900 text-blue-200 text-xs px-2 py-1 rounded-full">{offer.typeOffer?.name || 'Servicio'}</span>
-                    {isExpired && <span className="bg-red-900 text-red-200 text-xs px-2 py-1 rounded-full">Expirada</span>}
+                <div key={offer.offer_id} className={`bg-gray-800 p-5 rounded-lg border ${isExpired ? 'border-red-900/40 opacity-75' : 'border-gray-700 hover:border-blue-500'} transition-colors relative group`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex gap-2">
+                      <span className="bg-blue-900 text-blue-200 text-xs px-2 py-1 rounded-full">{offer.typeOffer?.name || 'Servicio'}</span>
+                      {isExpired && <span className="bg-red-900 text-red-200 text-xs px-2 py-1 rounded-full">Expirada</span>}
+                    </div>
                   </div>
+                  <h4 className="text-lg font-bold text-white mb-2">{offer.name}</h4>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">{offer.description}</p>
+                  <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(offer.offer_id)} disabled={deleteMutation.isPending}>
+                    Eliminar
+                  </Button>
                 </div>
-                <h4 className="text-lg font-bold text-white mb-2">{offer.name}</h4>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-3">{offer.description}</p>
-                <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(offer.offer_id)} disabled={deleteMutation.isPending}>
-                  Eliminar
-                </Button>
-              </div>
-            )})}
+              )
+            })}
           </div>
         )}
       </div>

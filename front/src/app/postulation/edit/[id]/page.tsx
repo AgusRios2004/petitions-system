@@ -71,10 +71,10 @@ export default function EditPostulationPage() {
         proposal: data.proposal,
         cost: data.cost,
         // Mapeamos los artículos existentes de la postulación al formato del formulario
-        articles: (data.inventories || data.postulationArticles)?.map((pa: any) => ({
-          id_article: pa.id_article || pa.article?.id_article,
+        articles: (data.inventories || (data as { postulationArticles?: { id_article?: number, article?: { id_article: number }, quantity: number, cost: number }[] }).postulationArticles)?.map((pa: { id_article?: number, article?: { id_article: number }, quantity: number, cost: number }) => ({
+          id_article: pa.id_article || pa.article?.id_article || 0,
           quantity: pa.quantity,
-          cost: pa.cost, 
+          cost: pa.cost,
         })) || [],
       });
     }
@@ -104,8 +104,9 @@ export default function EditPostulationPage() {
       queryClient.invalidateQueries({ queryKey: ['postulations'] });
       router.back();
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al actualizar la postulación');
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || 'Error al actualizar la postulación');
     },
   });
 
@@ -191,7 +192,7 @@ export default function EditPostulationPage() {
 
             {fields.map((item, index) => (
               <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-3 p-3 border border-gray-600 rounded-lg bg-gray-700/50">
-                
+
                 <div className="flex-1">
                   <Controller
                     control={control}

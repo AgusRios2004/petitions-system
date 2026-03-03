@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import apiClient from "./apiClient";
 import { IInterest } from '@/types/common';
 
@@ -14,9 +15,10 @@ export const interestService = {
     try {
       const response = await apiClient.get(`/interests/customer/${customerId}`);
       return response.data.data;
-    } catch (error: any) {
-      console.error('Error al obtener los intereses del cliente:', error);
-      throw new Error(error.response?.data?.error || 'Error al obtener los intereses del cliente');
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      console.error('Error al obtener los intereses del cliente:', err);
+      throw new Error(err.response?.data?.error || 'Error al obtener los intereses del cliente');
     }
   },
 
@@ -27,22 +29,23 @@ export const interestService = {
     try {
       const response = await apiClient.post('/interests', payload);
       return response.data.data;
-    } catch (error: any) {
-      console.error('Error añadiendo el interés:', error);
-      throw new Error(error.response?.data?.error || 'Error al añadir el interés');
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      console.error('Error añadiendo el interés:', err);
+      throw new Error(err.response?.data?.error || 'Error al añadir el interés');
     }
   },
 
   /**
    * Elimina un interés específico por su ID.
    */
-  deleteInterest: async (interestId: number): Promise<any> => {
+  deleteInterest: async (interestId: number): Promise<void> => {
     try {
-      const response = await apiClient.delete(`/interests/${interestId}`);
-      return response.data.data;
-    } catch (error: any) {
-      console.error('Error eliminando interes:', error);
-      throw new Error(error.response?.data?.error || 'Error al eliminar el interés');
+      await apiClient.delete(`/interests/${interestId}`);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      console.error('Error eliminando interes:', err);
+      throw new Error(err.response?.data?.error || 'Error al eliminar el interés');
     }
   },
 };

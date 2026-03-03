@@ -102,8 +102,13 @@ app.use(errorHandler);
   try {
     await sequelize.authenticate();
     console.log('🟢 DB conectada');
+
+    // Sincronizar modelos con la base de datos
+    // force: false evita borrar datos si las tablas ya existen
+    await sequelize.sync({ force: false });
+    console.log('📂 Tablas sincronizadas');
   } catch (e) {
-    console.error('🔴 Error DB:', e.message);
+    console.error('🔴 Error al conectar o sincronizar la DB:', e);
   }
 })();
 

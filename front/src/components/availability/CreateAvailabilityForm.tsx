@@ -4,21 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { availabilityService } from '@/service/availabilityService';
 // Asumimos que tienes o crearás estos servicios para obtener las listas de días y horas
-import { weekService } from '@/service/weekService'; 
+import { weekService } from '@/service/weekService';
 import { hourService } from '@/service/hourService';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
+import { IAvailability, IWeek, IHour } from '@/types/common';
 import toast from 'react-hot-toast';
 
 interface FormState {
-  id_week: string;
-  id_from_hour: string;
-  id_until_hour: string;
-  id_user_update: string;
+    id_week: string;
+    id_from_hour: string;
+    id_until_hour: string;
+    id_user_update: string;
 }
 
 interface CreateAvailabilityFormProps {
-  onFinished: () => void;
+    onFinished: () => void;
 }
 
 const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinished }) => {
@@ -30,13 +31,13 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         id_user_update: '',
     });
 
-    const {data: weeks, isLoading: isLoadingWeeks} = useQuery({
+    const { data: weeks, isLoading: isLoadingWeeks } = useQuery({
         queryKey: ['weeks'],
         queryFn: () => weekService.getAllWeeks(), // Asume que este servicio existe
         select: (response) => response.data,
     });
 
-    const {data: hours, isLoading: isLoadingHours} = useQuery({
+    const { data: hours, isLoading: isLoadingHours } = useQuery({
         queryKey: ['hours'],
         queryFn: () => hourService.getAllHours(), // Asume que este servicio existe
         select: (response) => response.data,
@@ -101,7 +102,7 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                 const newEnd = getMinutes(untilTimeStr);
                 const selectedWeekId = parseInt(formState.id_week);
 
-                const hasOverlap = existingAvailabilities.some((avail: any) => {
+                const hasOverlap = existingAvailabilities.some((avail: IAvailability) => {
                     if (avail.week.id_week !== selectedWeekId) return false; // Solo comparar mismo día
                     const existStart = getMinutes(avail.fromHour.name.split(' ')[0]);
                     const existEnd = getMinutes(avail.untilHour.name.split(' ')[0]);
@@ -135,7 +136,7 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                                 <Select
                                     label="Día"
                                     id="id_week"
-                                    options={weeks?.map((week: any) => ({ value: week.id_week, label: week.name })) || []}
+                                    options={weeks?.map((week: IWeek) => ({ value: week.id_week, label: week.name })) || []}
                                     value={formState.id_week ? Number(formState.id_week) : null}
                                     onChange={(val) => setFormState(prev => ({ ...prev, id_week: String(val || '') }))}
                                     placeholder="Selecciona un día"
@@ -147,7 +148,7 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                                 <Select
                                     label="Hora desde"
                                     id="id_from_hour"
-                                    options={hours?.map((hour: any) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                    options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
                                     value={formState.id_from_hour ? Number(formState.id_from_hour) : null}
                                     onChange={(val) => setFormState(prev => ({ ...prev, id_from_hour: String(val || '') }))}
                                     placeholder="Selecciona una hora"
@@ -159,7 +160,7 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                                 <Select
                                     label="Hora hasta"
                                     id="id_until_hour"
-                                    options={hours?.map((hour: any) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                    options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
                                     value={formState.id_until_hour ? Number(formState.id_until_hour) : null}
                                     onChange={(val) => setFormState(prev => ({ ...prev, id_until_hour: String(val || '') }))}
                                     placeholder="Selecciona una hora"

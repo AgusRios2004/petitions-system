@@ -15,6 +15,7 @@ import ProviderOffers from '@/components/profile/provider/ProviderOffers';
 // Importaciones de los nuevos componentes que hemos creado
 import PublicProfileContent from './provider/PublicProfileContent';
 import ProfileSettings from './provider/ProfileSettings';
+import { SOCKET_URL } from '@/service/socketService';
 
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
@@ -34,7 +35,7 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
     if (!token) return; // No intentar conectar si no hay token
 
     // Conecta al backend, enviando el token para la autenticación
-    const socket: Socket = io('http://localhost:3000', {
+    const socket: Socket = io(SOCKET_URL, {
       auth: {
         token: token,
       },
@@ -125,11 +126,10 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${
-                activeTab === tab.id
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === tab.id
                   ? 'border-blue-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              }`}>
+                }`}>
               {tab.label}
             </button>
           ))}

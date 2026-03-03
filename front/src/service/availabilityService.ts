@@ -21,50 +21,55 @@ export const availabilityService = {
             // Pasamos los parámetros al método get de apiClient
             const response = await apiClient.get('/availability/me', { params });
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error fetching all availabilities:', error);
-            return { data: null, error: error.message || 'Error al obtener las disponibilidades' };
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error fetching all availabilities:', err);
+            return { data: null, error: err.message || 'Error al obtener las disponibilidades' };
         }
     },
 
-    getAvailabilityById: async (id: number) : Promise<ApiResponse<IAvailability>> => {
+    getAvailabilityById: async (id: number): Promise<ApiResponse<IAvailability>> => {
         try {
             const response = await apiClient.get(`/availability/${id}`);
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error fetching availability by ID:', error);
-            return { data: null, error: error.message || 'Error al obtener la disponibilidad' };
-        }   
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error fetching availability by ID:', err);
+            return { data: null, error: err.message || 'Error al obtener la disponibilidad' };
+        }
     },
-    
-    deleteAvailability: async (id: number) : Promise<ApiResponse<null>> => {
+
+    deleteAvailability: async (id: number): Promise<ApiResponse<null>> => {
         try {
             await apiClient.delete(`/availability/me/${id}`);
             return { data: null, error: null };
-        } catch (error: any) {
-            console.error('Error deleting availability:', error);
-            return { data: null, error: error.message || 'Error al eliminar la disponibilidad' };
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error deleting availability:', err);
+            return { data: null, error: err.message || 'Error al eliminar la disponibilidad' };
         }
     },
 
     // 2. Usamos la nueva interfaz en la firma de la función.
-    updateAvailability: async (id: number, payload: IUpdateAvailabilityPayload) : Promise<ApiResponse<IAvailability>> => {
+    updateAvailability: async (id: number, payload: IUpdateAvailabilityPayload): Promise<ApiResponse<IAvailability>> => {
         try {
             const response = await apiClient.put(`/availability/me/${id}`, payload);
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error updating availability:', error);
-            return { data: null, error: error.message || 'Error al actualizar la disponibilidad' };
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error updating availability:', err);
+            return { data: null, error: err.message || 'Error al actualizar la disponibilidad' };
         }
     },
 
-    createAvailability: async (payload: {id_week: string; id_from_hour: string; id_until_hour: string;}): Promise<ApiResponse<IAvailability>> => {
+    createAvailability: async (payload: { id_week: string; id_from_hour: string; id_until_hour: string; }): Promise<ApiResponse<IAvailability>> => {
         try {
             const response = await apiClient.post('/availability/me', payload);
             return { data: response.data.data, error: null };
-        } catch (error: any) {
-            console.error('Error creating availability:', error);
-            return { data: null, error: error.message || 'Error al crear la disponibilidad' };
-        }   
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('Error creating availability:', err);
+            return { data: null, error: err.message || 'Error al crear la disponibilidad' };
+        }
     },
 }

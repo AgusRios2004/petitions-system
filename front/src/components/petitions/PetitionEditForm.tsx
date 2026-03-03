@@ -60,13 +60,13 @@ interface Petition {
 
 interface PetitionEditFormProps {
   petition: Petition;
-  onSave: (formData: any) => void;
+  onSave: (formData: Record<string, unknown>) => void;
   onCancel: () => void;
   isLoading: boolean;
 }
 
 const PetitionEditForm: React.FC<PetitionEditFormProps> = ({ petition, onSave, onCancel, isLoading }) => {
-  
+
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<PetitionEditFormValues>({
     resolver: zodResolver(petitionEditSchema),
     defaultValues: {
@@ -111,7 +111,7 @@ const PetitionEditForm: React.FC<PetitionEditFormProps> = ({ petition, onSave, o
   const onSubmit = (data: PetitionEditFormValues) => {
     onSave({
       ...data,
-      id_customer: petition.id_customer, 
+      id_customer: petition.id_customer,
       id_state: petition.id_state,
     });
   };
@@ -120,7 +120,7 @@ const PetitionEditForm: React.FC<PetitionEditFormProps> = ({ petition, onSave, o
     <div className="container mx-auto p-4">
       <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800 shadow-lg rounded-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold text-white mb-6">Editar Petición</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Profession */}
           <div>

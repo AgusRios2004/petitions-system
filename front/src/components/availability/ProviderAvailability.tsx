@@ -9,6 +9,7 @@ import AvailabilityCard from './AvailabilityCard';
 import { Button } from '@/components/ui/Button';
 import EditAvailabilityForm from './EditAvailabilityForm';
 import CreateAvailabilityForm from './CreateAvailabilityForm'; // Importa el formulario de creación
+import { IAvailability } from '@/types/common';
 import toast from 'react-hot-toast';
 
 const availabilityTabs = [
@@ -64,7 +65,7 @@ const ProviderAvailability = () => {
       deleteMutation.mutate(id);
     }
   };
-  
+
   const handleCancelEdit = () => {
     setEditingId(null);
   };
@@ -77,9 +78,9 @@ const ProviderAvailability = () => {
   return (
     <div>
       {editingId && (
-        <EditAvailabilityForm 
-          availabilityId={editingId} 
-          onFinished={handleCancelEdit} 
+        <EditAvailabilityForm
+          availabilityId={editingId}
+          onFinished={handleCancelEdit}
         />
       )}
 
@@ -89,14 +90,14 @@ const ProviderAvailability = () => {
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Gestionar Disponibilidad</h2>
-        <Button 
+        <Button
           fullWidth={false}
           onClick={() => setIsCreating(true)}
         >
           Crear
         </Button>
       </div>
-      
+
       <div className="flex justify-start mb-4">
         <Tabs
           tabs={availabilityTabs}
@@ -107,11 +108,11 @@ const ProviderAvailability = () => {
 
       {isLoading && <p className="text-center text-gray-400">Cargando disponibilidad...</p>}
       {isError && <p className="text-center text-red-500">Error: {error?.message}</p>}
-      
+
       {data && data.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
-          {data.map((availability: any) => (
-            <AvailabilityCard 
+          {data.map((availability: IAvailability) => (
+            <AvailabilityCard
               key={availability.id_availability}
               availability={availability}
               onEdit={handleEdit}

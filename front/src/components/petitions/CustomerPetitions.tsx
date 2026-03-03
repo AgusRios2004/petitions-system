@@ -10,7 +10,7 @@ import Tabs from '@/components/ui/Tabs';
 import Pagination from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/Button';
 
-import { IState } from '@/types/common';
+import { IState, IPetitionCardData } from '@/types/common';
 
 interface CustomerPetitionsProps {
   customerId: number;
@@ -100,7 +100,7 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
 
       {data && data.petitions && data.petitions.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {data.petitions.map((petition: any) => (
+          {data.petitions.map((petition: IPetitionCardData) => (
             <PetitionCard key={petition.id_petition} petition={petition} />
           ))}
         </div>

@@ -99,7 +99,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
       setValue('id_city', 0);
     }
   }, [watchedDepartment, setValue]);
-  
+
   // --- Carga de Datos para Dirección ---
   const { data: countries, isLoading: isLoadingCountries } = useQuery({ queryKey: ['countries'], queryFn: locationService.getCountries });
   const { data: provinces, isLoading: isLoadingProvinces } = useQuery({ queryKey: ['provinces', watchedCountry], queryFn: () => locationService.getProvincesByCountry(watchedCountry), enabled: watchedCountry > 0 });
@@ -137,16 +137,19 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
     },
     onSuccess: ([updatedUser, updatedCustomer]) => {
       toast.success('Perfil actualizado con éxito');
-      
-      if(updatedUser) {
+
+      if (updatedUser) {
         updateUser(updatedUser)
       }
 
       queryClient.invalidateQueries({ queryKey: ['customerProfile', customer.id_customer] });
-      
+
       onFinished();
     },
-    onError: (error: any) => toast.error(`Error al actualizar: ${error.message}`),
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(`Error al actualizar: ${err.message}`);
+    },
   });
 
   const onSubmit = (data: ProfileFormData) => {
@@ -155,7 +158,7 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 p-4 bg-gray-800 rounded-lg">
-      
+
       {/* --- 1. SECCIÓN DE INFO PERSONAL --- */}
       <div className="border-b border-gray-700 pb-6">
         <h3 className="text-2xl font-bold text-white mb-6">Información de la Cuenta</h3>
@@ -172,10 +175,10 @@ const EditCustomerForm: React.FC<EditCustomerFormProps> = ({ customer, user, onF
       <div className="pb-6">
         <h4 className="text-2xl font-bold text-white mb-6">Dirección</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Controller name="id_country" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="País" options={countries?.map(c => ({ value: c.id_country, label: c.name })) || []} disabled={isLoadingCountries} placeholder="Seleccione un país..." error={errors.id_country?.message} /> )} />
-          <Controller name="id_province" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Provincia" options={provinces?.map(p => ({ value: p.id_province, label: p.name })) || []} disabled={!watchedCountry || isLoadingProvinces} placeholder="Seleccione una provincia..." error={errors.id_province?.message} /> )} />
-          <Controller name="id_department" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Departamento" options={departments?.map(d => ({ value: d.id_department, label: d.name })) || []} disabled={!watchedProvince || isLoadingDepartments} placeholder="Seleccione un departamento..." error={errors.id_department?.message} /> )} />
-          <Controller name="id_city" control={control} render={({ field }) => ( <Select {...field} value={field.value || 0} label="Ciudad" options={cities?.map(c => ({ value: c.id_city, label: c.name })) || []} disabled={!watchedDepartment || isLoadingCities} placeholder="Seleccione una ciudad..." error={errors.id_city?.message} /> )} />
+          <Controller name="id_country" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="País" options={countries?.map(c => ({ value: c.id_country, label: c.name })) || []} disabled={isLoadingCountries} placeholder="Seleccione un país..." error={errors.id_country?.message} />)} />
+          <Controller name="id_province" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Provincia" options={provinces?.map(p => ({ value: p.id_province, label: p.name })) || []} disabled={!watchedCountry || isLoadingProvinces} placeholder="Seleccione una provincia..." error={errors.id_province?.message} />)} />
+          <Controller name="id_department" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Departamento" options={departments?.map(d => ({ value: d.id_department, label: d.name })) || []} disabled={!watchedProvince || isLoadingDepartments} placeholder="Seleccione un departamento..." error={errors.id_department?.message} />)} />
+          <Controller name="id_city" control={control} render={({ field }) => (<Select {...field} value={field.value || 0} label="Ciudad" options={cities?.map(c => ({ value: c.id_city, label: c.name })) || []} disabled={!watchedDepartment || isLoadingCities} placeholder="Seleccione una ciudad..." error={errors.id_city?.message} />)} />
           <Controller name="street" control={control} render={({ field }) => <Input {...field} label="Calle" error={errors.street?.message} />} />
           <Controller name="number" control={control} render={({ field }) => <Input {...field} label="Número" error={errors.number?.message} />} />
           <Controller name="postal_code" control={control} render={({ field }) => <Input {...field} label="Código Postal" error={errors.postal_code?.message} />} />
