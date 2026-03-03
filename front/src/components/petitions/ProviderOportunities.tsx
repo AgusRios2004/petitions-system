@@ -13,10 +13,16 @@ import { IState } from "@/types/common";
 import { useAuth } from '@/context/AuthContext';
 
 type PetitionForProvider = IPetitionCardData & {
-    id_type_provider: number;
-    typeProvider: {
-        name: string;
-    };
+  id_type_provider: number;
+  typeProvider: {
+    name: string;
+  };
+  petitionCategories?: {
+    category: {
+      id_category: number;
+      name: string;
+    }
+  }[];
 };
 
 const ProviderOportunities = () => {
@@ -55,7 +61,7 @@ const ProviderOportunities = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['openPetitions', providerId, selectedCategoryId, pendingStateId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
-            const params: Record<string, unknown> = {
+            const params: Record<string, number | undefined> = { 
                 id_state: pendingStateId
             };
             // Añadimos el providerId a los parámetros si existe
@@ -76,8 +82,8 @@ const ProviderOportunities = () => {
         let availablePetitions = data || [];
 
         if (selectedCategoryId) {
-            availablePetitions = availablePetitions.filter((p: IPetitionCardData) =>
-                p.petitionCategories?.some((pc: { category: { id_category: number } }) => pc.category.id_category === selectedCategoryId)
+            availablePetitions = availablePetitions.filter((p: PetitionForProvider) => 
+                p.petitionCategories?.some((pc) => pc.category.id_category === selectedCategoryId)
             );
         }
 
