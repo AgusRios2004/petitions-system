@@ -1,15 +1,17 @@
 'use client';
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import axios, { AxiosError } from 'axios';
-import { ICustomer, IProvider } from '@/types/common';
+import { API_BASE_URL } from '@/service/apiClient';
+import {
+  ICustomer,
+  IProvider,
+  IUser,
+  IRegisterPayload,
+  ILoginResponse
+} from '@/types/common';
 
 // --- TIPOS ---
-interface User {
-  id_user: number;
-  name: string;
-  lastname: string;
-  email: string;
-  profile_image?: string | null;
+export interface AuthUser extends IUser {
   customer?: ICustomer | null;
   provider?: IProvider | null;
   role: 'provider' | 'customer' | 'admin' | 'unknown';
@@ -20,7 +22,7 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  register: (payload: Record<string, unknown>) => Promise<{ success: boolean; message?: string }>;
+  register: (payload: IRegisterPayload) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateUser: (updatedData: Partial<AuthUser>) => void;
 }
@@ -140,20 +142,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return { success: true };
     } catch (error: unknown) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      console.error('Error en el login:', axiosError.response?.data || axiosError.message);
-      return { success: false, message: axiosError.response?.data?.message || 'Error al iniciar sesión' };
+      const err = error as AxiosError<{ message?: string }>;
+      console.error('Error en el login:', err.response?.data || err.message);
+      return { success: false, message: err.response?.data?.message || 'Error al iniciar sesión' };
     }
   };
 
-  const register = async (payload: Record<string, unknown>) => {
+  const register = async (payload: IRegisterPayload) => {
     try {
       await authApi.post('/register', payload);
       return { success: true };
     } catch (error: unknown) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      console.error('Error en el registro:', axiosError.response?.data || axiosError.message);
-      return { success: false, message: axiosError.response?.data?.message || 'Error al registrarse' };
+      const err = error as AxiosError<{ message?: string }>;
+      console.error('Error en el registro:', err.response?.data || err.message);
+      return { success: false, message: err.response?.data?.message || 'Error al registrarse' };
     }
   };
 
@@ -186,4 +188,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
