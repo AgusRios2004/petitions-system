@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const UserVerificationCode = sequelize.define('UserVerificationCode', {
         id: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },

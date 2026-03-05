@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const InventoryHasInterestHistory = sequelize.define('InventoryHasInterestHistory', {
         id_inventory_has_interest_history: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -22,11 +22,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
     }, {
@@ -44,12 +44,12 @@ module.exports = (sequelize, DataTypes) => {
             as: 'interestHistories',
         });
         InventoryHasInterestHistory.belongsTo(models.User, {
-             foreignKey: 'id_user_create',
-             as: 'userCreate',
+            foreignKey: 'id_user_create',
+            as: 'userCreate',
         });
-         InventoryHasInterestHistory.belongsTo(models.User, {
-             foreignKey: 'id_user_update',
-             as: 'userUpdate',
+        InventoryHasInterestHistory.belongsTo(models.User, {
+            foreignKey: 'id_user_update',
+            as: 'userUpdate',
         });
     };
 

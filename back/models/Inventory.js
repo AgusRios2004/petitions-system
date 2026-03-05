@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const Inventory = sequelize.define('Inventory', {
         id_inventory: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -43,30 +43,31 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Inventory.associate = (models) => {
-                Inventory.belongsTo(models.Article, {
-                    foreignKey: 'id_article',
-                    as: 'article'
-                });
-                
-                Inventory.belongsTo(models.Postulation, {
-                    foreignKey: 'id_postulation',
-                    as: 'postulation'
-                });
-                
-                Inventory.belongsTo(models.User, {
-                    foreignKey: 'id_user_update',
-                    as: 'userUpdate'
-                });
-                
-                Inventory.belongsTo(models.User, {
-                    foreignKey: 'id_user_create',
-                    as: 'userCreate'
-                });
-                
-                Inventory.hasMany(models.InventoryHasInterestHistory, {
-                    foreignKey: 'id_inventory',
-                    as:'inventoryInterestHistories'
-                });    };
+        Inventory.belongsTo(models.Article, {
+            foreignKey: 'id_article',
+            as: 'article'
+        });
+
+        Inventory.belongsTo(models.Postulation, {
+            foreignKey: 'id_postulation',
+            as: 'postulation'
+        });
+
+        Inventory.belongsTo(models.User, {
+            foreignKey: 'id_user_update',
+            as: 'userUpdate'
+        });
+
+        Inventory.belongsTo(models.User, {
+            foreignKey: 'id_user_create',
+            as: 'userCreate'
+        });
+
+        Inventory.hasMany(models.InventoryHasInterestHistory, {
+            foreignKey: 'id_inventory',
+            as: 'inventoryInterestHistories'
+        });
+    };
 
     return Inventory;
 };
