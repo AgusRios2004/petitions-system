@@ -1,5 +1,4 @@
-const { title } = require('process');
-const { post } = require('../app');
+// const { post } = require('../app'); // REMOVIDO: Causaba dependencia circular y error de exportación
 const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer } = require('../models');
 const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
@@ -23,26 +22,26 @@ class PostulationService {
         // ... (código original sin cambios)
         const whereClause = {};
         const includeClause = [
-            { 
-                model: Petition, 
+            {
+                model: Petition,
                 as: 'petition',
                 include: [
                     {
                         model: Customer,
-                        as: 'customers' 
+                        as: 'customers'
                     }
                 ]
             },
             { model: Inventory, as: 'inventories', include: ['article'] },
-            { 
-                model: User, 
-                as: 'createdBy', 
+            {
+                model: User,
+                as: 'createdBy',
                 include: [
-                    { 
-                        model: Provider, 
+                    {
+                        model: Provider,
                         as: 'provider',
                     }
-                ] 
+                ]
             },
             { model: User, as: 'updatedBy' },
             { model: State, as: 'states' }
@@ -71,10 +70,10 @@ class PostulationService {
     async getPostulationById(id) {
         return await Postulation.findByPk(id, {
             include: [
-                { 
-                    model: Petition, 
-                    as: 'petition', 
-                    include: ['customers'] 
+                {
+                    model: Petition,
+                    as: 'petition',
+                    include: ['customers']
                 },
                 {
                     model: Inventory,
@@ -110,9 +109,9 @@ class PostulationService {
             }
             // MEJORA: Bloqueamos la petición al leerla. 
             // Si el dueño la está cerrando/cancelando en este instante, esperamos a que termine para ver el estado real.
-            const petition = await Petition.findByPk(id_petition, { 
+            const petition = await Petition.findByPk(id_petition, {
                 transaction: t,
-                lock: true 
+                lock: true
             });
             if (!petition) {
                 const error = new Error('Petición no encontrada');
@@ -122,7 +121,7 @@ class PostulationService {
 
             // [CORREGIDO] Se valida contra el estado 'Abierta' (ABI), no 'Pendiente' (PEN).
             const petitionOpenState = await getStateId('PEN');
-            if (petition.id_state !== petitionOpenState) { 
+            if (petition.id_state !== petitionOpenState) {
                 const error = new Error('No se pueden crear postulaciones para una petición que no está abierta');
                 error.statusCode = 400;
                 throw error;
@@ -139,7 +138,7 @@ class PostulationService {
                 error.statusCode = 409;
                 throw error;
             }
-            
+
             const postulationPendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
 
             const newPostulation = await Postulation.create({
@@ -162,7 +161,7 @@ class PostulationService {
                     cost: article.cost,
                     id_postulation: newPostulation.id_postulation,
                     id_user_create: userId,
-                    date_create: new Date(),                    
+                    date_create: new Date(),
                 }));
                 await Inventory.bulkCreate(inventoryData, { transaction: t });
             }
@@ -190,7 +189,7 @@ class PostulationService {
 
         // 2. Extraemos datos necesarios para notificaciones del objeto ya cargado
         // Asumimos que 'customers' viene incluido en 'petition' gracias a getPostulationById
-        const customer = postulationWithDetails.petition.customers; 
+        const customer = postulationWithDetails.petition.customers;
         const targetUserId = customer.user_id;
 
         // 3. Eventos (Desacoplados)
@@ -198,7 +197,7 @@ class PostulationService {
             eventBus.emit('postulation:created', {
                 postulation: postulationWithDetails,
                 // Pasamos el ID del usuario de forma segura después de la validación.
-                targetUserId: targetUserId 
+                targetUserId: targetUserId
             });
         }
 
@@ -221,17 +220,17 @@ class PostulationService {
         }).catch(notifyError => {
             console.error("Error enviando notificación en segundo plano:", notifyError);
         });
-        
+
         return postulationWithDetails;
     }
 
     async updatePostulation(id, data) {
         // ... (código original sin cambios)
-        const {proposal, cost, articles, id_user_update} = data;
+        const { proposal, cost, articles, id_user_update } = data;
         const t = await sequelize.transaction();
         try {
-            const postulation = await Postulation.findByPk(id, {transaction: t});
-            if(!postulation){
+            const postulation = await Postulation.findByPk(id, { transaction: t });
+            if (!postulation) {
                 const error = new Error('Postulacion no encontrada');
                 error.statusCode = 404;
                 throw error;
@@ -244,9 +243,9 @@ class PostulationService {
                 date_update: new Date(),
             }, { transaction: t });
 
-            await Inventory.destroy({where: {id_postulation: id}, transaction: t});
+            await Inventory.destroy({ where: { id_postulation: id }, transaction: t });
 
-            if(articles && articles.length > 0) {
+            if (articles && articles.length > 0) {
                 const inventoryData = articles.map(article => ({
                     id_article: article.id_article,
                     quantity: article.quantity,
@@ -255,14 +254,14 @@ class PostulationService {
                     id_user_create: id_user_update,
                     date_create: new Date(),
                 }));
-                await Inventory.bulkCreate(inventoryData, {transaction: t});
+                await Inventory.bulkCreate(inventoryData, { transaction: t });
             }
 
             await t.commit();
             return await this.getPostulationById(postulation.id_postulation);
         } catch (e) {
             await t.rollback();
-            console.error("Error: " ,e.message);
+            console.error("Error: ", e.message);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
         }
@@ -273,18 +272,18 @@ class PostulationService {
         const t = await sequelize.transaction();
         // [CORREGIDO] Declaramos las variables fuera del try para que sean accesibles después del commit.
         let petition;
-        let postulation; 
+        let postulation;
         try {
             postulation = await Postulation.findByPk(id, {
                 transaction: t,
                 lock: true // Bloquea la fila para evitar conflictos concurrentes
             });
-            if(!postulation) {
+            if (!postulation) {
                 const error = new Error("Postulación no encontrada.")
-                error.statusCode = 404; 
+                error.statusCode = 404;
                 throw error;
             }
-            
+
             const postulationWinState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
             const petitionClosedState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
 
@@ -295,11 +294,11 @@ class PostulationService {
                 date_update: new Date(), // Corregido: data_update -> date_update
             }, { transaction: t });
 
-            petition = await Petition.findByPk(postulation.id_petition, { 
+            petition = await Petition.findByPk(postulation.id_petition, {
                 transaction: t,
                 lock: true // Bloquea la petición para asegurar su estado
             });
-            if(!petition){
+            if (!petition) {
                 const e = new Error("Petición no encontrada");
                 e.statusCode = 404;
                 throw e;
@@ -309,7 +308,7 @@ class PostulationService {
                 id_state: petitionClosedState,
                 id_user_update: userId,
                 date_update: new Date(),
-            }, {transaction: t});
+            }, { transaction: t });
 
             // Actualizamos las postulaciones pendientes a "Rechazada" dentro de la misma transacción.
             // La notificación se hará DESPUÉS del commit.
@@ -380,14 +379,14 @@ class PostulationService {
                 include: [{ model: Petition, as: 'petition' }],
                 transaction: t
             });
-    
+
             if (!postulation) {
                 const error = new Error("Postulación no encontrada.");
                 error.statusCode = 404;
                 await t.rollback();
                 throw error;
             }
-    
+
             const petitionOwner = await postulation.petition.getCustomers({ transaction: t });
             if (petitionOwner.user_id !== userId) {
                 const error = new Error("No tienes permiso para rechazar esta postulación.");
@@ -395,7 +394,7 @@ class PostulationService {
                 await t.rollback();
                 throw error;
             }
-    
+
             const postulationRejectedState = await getStateId('REC'); // REC = Rechazado (ID 2)
 
             await postulation.update({
@@ -408,7 +407,7 @@ class PostulationService {
             await t.commit();
 
             // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
-            if(eventBus) {
+            if (eventBus) {
                 const targetUserId = postulation.id_user_create;
                 const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
                 eventBus.emit('postulation:rejected', {
@@ -416,7 +415,7 @@ class PostulationService {
                     targetUserId: targetUserId
                 });
             }
-    
+
             // Notificación persistente (fire-and-forget)
             notificationService.createNotification({ // No usamos await
                 id_user: postulation.id_user_create,
@@ -427,7 +426,7 @@ class PostulationService {
                 related_postulation_id: postulation.id_postulation,
                 related_petition_id: postulation.id_petition
             }).catch(err => console.error("Error creando notificación de rechazo:", err));
-    
+
             return postulation;
 
         } catch (e) {
@@ -446,7 +445,7 @@ class PostulationService {
         const t = await sequelize.transaction();
         try {
             const postulation = await Postulation.findByPk(postulationId, {
-                include: {model: Petition, as: 'petition'},
+                include: { model: Petition, as: 'petition' },
                 transaction: t
             });
 
@@ -476,7 +475,7 @@ class PostulationService {
             await t.commit();
 
             // --- NOTIFICACIONES (FUERA DE LA TRANSACCIÓN) ---
-            if(eventBus) {
+            if (eventBus) {
                 const targetUserId = postulation.petition.id_user_create;
                 const updatedPostulation = await this.getPostulationById(postulation.id_postulation); // Para máxima consistencia
                 eventBus.emit('postulation:withdrawn', {
@@ -515,7 +514,7 @@ class PostulationService {
      * @param {number|null} winnerPostulationId - [NUEVO] ID del ganador para excluirlo.
      */
     async cancelPostulationsForPetition(petitionId, userId, transaction, newStateCode = 'CAN', winnerPostulationId = null) {
-        
+
         const pendingState = await getStateId('PEN'); // PEN = Pendiente (ID 3)
         const newStateId = await getStateId(newStateCode);
 

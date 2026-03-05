@@ -108,7 +108,11 @@ app.use(errorHandler);
     await sequelize.sync({ force: false });
     console.log('📂 Tablas sincronizadas');
   } catch (e) {
-    console.error('🔴 Error al conectar o sincronizar la DB:', e);
+    console.error('🔴 Error al conectar o sincronizar la DB:');
+    console.error('Mensaje:', e.message);
+    console.error('Host intentado:', sequelize.options.host);
+    console.error('Puerto intentado:', sequelize.options.port);
+    // console.error('Error detallado:', e);
   }
 })();
 
