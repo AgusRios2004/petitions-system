@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const Week = sequelize.define('Week', {
         id_week: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },

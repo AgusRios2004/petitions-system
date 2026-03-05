@@ -1,28 +1,28 @@
 module.exports = (sequelize, DataTypes) => {
     const Interest = sequelize.define('Interest', {
         id_interest: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
         id_customer: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_category: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         is_deleted: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_user_create: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_user_update: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_create: {

@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const InterestHistory = sequelize.define('InterestHistory', {
         id_interest_history: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -10,23 +10,23 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_interest: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_create: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
         date_update: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
     }, {

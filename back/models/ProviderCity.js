@@ -1,12 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
     const ProviderCity = sequelize.define('ProviderCity', {
         id_provider: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
         },
         id_city: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
         },

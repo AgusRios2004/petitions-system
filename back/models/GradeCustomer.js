@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
         },
         date_create: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
         date_update: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
         id_user_create: {

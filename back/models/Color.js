@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const Color = sequelize.define('Color', {
         id_color: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -10,11 +10,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         id_user_create: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_create: {

@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const TypeProvider = sequelize.define('TypeProvider', {
         id_type_provider: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },

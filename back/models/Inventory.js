@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
         },
         id_article: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         cost: {
@@ -14,15 +14,15 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         id_postulation: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_update: {
@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         quantity: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
     }, {

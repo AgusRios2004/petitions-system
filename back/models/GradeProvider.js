@@ -1,16 +1,16 @@
 module.exports = (sequelize, DataTypes) => {
     const GradeProvider = sequelize.define('GradeProvider', {
         id_grade_provider: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
         id_provider: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_grade: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         coment: {
@@ -18,11 +18,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_create: {

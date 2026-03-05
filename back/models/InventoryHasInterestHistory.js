@@ -6,19 +6,19 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
         },
         id_inventory: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         id_interest_history: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         date_create: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
         date_update: {
-            type: DataTypes.DATE(6),
+            type: DataTypes.DATE,
             allowNull: true,
         },
         id_user_create: {

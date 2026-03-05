@@ -1,12 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
     const UserRole = sequelize.define('UserRole', {
         id_user: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
         },
         id_role: {
-            type: DataTypes.INTEGER(11),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
         },
