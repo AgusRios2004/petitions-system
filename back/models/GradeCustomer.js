@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const GradeCustomer = sequelize.define('GradeCustomer', {
         idGradeCustomer: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -14,11 +14,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         comment: {
@@ -26,11 +26,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_customer: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_grade: {
-            type: DataTypes.BIGINT(20),
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
     }, {
