@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     const Inventory = sequelize.define('Inventory', {
         id_inventory: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BIGINT,
             primaryKey: true,
             autoIncrement: true,
         },
