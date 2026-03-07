@@ -15,7 +15,10 @@ const sequelize = process.env.MYSQL_URL
     logging: false,
     dialect: 'mysql',
     dialectOptions: {
-      connectTimeout: 60000
+      connectTimeout: 60000,
+      ssl: {
+        rejectUnauthorized: false
+      }
     }
   })
   : new Sequelize(
@@ -28,7 +31,10 @@ const sequelize = process.env.MYSQL_URL
       port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
       logging: false,
       dialectOptions: {
-        connectTimeout: 60000
+        connectTimeout: 60000,
+        ssl: {
+          rejectUnauthorized: false
+        }
       }
     }
   );
