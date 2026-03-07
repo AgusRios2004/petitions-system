@@ -30,11 +30,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         id_user_create: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         id_user_update: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date_create: {
