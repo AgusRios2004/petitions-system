@@ -79,7 +79,7 @@ async function seed() {
         console.log('✅ Categorías insertadas.');
 
         // 6. Profesiones
-        await Profession.bulkCreate([
+        const professions = await Profession.bulkCreate([
             { name: 'Plomero' },
             { name: 'Electricista' },
             { name: 'Programador' },
@@ -88,14 +88,14 @@ async function seed() {
         console.log('✅ Profesiones insertadas.');
 
         // 7. Tipos de Proveedor
-        await TypeProvider.bulkCreate([
+        const typeProviders = await TypeProvider.bulkCreate([
             { name: 'Independiente' },
             { name: 'Empresa' }
         ]);
         console.log('✅ Tipos de Proveedor insertados.');
 
         // 8. Localización (Datos mínimos para probar)
-        const { Department } = require('../models');
+        const { Department, Address, Customer, Provider } = require('../models');
         const argentina = await Country.create({ name: 'Argentina', code: 'AR', id_user_create: adminUser.id_user });
         const mendoza = await Province.create({ name: 'Mendoza', id_country: argentina.id_country, id_user_create: adminUser.id_user });
         const capitalDep = await Department.create({
@@ -104,13 +104,72 @@ async function seed() {
             id_province: mendoza.id_province,
         });
 
-        await City.create({
+        const mendozaCity = await City.create({
             name: 'Mendoza Capital',
             id_department: capitalDep.id_department,
             postal_code: '5500',
         });
 
         console.log('✅ Datos de localización insertados (Argentina -> Mendoza -> Capital -> Mendoza Capital).');
+
+        console.log('--- Creando Usuarios de Prueba ---');
+
+        // 9. Crear un Cliente (Customer)
+        const addressCustomer = await Address.create({
+            street: 'Av. Siempre Viva',
+            number: '742',
+            postal_code: '5500',
+            id_city: mendozaCity.id_city
+        });
+
+        const userCustomer = await User.create({
+            name: 'Juan',
+            lastname: 'Pérez',
+            email: 'cliente@ejemplo.com',
+            password: 'password123',
+            is_staff: false,
+            is_active: true,
+            enabled: true,
+        });
+
+        await UserRole.create({ id_user: userCustomer.id_user, id_role: roles[1].id_role });
+
+        await Customer.create({
+            user_id: userCustomer.id_user,
+            dni: '12345678',
+            phone: '2615556677',
+            address_id: addressCustomer.id_address
+        });
+        console.log('✅ Usuario Cliente (Customer) creado.');
+
+        // 10. Crear un Proveedor (Provider)
+        const addressProvider = await Address.create({
+            street: 'Calle Falsa',
+            number: '123',
+            postal_code: '5500',
+            id_city: mendozaCity.id_city
+        });
+
+        const userProvider = await User.create({
+            name: 'Mario',
+            lastname: 'Goméz',
+            email: 'proveedor@ejemplo.com',
+            password: 'password123',
+            is_staff: true,
+            is_active: true,
+            enabled: true,
+        });
+
+        await UserRole.create({ id_user: userProvider.id_user, id_role: roles[2].id_role });
+
+        await Provider.create({
+            user_id: userProvider.id_user,
+            id_type_provider: typeProviders[0].id_type_provider,
+            id_profession: professions[0].id_profession, // Plomero
+            address_id: addressProvider.id_address,
+            description: 'Plomero con 10 años de experiencia en reparaciones hogareñas.'
+        });
+        console.log('✅ Usuario Proveedor (Provider) creado.');
 
         console.log('\n🚀 ¡Base de datos configurada con éxito!');
         process.exit(0);

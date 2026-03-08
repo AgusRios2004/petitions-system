@@ -1,24 +1,15 @@
-const { User } = require('../models');
+const { User, Customer, Provider } = require('../models');
 
 async function checkUsers() {
     try {
-        const users = await User.findAll({ limit: 1 });
-        if (users.length === 0) {
-            console.log('No users found.');
-            process.exit(0);
-        }
-        const u = users[0];
-        console.log(`Testing user: ${u.email}`);
-
-        const bcrypt = require('bcrypt');
-        // We don't know the password, but we can test if the function exists and runs
-        try {
-            const ok = await u.comparePassword('any_password');
-            console.log('bcrypt.compare executed successfully, result:', ok);
-        } catch (bcryptErr) {
-            console.error('bcrypt.compare FAILED:', bcryptErr);
-        }
-
+        const users = await User.findAll({
+            include: [{ model: Customer, as: 'customer' }, { model: Provider, as: 'provider' }]
+        });
+        console.log('Total users found:', users.length);
+        users.forEach(u => {
+            const role = u.customer ? 'Customer' : (u.provider ? 'Provider' : (u.is_superuser ? 'Admin' : 'None'));
+            console.log(`ID: ${u.id_user}, Email: ${u.email}, Role: ${role}, Prof/DNI: ${u.provider?.id_profession || u.customer?.dni || 'N/A'}`);
+        });
         process.exit(0);
     } catch (error) {
         console.error('Error checking users:', error);
