@@ -112,26 +112,26 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
           </div>
         )}
 
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-white/10 gap-4">
+          <span className="text-xs text-gray-500 dark:text-gray-400 capitalize bg-gray-900/40 px-3 py-1 rounded-full border border-white/5">
             Creada: {creationDate}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             {/* Botón Calificar SOLO si hay proveedor asignado */}
             {showProviderAssigned && (
               <Button
-                fullWidth={false}
                 size="sm"
                 variant="secondary"
+                className="flex-1 sm:flex-initial"
                 onClick={() => setIsRatingModalOpen(true)}
               >
                 Calificar
               </Button>
             )}
 
-            <Link href={`/petition/${petition.id_petition}`}>
-              <Button fullWidth={false} size="sm" variant="primary">
+            <Link href={`/petition/${petition.id_petition}`} className="flex-1 sm:flex-initial">
+              <Button size="sm" variant="primary" className="w-full">
                 Ver Detalles
               </Button>
             </Link>
@@ -144,6 +144,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
         <RatingModal
           isOpen={isRatingModalOpen}
           onClose={() => setIsRatingModalOpen(false)}
+          petitionId={petition.id_petition}
           providerId={acceptedPostulation.id_provider}
           customerId={petition.id_customer}
           ratingTarget="provider"

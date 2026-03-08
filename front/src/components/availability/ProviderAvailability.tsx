@@ -88,13 +88,15 @@ const ProviderAvailability = () => {
         <CreateAvailabilityForm onFinished={handleFinishedCreation} />
       )}
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Gestionar Disponibilidad</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Gestionar Disponibilidad
+        </h2>
         <Button
-          fullWidth={false}
+          className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 font-bold shadow-lg shadow-cyan-900/20 px-8"
           onClick={() => setIsCreating(true)}
         >
-          Crear
+          Crear Nuevo Horario
         </Button>
       </div>
 

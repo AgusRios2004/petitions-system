@@ -26,12 +26,12 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
     address?.city?.department?.province?.country?.name,
   ].filter(Boolean).join(', ');
 
-  const memberSince = customer.user?.date_create 
+  const memberSince = customer.user?.date_create
     ? new Date(customer.user.date_create).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
     : 'No disponible';
 
   const handleImageUpdate = () => {
@@ -102,7 +102,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
 
       {/* --- Botón de Editar Perfil --- */}
       <div className="mt-8 pt-6 border-t border-gray-700 flex justify-end">
-        <Button variant="primary" size="lg" onClick={() => setIsEditing(true)}>
+        <Button variant="primary" size="lg" onClick={() => setIsEditing(true)} className="w-full sm:w-auto px-10 font-bold shadow-lg shadow-blue-900/20">
           Editar Perfil
         </Button>
       </div>

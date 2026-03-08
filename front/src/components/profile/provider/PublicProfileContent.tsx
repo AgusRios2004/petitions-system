@@ -9,6 +9,7 @@ import { IProvider, IAvailability, IPortfolioItem } from '@/types/common';
 import AvailabilityCard from '@/components/availability/AvailabilityCard';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 import InfoRow from '@/components/ui/InfoRow';
 import AddPortfolioButton from '@/components/portfolio/AddPortfolioButton';
 import ProfileImageUpdater from '../ProfileImageUpdater';
@@ -115,24 +116,24 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
 
-        <div className="flex justify-end items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mb-8">
           {isOwner ? (
-            <>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <AddPortfolioButton providerId={providerId} />
               <Button
                 onClick={() => router.push('/profile/edit')}
-                className="!bg-blue-600 !hover:bg-blue-700"
+                className="!bg-blue-600 !hover:bg-blue-700 w-full sm:w-auto font-bold px-6"
               >
                 Editar Perfil
               </Button>
-            </>
+            </div>
           ) : user?.customer ? (
-            <a
+            <Link
               href={`/provider/${providerId}/postulations`}
-              className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-cyan-900/20 text-center"
             >
               Ver Historial de Postulaciones
-            </a>
+            </Link>
           ) : null}
         </div>
 

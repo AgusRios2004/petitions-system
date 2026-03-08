@@ -233,173 +233,175 @@ export default function CreatePetitionPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-gray-800 p-8 shadow-lg rounded-lg border border-gray-700">
 
-        {/* Descripción */}
-        <div>
-          <Label htmlFor="description" className="text-gray-300 mb-2 block">Descripción</Label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            rows={5}
-            placeholder="Describe detalladamente qué necesitas..."
-            variant="dark"
-          />
-          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
-        </div>
-
-        {/* Selects */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Descripción */}
           <div>
-            <Controller
-              name="id_type_petition"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Tipo de Petición"
-                  id="id_type_petition"
-                  options={typePetitions?.data?.map((tp) => ({ value: String(tp.id_type_petition), label: tp.name })) || []}
-                  value={field.value}
-                  onChange={(val) => field.onChange(val ?? '')}
-                  error={errors.id_type_petition?.message}
-                  disabled={isAnyDataLoading}
-                  placeholder="Selecciona"
-                  variant="dark"
-                />
-              )}
+            <Label htmlFor="description" className="text-gray-300 mb-2 block">Descripción</Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              rows={5}
+              placeholder="Describe detalladamente qué necesitas..."
+              variant="dark"
             />
+            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
           </div>
 
+          {/* Selects */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <Controller
+                name="id_type_petition"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de Petición"
+                    id="id_type_petition"
+                    options={typePetitions?.data?.map((tp) => ({ value: String(tp.id_type_petition), label: tp.name })) || []}
+                    value={field.value}
+                    onChange={(val) => field.onChange(val ?? '')}
+                    error={errors.id_type_petition?.message}
+                    disabled={isAnyDataLoading}
+                    placeholder="Selecciona"
+                    variant="dark"
+                  />
+                )}
+              />
+            </div>
+
+            <div>
+              <Controller
+                name="id_type_provider"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de Proveedor (Opcional)"
+                    id="id_type_provider"
+                    options={typeProviders?.data?.map((tp) => ({ value: String(tp.id_type_provider), label: tp.name })) || []}
+                    value={field.value}
+                    onChange={(val) => field.onChange(val ?? '')}
+                    error={errors.id_type_provider?.message}
+                    disabled={isAnyDataLoading}
+                    placeholder="Selecciona"
+                    variant="dark"
+                  />
+                )}
+              />
+            </div>
+
+            <div>
+              <Controller
+                name="id_profession"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="Profesión (Opcional)"
+                    id="id_profession"
+                    options={professions?.data?.map((p) => ({ value: String(p.id_profession), label: p.name })) || []}
+                    value={field.value}
+                    onChange={(val) => field.onChange(val ?? '')}
+                    error={errors.id_profession?.message}
+                    disabled={isAnyDataLoading}
+                    placeholder="Selecciona..."
+                    variant="dark"
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Categorías (Combobox con lista de tags) */}
           <div>
-            <Controller
-              name="id_type_provider"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Tipo de Proveedor (Opcional)"
-                  id="id_type_provider"
-                  options={typeProviders?.data?.map((tp) => ({ value: String(tp.id_type_provider), label: tp.name })) || []}
-                  value={field.value}
-                  onChange={(val) => field.onChange(val ?? '')}
-                  error={errors.id_type_provider?.message}
-                  disabled={isAnyDataLoading}
-                  placeholder="Selecciona"
-                  variant="dark"
-                />
-              )}
+            <Select
+              label="Categorías de Interés"
+              id="categories-select"
+              options={categories?.map((c) => ({ value: c.id_category, label: c.name })) || []}
+              onChange={handleAddCategory}
+              value={null} // Siempre null para que funcione como un "agregador" y se limpie tras seleccionar
+              placeholder="Selecciona una categoría para agregar..."
+              disabled={isAnyDataLoading}
+              variant="dark"
             />
+
+            {/* Lista visual de categorías seleccionadas */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedCategoryIds.map((id) => {
+                const category = categories?.find((c) => String(c.id_category) === id);
+                return (
+                  <span key={id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-900 text-blue-100 border border-blue-700">
+                    {category?.name || 'Cargando...'}
+                    <button type="button" onClick={() => handleRemoveCategory(id)} className="ml-2 text-blue-300 hover:text-white font-bold focus:outline-none">
+                      &times;
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Selecciona las categorías que mejor describan tu petición para notificar a los proveedores adecuados.</p>
           </div>
 
-          <div>
-            <Controller
-              name="id_profession"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Profesión (Opcional)"
-                  id="id_profession"
-                  options={professions?.data?.map((p) => ({ value: String(p.id_profession), label: p.name })) || []}
-                  value={field.value}
-                  onChange={(val) => field.onChange(val ?? '')}
-                  error={errors.id_profession?.message}
-                  disabled={isAnyDataLoading}
-                  placeholder="Selecciona..."
-                  variant="dark"
-                />
-              )}
-            />
-          </div>
-        </div>
+          {/* Fechas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Input
+                label="Disponible Desde"
+                id="date_since"
+                type="date"
+                {...register('date_since')}
+                error={errors.date_since?.message}
+                disabled={isAnyDataLoading} // Deshabilitar mientras carga
+              />
+            </div>
 
-        {/* Categorías (Combobox con lista de tags) */}
-        <div>
-          <Select
-            label="Categorías de Interés"
-            id="categories-select"
-            options={categories?.map((c) => ({ value: c.id_category, label: c.name })) || []}
-            onChange={handleAddCategory}
-            value={null} // Siempre null para que funcione como un "agregador" y se limpie tras seleccionar
-            placeholder="Selecciona una categoría para agregar..."
-            disabled={isAnyDataLoading}
-            variant="dark"
-          />
-          
-          {/* Lista visual de categorías seleccionadas */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {selectedCategoryIds.map((id) => {
-              const category = categories?.find((c) => String(c.id_category) === id);
-              return (
-                <span key={id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-900 text-blue-100 border border-blue-700">
-                  {category?.name || 'Cargando...'}
-                  <button type="button" onClick={() => handleRemoveCategory(id)} className="ml-2 text-blue-300 hover:text-white font-bold focus:outline-none">
-                    &times;
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-          <p className="text-xs text-gray-400 mt-1">Selecciona las categorías que mejor describan tu petición para notificar a los proveedores adecuados.</p>
-        </div>
-
-        {/* Fechas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Input
-              label="Disponible Desde"
-              id="date_since"
-              type="date"
-              {...register('date_since')}
-              error={errors.date_since?.message}
-              disabled={isAnyDataLoading} // Deshabilitar mientras carga
-            />
+            <div>
+              <Input
+                label="Disponible Hasta"
+                id="date_until"
+                type="date"
+                {...register('date_until')}
+                error={errors.date_until?.message}
+                disabled={isAnyDataLoading} // Deshabilitar mientras carga
+              />
+            </div>
           </div>
 
-          <div>
-            <Input
-              label="Disponible Hasta"
-              id="date_until"
-              type="date"
-              {...register('date_until')}
-              error={errors.date_until?.message}
-              disabled={isAnyDataLoading} // Deshabilitar mientras carga
-            />
-          </div>
-        </div>
-
-        {/* Sección para Adjuntos */}
-        <div className="space-y-4 rounded-lg border border-gray-700 bg-gray-900/50 p-4">
+          {/* Sección para Adjuntos */}
+          <div className="space-y-4 rounded-lg border border-gray-700 bg-gray-900/50 p-4">
             <h3 className="text-lg font-medium text-gray-200">Adjuntar Archivo (Opcional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <Input
-                        label="Título del Adjunto"
-                        id="attachmentName"
-                        type="text"
-                        value={attachmentName}
-                        onChange={(e) => setAttachmentName(e.target.value)}
-                        placeholder="Ej: Planos de la casa"
-                        disabled={isAnyDataLoading} // Deshabilitar mientras carga
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-300 mb-1">
-                        Seleccionar Archivo
-                    </Label>
-                    <input
-                        id="attachmentFile"
-                        type="file"
-                        onChange={handleFileChange}
-                        className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-blue-400 hover:file:bg-gray-600"
-                        disabled={isAnyDataLoading} // Deshabilitar mientras carga
-                    />
-                </div>
+              <div>
+                <Input
+                  label="Título del Adjunto"
+                  id="attachmentName"
+                  type="text"
+                  value={attachmentName}
+                  onChange={(e) => setAttachmentName(e.target.value)}
+                  placeholder="Ej: Planos de la casa"
+                  disabled={isAnyDataLoading} // Deshabilitar mientras carga
+                />
+              </div>
+              <div>
+                <Label htmlFor="attachmentFile" className="block text-sm font-medium text-gray-300 mb-1">
+                  Seleccionar Archivo
+                </Label>
+                <input
+                  id="attachmentFile"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-blue-400 hover:file:bg-gray-600"
+                  disabled={isAnyDataLoading} // Deshabilitar mientras carga
+                />
+              </div>
             </div>
-        </div>
-        <Button type="submit" disabled={isSubmitting || isAnyDataLoading}>
-          {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Crear Petición'}
-        </Button>
-        <Button type="button" variant="secondary" onClick={handleBackClick} disabled={isSubmitting}>
-          Volver
-        </Button>
-      </form>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-700/50">
+            <Button type="submit" className="flex-1 font-bold h-12" disabled={isSubmitting || isAnyDataLoading}>
+              {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Crear Petición'}
+            </Button>
+            <Button type="button" variant="secondary" className="w-full sm:w-32 h-12" onClick={handleBackClick} disabled={isSubmitting}>
+              Volver
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

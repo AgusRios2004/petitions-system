@@ -113,11 +113,11 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
     <div className="min-h-screen bg-gray-950 py-8">
       <div className="container mx-auto p-4">
         <div className="bg-gray-800 shadow-lg rounded-lg p-6 border border-gray-700">
-          <div className="flex justify-between items-start mb-4">
-            <h1 className="text-2xl font-bold text-white">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
               {petition.profession?.name || 'Sin título'}
             </h1>
-            <span className="bg-orange-900/30 text-orange-200 border border-orange-800 text-sm font-semibold px-3 py-1 rounded-full">
+            <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
               {petition.states?.state || 'Sin Estado'}
             </span>
           </div>
@@ -207,47 +207,46 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
             )}
           </div>
 
-          <div className="mt-8 flex flex-wrap justify-end gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row flex-wrap justify-end gap-3 border-t border-gray-700/50 pt-6">
             <Button
               onClick={() => router.push('/profile')}
               variant="secondary"
-              className="flex-1 min-w-[120px]"
+              className="w-full sm:w-auto order-last sm:order-first"
             >
               Volver
             </Button>
             {/* El botón de postulación aparece si el usuario es un proveedor y no el dueño de la petición. */}
             {!isOwner && user?.provider && petition.states.state === 'Pendiente' && (
-              <Link href={`/postulation/create/${petition.id_petition}`} className="flex-1 min-w-[120px]">
-                <Button variant="primary" className="w-full">Postularse</Button>
+              <Link href={`/postulation/create/${petition.id_petition}`} className="w-full sm:w-auto">
+                <Button variant="primary" className="w-full bg-blue-600 hover:bg-blue-700 font-bold">Postularse</Button>
               </Link>
             )}
 
             {isOwner && (petition.id_state === 1 || petition.id_state === 3) && (
-              <>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button
                   onClick={() => onEdit(petition.id_petition)}
                   variant="primary"
-                  className="bg-yellow-500 hover:bg-yellow-600 flex-1 min-w-[120px]"
+                  className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto font-bold"
                 >
                   Editar
                 </Button>
                 <Button
                   onClick={handleCancelPetition}
                   variant="destructive"
-                  className="flex-1 min-w-[120px]"
+                  className="w-full sm:w-auto font-bold"
                   disabled={cancelMutation.isPending}
                 >
                   {cancelMutation.isPending ? 'Cancelando...' : 'Cancelar petición'}
                 </Button>
-              </>
+              </div>
             )}
-          </div>
-          <div className='mt-4'>
+
             {isOwner && (
               <Button
                 onClick={togglePostulations}
                 variant="primary"
-                className="bg-green-500 hover:bg-green-600 flex-1 min-w-[120px]"
+                className="bg-green-600 hover:bg-green-700 w-full sm:w-auto font-bold"
               >
                 {showPostulations ? 'Ocultar Postulaciones' : 'Ver Postulaciones'}
               </Button>

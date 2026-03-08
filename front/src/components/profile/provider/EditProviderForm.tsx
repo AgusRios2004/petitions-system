@@ -272,11 +272,11 @@ const EditProviderForm = ({ providerId }: { providerId: number }) => {
         {errors.categoryIds && <p className="text-red-500 text-sm mt-1">{errors.categoryIds.message}</p>}
       </div>
 
-      <div className="mt-8 flex justify-end gap-4">
-        <Button type="button" variant="secondary" onClick={() => router.back()}>
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-700/50 mt-8">
+        <Button type="button" variant="secondary" onClick={() => router.back()} className="w-full sm:w-auto order-last sm:order-first">
           Volver
         </Button>
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" variant="primary" disabled={isPending} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold px-8">
           {isPending ? 'Guardando...' : 'Guardar Cambios'}
         </Button>
       </div>

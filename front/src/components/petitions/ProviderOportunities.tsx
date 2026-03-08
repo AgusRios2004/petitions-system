@@ -13,16 +13,16 @@ import { IState } from "@/types/common";
 import { useAuth } from '@/context/AuthContext';
 
 type PetitionForProvider = IPetitionCardData & {
-  id_type_provider: number;
-  typeProvider: {
-    name: string;
-  };
-  petitionCategories?: {
-    category: {
-      id_category: number;
-      name: string;
-    }
-  }[];
+    id_type_provider: number;
+    typeProvider: {
+        name: string;
+    };
+    petitionCategories?: {
+        category: {
+            id_category: number;
+            name: string;
+        }
+    }[];
 };
 
 const ProviderOportunities = () => {
@@ -61,7 +61,7 @@ const ProviderOportunities = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['openPetitions', providerId, selectedCategoryId, pendingStateId], // Agregamos selectedCategoryId a la key
         queryFn: async () => {
-            const params: Record<string, number | undefined> = { 
+            const params: Record<string, number | undefined> = {
                 id_state: pendingStateId
             };
             // Añadimos el providerId a los parámetros si existe
@@ -82,7 +82,7 @@ const ProviderOportunities = () => {
         let availablePetitions = data || [];
 
         if (selectedCategoryId) {
-            availablePetitions = availablePetitions.filter((p: PetitionForProvider) => 
+            availablePetitions = availablePetitions.filter((p: PetitionForProvider) =>
                 p.petitionCategories?.some((pc) => pc.category.id_category === selectedCategoryId)
             );
         }
@@ -103,32 +103,37 @@ const ProviderOportunities = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-4 mb-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h2 className="text-2xl font-bold text-white">Oportunidades Disponibles</h2>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+                <div className="space-y-1">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Oportunidades Disponibles</h2>
+                    <p className="text-gray-400 text-sm">Encuentra trabajos que coincidan con tus habilidades.</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-end gap-4 w-full lg:w-auto">
+                    {user?.provider && (
+                        <div className="w-full sm:w-64">
+                            <Select
+                                label="Filtrar por categoría"
+                                options={categoryOptions}
+                                value={selectedCategoryId || 0}
+                                onChange={(val) => setSelectedCategoryId(val ? Number(val) : null)}
+                                placeholder={categoryOptions.length > 0 ? "Mis categorías" : "Sin categorías"}
+                                disabled={categoryOptions.length === 0}
+                                variant="dark"
+                            />
+                        </div>
+                    )}
+
                     {user?.provider && (
                         <Button
                             onClick={() => setFilterByMyType(prev => !prev)}
                             variant={filterByMyType ? 'primary' : 'secondary'}
-                            className="w-full sm:w-auto"
+                            className={`w-full sm:w-auto h-11 px-6 font-bold shadow-lg transition-all ${filterByMyType ? 'bg-blue-600 shadow-blue-900/20' : ''}`}
                         >
-                            {filterByMyType ? 'Mostrar Todas' : 'Filtrar por mi tipo de proveedor'}
+                            {filterByMyType ? 'Mostrar Todas' : 'Ver por mi tipo'}
                         </Button>
                     )}
                 </div>
-
-                {user?.provider && (
-                    <div className="w-full sm:w-72">
-                        <Select
-                            label="Filtrar por categoría"
-                            options={categoryOptions}
-                            value={selectedCategoryId || 0}
-                            onChange={(val) => setSelectedCategoryId(val ? Number(val) : null)}
-                            placeholder={categoryOptions.length > 0 ? "Mis categorías" : "Sin categorías"}
-                            disabled={categoryOptions.length === 0}
-                        />
-                    </div>
-                )}
             </div>
             {petitions.length === 0 ? (
                 <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">

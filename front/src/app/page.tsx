@@ -1,103 +1,190 @@
-import Image from "next/image";
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import { FiSearch, FiCheckCircle, FiUsers, FiClock, FiShield, FiTrendingUp, FiFileText } from 'react-icons/fi';
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 p-8 gap-8 text-center">
-      <main className="flex flex-col gap-8 items-center">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex flex-col min-h-screen bg-gray-950 text-white overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 rounded-full blur-[120px]" />
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-gray-200 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 px-4 overflow-hidden">
+        <div className="container mx-auto text-center max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/30 border border-blue-800 text-blue-400 text-sm font-semibold mb-8 animate-fade-in">
+            <FiCheckCircle size={16} />
+            <span>La plataforma líder para conectar con profesionales</span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight leading-tight">
+            Encuentra al <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">profesional ideal</span> para tu próximo proyecto
+          </h1>
+
+          <p className="text-xl md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Conectamos clientes con los mejores proveedores de servicios en tiempo real. Rápido, seguro y transparente.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full px-10 h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-900/40">
+                Empezar Ahora
+              </Button>
+            </Link>
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button variant="secondary" size="lg" className="w-full px-10 h-14 text-lg font-bold border-gray-700 bg-gray-900/50 hover:bg-gray-800">
+                Iniciar Sesión
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-t border-gray-800/60 mt-10">
+            <div>
+              <p className="text-3xl font-bold text-white">+10k</p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest">Proveedores</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-white">+50k</p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest">Proyectos</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-white">99%</p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest">Satisfacción</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-white">24/7</p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest">Soporte</p>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="flex gap-6 flex-wrap items-center justify-center mt-auto">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 px-4 bg-gray-900/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">¿Por qué elegir nuestra plataforma?</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">Diseñado para ofrecerte la mejor experiencia en la búsqueda y contratación de servicios.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={<FiSearch size={32} className="text-blue-500" />}
+              title="Búsqueda Inteligente"
+              description="Encuentra exactamente lo que necesitas con nuestros filtros avanzados por categoría y ubicación."
+            />
+            <FeatureCard
+              icon={<FiShield size={32} className="text-cyan-500" />}
+              title="Seguridad Garantizada"
+              description="Verificamos a cada proveedor para asegurar la calidad y honestidad en cada servicio."
+            />
+            <FeatureCard
+              icon={<FiClock size={32} className="text-purple-500" />}
+              title="Tiempo Real"
+              description="Recibe notificaciones instantáneas sobre tus peticiones y postulaciones directamente en tu panel."
+            />
+            <FeatureCard
+              icon={<FiUsers size={32} className="text-green-500" />}
+              title="Comunidad Activa"
+              description="Únete a miles de usuarios que ya están transformando la forma de trabajar y contratar."
+            />
+            <FeatureCard
+              icon={<FiTrendingUp size={32} className="text-yellow-500" />}
+              title="Escalabilidad"
+              description="Ya sea un pequeño arreglo o un gran proyecto, tenemos al profesional adecuado para ti."
+            />
+            <FeatureCard
+              icon={<FiFileText size={32} className="text-red-500" />}
+              title="Gestión Simplificada"
+              description="Todo el historial de tus trabajos y pagos en un solo lugar, sin complicaciones."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-4 overflow-hidden">
+        <div className="container mx-auto max-w-5xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-500 p-12 md:p-20 text-center shadow-2xl">
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-white/10 rounded-full" />
+            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-black/10 rounded-full" />
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight">¿Listo para dar el siguiente paso?</h2>
+            <p className="text-blue-100 text-xl mb-10 max-w-xl mx-auto">Crea tu cuenta hoy mismo y descubre todas las oportunidades que te esperan.</p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full px-12 h-14 text-lg font-bold bg-white text-blue-600 hover:bg-gray-100 shadow-xl">
+                  Registrarse Gratis
+                </Button>
+              </Link>
+              <Link href="/about" className="text-white font-bold hover:underline underline-offset-4 text-lg">
+                Saber más sobre nosotros →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 border-t border-gray-800 bg-gray-950 px-4">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="col-span-1 md:col-span-1">
+              <h3 className="text-2xl font-bold text-white mb-6">Búsqueda de Trabajo</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                Nuestra misión es empoderar a los profesionales y brindar soluciones de calidad a los clientes en todo el mundo.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Plataforma</h4>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><Link href="/explore" className="hover:text-blue-400 transition-colors">Explorar</Link></li>
+                <li><Link href="/providers" className="hover:text-blue-400 transition-colors">Proveedores</Link></li>
+                <li><Link href="/how-it-works" className="hover:text-blue-400 transition-colors">Cómo Funciona</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Compañía</h4>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><Link href="/about" className="hover:text-blue-400 transition-colors">Acerca de</Link></li>
+                <li><Link href="/careers" className="hover:text-blue-400 transition-colors">Carreras</Link></li>
+                <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contacto</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Legal</h4>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacidad</Link></li>
+                <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Términos</Link></li>
+                <li><Link href="/help" className="hover:text-blue-400 transition-colors">Ayuda</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-gray-800/60 text-center text-gray-600 text-sm">
+            <p>&copy; {new Date().getFullYear()} Búsqueda de Trabajo. Todos los derechos reservados.</p>
+          </div>
+        </div>
       </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+  return (
+    <div className="p-8 rounded-2xl bg-gray-800/40 border border-gray-700/50 hover:border-blue-500/50 hover:bg-gray-800/60 transition-all duration-300 group">
+      <div className="mb-6 p-4 inline-block rounded-xl bg-gray-700/50 group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{title}</h3>
+      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
     </div>
   );
 }

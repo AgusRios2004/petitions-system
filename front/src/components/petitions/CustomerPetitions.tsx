@@ -84,17 +84,21 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         {petitionStatusTabs && filters.id_state !== undefined && (
-          <Tabs
-            tabs={petitionStatusTabs}
-            activeTab={filters.id_state}
-            onTabClick={handleStatusTabChange}
-          />
+          <div className="w-full sm:w-auto overflow-x-auto">
+            <Tabs
+              tabs={petitionStatusTabs}
+              activeTab={filters.id_state}
+              onTabClick={handleStatusTabChange}
+            />
+          </div>
         )}
 
-        <Link href="/petition/create">
-          <Button fullWidth={false}>Crear Petición</Button>
+        <Link href="/petition/create" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-900/20">
+            Crear Petición
+          </Button>
         </Link>
       </div>
 
