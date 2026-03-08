@@ -84,7 +84,7 @@ async function seed() {
             const role = roles.find(r => r.name === roleName);
             await UserRole.create({ id_user: user.id_user, id_role: role.id_role });
 
-            const addr = await Address.create({ street: 'Calle ' + name, number: '123', id_city: mzaCity.id_city });
+            const addr = await Address.create({ street: 'Calle ' + name, number: '123', postal_code: '5500', id_city: mzaCity.id_city });
 
             if (roleName === 'customer') {
                 return await Customer.create({ user_id: user.id_user, dni: '123' + user.id_user, phone: '261000' + user.id_user, address_id: addr.id_address });
@@ -110,7 +110,7 @@ async function seed() {
         const p3 = await createFullUser('Laura', 'Mesa', 'laura@ejemplo.com', 'provider', { profId: professions[2].id_profession, cats: [2] });
 
         // 4. Artículos
-        const art1 = await Article.create({ name: 'Cano de PVC 1/2', id_category: 1, id_user_create: adminUser.id_user });
+        const art1 = await Article.create({ name: 'Caño de PVC 1/2', id_category: 1, id_user_create: adminUser.id_user });
         const art2 = await Article.create({ name: 'Cinta Aisladora', id_category: 1, id_user_create: adminUser.id_user });
         const art3 = await Article.create({ name: 'Válvula Esférica', id_category: 1, id_user_create: adminUser.id_user });
 
