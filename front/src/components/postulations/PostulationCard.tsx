@@ -7,7 +7,10 @@ import { IPostulation } from '@/types/common';
 import RatingModal from '../petitions/RatingModal'; // Asegúrate que la ruta sea correcta
 import { useAuth } from '@/context/AuthContext';
 import { startConversation } from '@/service/messageService';
-import { MessageSquare } from 'lucide-react';
+import { postulationService } from '@/service/postulationService';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { MessageSquare, Check, X } from 'lucide-react';
 
 interface PostulationCardProps {
   postulation: IPostulation;
@@ -17,8 +20,36 @@ interface PostulationCardProps {
 const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) => {
   const { user } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isRatingModalOpen, setRatingModalOpen] = useState(false);
-  const isPostulationInactive = postulation.states.id_state === 1 || postulation.states.id_state === 2 || postulation.states.id_state === 4 || postulation.states.id_state === 6;
+
+  // En el seed actual: 1 = Pendiente, 2 = Aceptado, 3 = Rechazado...
+  const isPending = postulation.states.id_state === 1 || postulation.states.state === 'Pendiente';
+  const isPostulationInactive = !isPending;
+
+  const acceptMutation = useMutation({
+    mutationFn: () => postulationService.acceptPostulation(postulation.id_postulation.toString()),
+    onSuccess: () => {
+      toast.success('Postulación aceptada correctamente');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+      queryClient.invalidateQueries({ queryKey: ['petition'] });
+      queryClient.invalidateQueries({ queryKey: ['petitions'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al aceptar la postulación');
+    }
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: () => postulationService.rejectPostulation(postulation.id_postulation.toString(), { id_user_update: user!.id_user }),
+    onSuccess: () => {
+      toast.success('Postulación rechazada');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al rechazar la postulación');
+    }
+  });
 
   console.log('PostulationCard Props:', postulation)
 
@@ -53,14 +84,35 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
       </div>
       <div className='flex justify-end mt-4 gap-2'>
         {role === 'provider' && !isPostulationInactive && (
-            <Link href={`/postulation/edit/${postulation.id_postulation}`}>
-                <Button variant='primary' fullWidth={false}>Editar</Button>
-            </Link>
+          <Link href={`/postulation/edit/${postulation.id_postulation}`}>
+            <Button variant='primary' fullWidth={false}>Editar</Button>
+          </Link>
         )}
         {/* --- INICIO: Botón para iniciar conversación --- */}
+        {role === 'customer' && isPending && (
+          <>
+            <Button
+              variant='primary'
+              fullWidth={false}
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => acceptMutation.mutate()}
+              disabled={acceptMutation.isPending || rejectMutation.isPending}
+            >
+              <Check size={16} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
+            </Button>
+            <Button
+              variant='destructive'
+              fullWidth={false}
+              onClick={() => rejectMutation.mutate()}
+              disabled={acceptMutation.isPending || rejectMutation.isPending}
+            >
+              <X size={16} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+            </Button>
+          </>
+        )}
         {role === 'customer' && (
           <Button
-            variant='primary'
+            variant='secondary'
             fullWidth={false}
             onClick={async () => {
               if (!postulation.createdBy?.id_user || !postulation.petition?.id_petition) return;
@@ -95,12 +147,12 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
           isOpen={isRatingModalOpen}
           onClose={() => setRatingModalOpen(false)}
           // El proveedor a calificar es quien creó la postulación.
-          providerId={postulation.createdBy.provider!.id_provider} 
+          providerId={postulation.createdBy.provider!.id_provider}
           // El cliente a calificar es quien creó la petición original.
           // Se usa el 'user' logueado si es el cliente quien califica, o se extrae de la petición si es el proveedor.
           customerId={
-            role === 'customer' 
-              ? user!.customer!.id_customer 
+            role === 'customer'
+              ? user!.customer!.id_customer
               : postulation.petition!.customers.id_customer
           }
           // El objetivo de la calificación depende del rol del usuario actual.

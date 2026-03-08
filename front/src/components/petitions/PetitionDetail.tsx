@@ -181,7 +181,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
           <div className="mt-6 pt-6 border-t border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-gray-200">Adjuntos</h3>
-              {isOwner && !user?.provider && petition.id_state == 3 && (
+              {isOwner && !user?.provider && (petition.id_state === 1 || petition.id_state === 3) && (
                 <Link href={`/petition/${petition.id_petition}/add-attachment`}>
                   <Button size="sm" variant="secondary">Gestionar Adjuntos</Button>
                 </Link>
@@ -222,7 +222,7 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
               </Link>
             )}
 
-            {isOwner && petition.id_state == 3 && (
+            {isOwner && (petition.id_state === 1 || petition.id_state === 3) && (
               <>
                 <Button
                   onClick={() => onEdit(petition.id_petition)}
