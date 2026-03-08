@@ -95,7 +95,7 @@ async function seed() {
         console.log('✅ Tipos de Proveedor insertados.');
 
         // 8. Localización (Datos mínimos para probar)
-        const { Department, Address, Customer, Provider } = require('../models');
+        const { Department, Address, Customer, Provider, ProviderCategory } = require('../models');
         const argentina = await Country.create({ name: 'Argentina', code: 'AR', id_user_create: adminUser.id_user });
         const mendoza = await Province.create({ name: 'Mendoza', id_country: argentina.id_country, id_user_create: adminUser.id_user });
         const capitalDep = await Department.create({
@@ -162,14 +162,20 @@ async function seed() {
 
         await UserRole.create({ id_user: userProvider.id_user, id_role: roles[2].id_role });
 
-        await Provider.create({
+        const provider = await Provider.create({
             user_id: userProvider.id_user,
             id_type_provider: typeProviders[0].id_type_provider,
             id_profession: professions[0].id_profession, // Plomero
             address_id: addressProvider.id_address,
             description: 'Plomero con 10 años de experiencia en reparaciones hogareñas.'
         });
-        console.log('✅ Usuario Proveedor (Provider) creado.');
+
+        // 11. Asignar categorías de interés al proveedor (Hogar y Construcción)
+        await ProviderCategory.bulkCreate([
+            { provider_id: provider.id_provider, category_id: 1 }, // Hogar
+            { provider_id: provider.id_provider, category_id: 3 }  // Construcción
+        ]);
+        console.log('✅ Usuario Proveedor (Provider) y sus intereses creados.');
 
         console.log('\n🚀 ¡Base de datos configurada con éxito!');
         process.exit(0);

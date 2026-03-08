@@ -4,9 +4,9 @@ const notificationService = require('../services/notificationService');
 
 exports.getPetitions = async (req, res) => {
     try {
-        const { 
+        const {
             id_state, id_type_petition, id_customer, id_profession, providerId,
-            id_type_provider, description, page, limit, sortBy, order 
+            id_type_provider, description, page, limit, sortBy, order
         } = req.query;
 
         // Build filter object
@@ -68,7 +68,7 @@ exports.getPetitionsByCustomerId = async (req, res) => {
 };
 
 exports.getPetitionsByState = async (req, res) => {
-    try {   
+    try {
         const { id_state } = req.params;
         const petitions = await service.getPetitionsByState(id_state);
         if (petitions.length === 0) return error(res, 'No se encontraron peticiones para este estado', 404);
@@ -94,14 +94,14 @@ exports.getPetitionsByStateAndType = async (req, res) => {
 exports.createPetition = async (req, res) => {
     try {
         // 1. Extraemos categoryIds del body
-        const { 
-            id_customer, 
-            id_type_petition, 
-            description, 
-            date_since, 
-            date_until, 
-            id_state, 
-            id_profession, 
+        const {
+            id_customer,
+            id_type_petition,
+            description,
+            date_since,
+            date_until,
+            id_state,
+            id_profession,
             id_type_provider,
             categoryIds // <--- NUEVO CAMPO (Array de IDs, ej: [1, 5, 8])
         } = req.body;
@@ -117,9 +117,9 @@ exports.createPetition = async (req, res) => {
             description,
             date_since,
             date_until,
-            id_state: 3, // Estado inicial (ej: Pendiente)
-            id_profession, 
-            id_type_provider, 
+            id_state: 1, // Estado inicial: 1 = Pendiente (ver seed.js)
+            id_profession,
+            id_type_provider,
             id_user_create: req.user.sub,
             id_user_update: req.user.sub,
             is_deleted: false,
@@ -173,7 +173,7 @@ exports.cancelPetition = async (req, res) => {
         const eventBus = req.app.get('eventBus');
 
         const petition = await service.cancelPetition(Number(id), userId, eventBus);
-        
+
         return success(res, petition, 'Petición y postulaciones asociadas canceladas correctamente.');
 
     } catch (e) {
