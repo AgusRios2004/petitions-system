@@ -90,5 +90,15 @@ export const postulationService = {
             console.error("Error: ", e);
             throw e;
         }
+    },
+
+    finishPostulation: async (id: string) => {
+        try {
+            const response = await apiClient.patch(`/postulation/${id}/finish`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error finishing postulation with ID ${id}:`, error);
+            throw error;
+        }
     }
 };

@@ -10,7 +10,8 @@ import { startConversation } from '@/service/messageService';
 import { postulationService } from '@/service/postulationService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { MessageSquare, Check, X } from 'lucide-react';
+import { MessageSquare, Check, X, ClipboardCheck, Award } from 'lucide-react';
+import * as petitionService from '@/service/petitionService';
 
 interface PostulationCardProps {
   postulation: IPostulation;
@@ -51,6 +52,30 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
     }
   });
 
+  const finishMutation = useMutation({
+    mutationFn: () => postulationService.finishPostulation(postulation.id_postulation.toString()),
+    onSuccess: () => {
+      toast.success('Trabajo marcado como finalizado. Esperando confirmación del cliente.');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al finalizar el trabajo');
+    }
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => petitionService.completePetition(postulation.petition.id_petition),
+    onSuccess: () => {
+      toast.success('Trabajo confirmado. ¡Gracias!');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+      queryClient.invalidateQueries({ queryKey: ['petition'] });
+      setRatingModalOpen(true);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al completar la petición');
+    }
+  });
+
   console.log('PostulationCard Props:', postulation)
 
   return (
@@ -72,9 +97,14 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
         </div>
         <div className="text-right">
           {postulation.winner ? (
-            <span className={`mt-2 inline-block text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor('Aceptado')}`}>
-              Ganador
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 uppercase tracking-wider`}>
+                Ganador
+              </span>
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
+                {postulation.states.state}
+              </span>
+            </div>
           ) : (
             <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
               {postulation.states.state}
@@ -131,7 +161,31 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
           <Button variant='secondary' fullWidth={false}>Ver detalles</Button>
         </Link>
 
-        {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (
+        {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
+          <Button
+            variant='primary'
+            fullWidth={false}
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => finishMutation.mutate()}
+            disabled={finishMutation.isPending}
+          >
+            <ClipboardCheck size={16} className="mr-2" /> {finishMutation.isPending ? 'Finalizando...' : 'Marcar como Finalizado'}
+          </Button>
+        )}
+
+        {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
+          <Button
+            variant='primary'
+            fullWidth={false}
+            className="bg-green-600 hover:bg-green-700 font-bold"
+            onClick={() => completeMutation.mutate()}
+            disabled={completeMutation.isPending}
+          >
+            <Award size={16} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
+          </Button>
+        )}
+
+        {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
           <Button variant='primary' fullWidth={false} className="bg-yellow-600 hover:bg-yellow-700" onClick={() => setRatingModalOpen(true)}>
             {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
           </Button>

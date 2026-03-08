@@ -11,5 +11,6 @@ router.patch('/:id/winner', authRequired, ctrl.winnerPostulation);
 router.patch('/:id/accept', authRequired, ctrl.acceptPostulation);
 router.patch('/:id/reject', authRequired, ctrl.rejectPostulation);
 router.patch('/:id/cancel', authRequired, ctrl.withdrawPostulation);
+router.patch('/:id/finish', authRequired, ctrl.finishPostulation);
 
 module.exports = router;

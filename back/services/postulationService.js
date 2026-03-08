@@ -553,6 +553,73 @@ class PostulationService {
         return updateResult;
     }
 
+    /**
+     * El proveedor marca la postulación (el trabajo) como finalizado.
+     */
+    async finishPostulation(id, userId, eventBus) {
+        const t = await sequelize.transaction();
+        try {
+            const postulation = await Postulation.findByPk(id, {
+                include: [{ model: Petition, as: 'petition' }],
+                transaction: t
+            });
+
+            if (!postulation) {
+                const error = new Error("Postulación no encontrada.");
+                error.statusCode = 404;
+                throw error;
+            }
+
+            // Solo el ganador puede finalizar
+            if (!postulation.winner || postulation.id_user_create !== userId) {
+                const error = new Error("No tienes permiso para finalizar este trabajo.");
+                error.statusCode = 403;
+                throw error;
+            }
+
+            const stateFin = await getStateId('FIN');
+            await postulation.update({
+                id_state: stateFin,
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
+
+            await t.commit();
+
+            // Lógica Post-Commit
+            if (eventBus) {
+                const petition = await Petition.findByPk(postulation.id_petition, {
+                    include: [{ model: Customer, as: 'customers' }]
+                });
+
+                if (petition && petition.customers) {
+                    const targetUserId = petition.customers.user_id;
+                    eventBus.emit('postulation:finished', {
+                        postulation: postulation,
+                        targetUserId: targetUserId
+                    });
+
+                    notificationService.createNotification({
+                        id_user: targetUserId,
+                        title: "Trabajo finalizado",
+                        message: `El proveedor ha marcado el trabajo "${petition.description.substring(0, 30)}..." como finalizado. Por favor, confírmalo para calificar.`,
+                        notification_type: "INFO",
+                        settingKey: "postulation_finished",
+                        related_postulation_id: postulation.id_postulation,
+                        related_petition_id: petition.id_petition
+                    }).catch(err => console.error("Error notificando fin de trabajo:", err));
+                }
+            }
+
+            return await this.getPostulationById(id);
+        } catch (e) {
+            if (t) await t.rollback();
+            console.error("Error en finishPostulation:", e);
+            if (!e.statusCode) e.statusCode = 500;
+            throw e;
+        }
+    }
+
 }
 
 module.exports = new PostulationService();

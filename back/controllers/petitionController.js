@@ -181,3 +181,15 @@ exports.cancelPetition = async (req, res) => {
         return error(res, e.message, e.statusCode || 500);
     }
 };
+
+exports.completePetition = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const eventBus = req.app.get('eventBus');
+        const petition = await service.completePetition(Number(id), req.user.sub, eventBus);
+        return success(res, petition);
+    } catch (e) {
+        console.error('Error en completePetition:', e);
+        return error(res, e.message, 500);
+    }
+}

@@ -11,5 +11,6 @@ router.get('/:id', ctrl.getPetitionById);
 router.post('/', authRequired, ctrl.createPetition);
 router.put('/:id', authRequired, ctrl.updatePetition);
 router.patch('/:id/cancel', authRequired, ctrl.cancelPetition);
+router.patch('/:id/complete', authRequired, ctrl.completePetition);
 
 module.exports = router;

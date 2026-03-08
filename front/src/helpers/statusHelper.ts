@@ -16,6 +16,7 @@ export const getStatusColor = (statusName: string) => {
     case 'en progreso':
       return 'bg-amber-400/10 text-amber-400 ring-1 ring-inset ring-amber-400/20';
     case 'finalizada':
+    case 'finalizado':
       return 'bg-emerald-400/10 text-emerald-400 ring-1 ring-inset ring-emerald-400/20';
     case 'cancelada':
       return 'bg-rose-400/10 text-rose-400 ring-1 ring-inset ring-rose-400/20';
@@ -28,7 +29,7 @@ export const getStatusColor = (statusName: string) => {
     case 'dado de baja':
       return 'bg-rose-400/10 text-rose-400 ring-1 ring-inset ring-rose-400/20';
     case 'activo':
-        return 'bg-sky-400/10 text-sky-400 ring-1 ring-inset ring-sky-400/20';
+      return 'bg-sky-400/10 text-sky-400 ring-1 ring-inset ring-sky-400/20';
     default:
       return 'bg-gray-400/10 text-gray-400 ring-1 ring-inset ring-gray-400/20';
   }

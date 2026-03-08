@@ -57,7 +57,7 @@ exports.getPostulationById = async (req, res) => {
         return success(res, postulation);
     } catch (e) {
         return error(res, e.message, 500);
-    }   
+    }
 };
 
 exports.createPostulation = async (req, res) => {
@@ -94,10 +94,10 @@ exports.changePostulationState = async (req, res) => {
 exports.winnerPostulation = async (req, res) => {
     try {
         const postulation = await service.updatePostulationWinnerStatus(req.params.id, req.body.winner, req.user.sub);
-        if(!postulation) return error(res, 'Postulación no encontrada', 404);
+        if (!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {
-        console.error("Error: " ,e.message);
+        console.error("Error: ", e.message);
         return error(res, e.message, 500)
     }
 };
@@ -106,7 +106,7 @@ exports.acceptPostulation = async (req, res) => {
     try {
         const eventBus = req.app.get('eventBus');
         const postulation = await service.acceptPostulation(req.params.id, req.user.sub, eventBus);
-        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        if (!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
@@ -118,7 +118,7 @@ exports.rejectPostulation = async (req, res) => {
     try {
         const eventBus = req.app.get('eventBus');
         const postulation = await service.rejectPostulation(req.params.id, req.user.sub, eventBus);
-        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        if (!postulation) return error(res, "Postulación no encontrada", 404);
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
@@ -130,7 +130,18 @@ exports.withdrawPostulation = async (req, res) => {
     try {
         const eventBus = req.app.get('eventBus');
         const postulation = await service.withdrawPostulation(req.params.id, req.user.sub, eventBus);
-        if(!postulation) return error(res, "Postulación no encontrada", 404);
+        if (!postulation) return error(res, "Postulación no encontrada", 404);
+        return success(res, postulation);
+    } catch (e) {
+        console.error("Error: ", e);
+        return error(res, e.message, 500);
+    }
+}
+
+exports.finishPostulation = async (req, res) => {
+    try {
+        const eventBus = req.app.get('eventBus');
+        const postulation = await service.finishPostulation(req.params.id, req.user.sub, eventBus);
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);

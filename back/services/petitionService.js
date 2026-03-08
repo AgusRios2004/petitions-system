@@ -1,8 +1,8 @@
-const { 
-    Petition, Customer, sequelize, Postulation, State, User, 
-    Provider, ProviderCategory, Interest, PetitionCategory, Category 
+const {
+    Petition, Customer, sequelize, Postulation, State, User,
+    Provider, ProviderCategory, Interest, PetitionCategory, Category
 } = require('../models');
-const postulationService = require('./postulationService'); 
+const postulationService = require('./postulationService');
 const { Op } = require('sequelize');
 
 // Caché simple para estados
@@ -40,7 +40,7 @@ class PetitionService {
             WHERE s.code = 'PEN'
             AND p.id_provider = ${sequelize.escape(providerId)}
         )`);
-    }  
+    }
 
     /**
         * Devuelve la configuración masiva de relaciones (Includes)
@@ -98,47 +98,47 @@ class PetitionService {
 
     // ... (Método getPetitions se mantiene igual) ...
     async getPetitions(filter = {}, options = {}) {
-       const { providerId, categories, ...restOfFilter } = filter;
-       const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
-       const offset = (page - 1) * limit;
+        const { providerId, categories, ...restOfFilter } = filter;
+        const { page = 1, limit = 10, sortBy = 'date_create', order = 'DESC' } = options;
+        const offset = (page - 1) * limit;
 
-       const where = { ...restOfFilter };
+        const where = { ...restOfFilter };
 
-       if (where.description) {
-           where.description = { [Op.like]: `%${where.description}%` };
-       }
+        if (where.description) {
+            where.description = { [Op.like]: `%${where.description}%` };
+        }
 
-       if (providerId) {
-           const interestQuery = this._getProviderInterestFilter(providerId);
-           const exclusionLiteral = sequelize.literal(`(
+        if (providerId) {
+            const interestQuery = this._getProviderInterestFilter(providerId);
+            const exclusionLiteral = sequelize.literal(`(
                SELECT p.id_petition
                FROM postulation AS p
                WHERE p.id_provider = ${sequelize.escape(providerId)}
            )`);
 
-           where[Op.and] = [
-               ...(where[Op.and] || []),
-               interestQuery,
-               { id_petition: { [Op.notIn]: exclusionLiteral } }
-           ];
-       }
+            where[Op.and] = [
+                ...(where[Op.and] || []),
+                interestQuery,
+                { id_petition: { [Op.notIn]: exclusionLiteral } }
+            ];
+        }
 
-       // Filtro por categorías específicas (Seleccionadas manualmente)
-       if (categories) {
-           let catIds = [];
-           if (Array.isArray(categories)) {
-               catIds = categories;
-           } else if (typeof categories === 'string') {
-               catIds = categories.split(',').map(id => parseInt(id, 10)).filter(n => !isNaN(n));
-           } else if (typeof categories === 'number') {
-               catIds = [categories];
-           }
+        // Filtro por categorías específicas (Seleccionadas manualmente)
+        if (categories) {
+            let catIds = [];
+            if (Array.isArray(categories)) {
+                catIds = categories;
+            } else if (typeof categories === 'string') {
+                catIds = categories.split(',').map(id => parseInt(id, 10)).filter(n => !isNaN(n));
+            } else if (typeof categories === 'number') {
+                catIds = [categories];
+            }
 
-           if (catIds.length > 0) {
-               const idsStr = catIds.join(',');
-               where[Op.and] = [
-                   ...(where[Op.and] || []),
-                   sequelize.literal(`
+            if (catIds.length > 0) {
+                const idsStr = catIds.join(',');
+                where[Op.and] = [
+                    ...(where[Op.and] || []),
+                    sequelize.literal(`
                        EXISTS (
                            SELECT 1
                            FROM n_petition_category AS ppc_cat
@@ -146,29 +146,29 @@ class PetitionService {
                            AND ppc_cat.id_category IN (${idsStr})
                        )
                    `)
-               ];
-           }
-       }
+                ];
+            }
+        }
 
-       return await Petition.findAndCountAll({
-           where,
-           limit,
-           offset,
-           order: [[sortBy, order]],
-           distinct: true,
-           include: this._getPetitionIncludes(),
-       });
+        return await Petition.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [[sortBy, order]],
+            distinct: true,
+            include: this._getPetitionIncludes(),
+        });
     }
 
     async getPetitionById(id) {
         return await Petition.findByPk(id, {
             // ADAPTACIÓN: Incluir categories aquí también
             include: [
-                'attachments', 
-                'customers', 
-                'typePetitions', 
-                'states', 
-                'profession', 
+                'attachments',
+                'customers',
+                'typePetitions',
+                'states',
+                'profession',
                 'typeProvider',
                 {
                     model: Category,
@@ -179,11 +179,11 @@ class PetitionService {
         });
     }
 
-    
+
     async createPetition(petitionData, categoryIds = []) {
         // Iniciamos una transacción para asegurar que se crea la petición Y sus categorías, o nada.
         const t = await sequelize.transaction();
-        
+
         try {
             // A. Crear la Petición
             const newPetition = await Petition.create(petitionData, { transaction: t });
@@ -212,7 +212,7 @@ class PetitionService {
     }
 
     async updatePetition(id, petitionData, categoryIds) {
-        
+
         console.log("DEBUG UPDATE - ID:", id);
         console.log("DEBUG UPDATE - Body:", JSON.stringify(petitionData));
         console.log("DEBUG UPDATE - Arg categoryIds:", categoryIds);
@@ -234,7 +234,7 @@ class PetitionService {
             if (categoryIds !== undefined && Array.isArray(categoryIds)) {
                 // Eliminar asociaciones existentes
                 await PetitionCategory.destroy({ where: { id_petition: id }, transaction: t });
-                
+
                 // Crear nuevas asociaciones
                 if (categoryIds.length > 0) {
                     const categoryRecords = categoryIds.map(idCat => ({ id_petition: id, id_category: idCat }));
@@ -268,7 +268,7 @@ class PetitionService {
                 throw error;
             }
 
-            const petitionCancelledState = await getStateId('CAN'); 
+            const petitionCancelledState = await getStateId('CAN');
 
             await petition.update({
                 id_state: petitionCancelledState,
@@ -285,6 +285,57 @@ class PetitionService {
             await t.rollback();
             console.error("Error en el servicio de cancelación de petición:", error);
             if (!error.statusCode) error.statusCode = 500;
+            throw error;
+        }
+    }
+
+    /**
+     * El cliente confirma que el trabajo se ha terminado.
+     */
+    async completePetition(petitionId, userId, eventBus) {
+        const t = await sequelize.transaction();
+        try {
+            const petition = await Petition.findByPk(petitionId, { transaction: t });
+            if (!petition) throw new Error("Petición no encontrada");
+
+            // Verificar que sea el dueño
+            const customer = await Customer.findOne({ where: { user_id: userId } });
+            if (!customer || petition.id_customer !== customer.id_customer) {
+                throw new Error("No tienes permiso para completar esta petición.");
+            }
+
+            const stateFin = await getStateId('FIN');
+            await petition.update({
+                id_state: stateFin,
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { transaction: t });
+
+            await t.commit();
+
+            // Lógica Post-Commit
+            if (eventBus) {
+                // Notificar al ganador
+                const winnerPostulation = await Postulation.findOne({
+                    where: { id_petition: petitionId, winner: true }
+                });
+
+                if (winnerPostulation) {
+                    notificationService.createNotification({
+                        id_user: winnerPostulation.id_user_create,
+                        title: "¡Trabajo Confirmado!",
+                        message: `El cliente ha confirmado la finalización del trabajo "${petition.description.substring(0, 30)}...".`,
+                        notification_type: "SUCCESS",
+                        settingKey: "petition_completed",
+                        related_postulation_id: winnerPostulation.id_postulation,
+                        related_petition_id: petition.id_petition
+                    }).catch(err => console.error("Error notificando confirmación:", err));
+                }
+            }
+
+            return await this.getPetitionById(petitionId);
+        } catch (error) {
+            if (t) await t.rollback();
             throw error;
         }
     }

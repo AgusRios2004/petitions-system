@@ -44,3 +44,8 @@ export const cancelPetition = async (id_petition: number) => {
   const response = await apiClient.patch(`/petition/${id_petition}/cancel`);
   return response.data;
 };
+
+export const completePetition = async (id_petition: number) => {
+  const response = await apiClient.patch(`/petition/${id_petition}/complete`);
+  return response.data;
+};
