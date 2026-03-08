@@ -120,13 +120,13 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
 
   return (
     <div>
-      <div className="border-b border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+      <div className="border-b border-gray-700 mb-6 overflow-x-auto scrollbar-hide">
+        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max px-2" aria-label="Tabs">
           {customerTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === tab.id
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-lg transition-all duration-200 ${activeTab === tab.id
                 ? 'border-blue-500 text-white'
                 : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
                 }`}>
@@ -135,7 +135,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
           ))}
         </nav>
       </div>
-      <div className="p-6 bg-gray-800 rounded-lg min-h-[400px]">
+      <div className="p-4 sm:p-6 bg-gray-800 rounded-lg min-h-[400px] shadow-xl border border-gray-700/50">
         {renderTabContent()}
       </div>
     </div>

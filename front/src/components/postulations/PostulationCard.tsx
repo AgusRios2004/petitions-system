@@ -80,70 +80,70 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
 
   return (
     <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
-      <div className="flex justify-between items-start">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div className="w-full sm:w-2/3">
           {postulation.createdBy?.provider?.id_provider ? (
-            <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-lg font-semibold text-white hover:underline">
+            <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-xl font-bold text-white hover:text-blue-400 transition-colors inline-block">
               {postulation.createdBy.name} {postulation.createdBy.lastname}
             </Link>
           ) : (
-            <p className="text-lg font-semibold text-white">
+            <p className="text-xl font-bold text-white">
               {postulation.createdBy?.name} {postulation.createdBy?.lastname}
             </p>
           )}
-          <p className="text-sm text-gray-300 mt-2">{postulation.petition?.description}</p>
-          <p className="text-sm text-gray-200 mt-1">Propuesta: {postulation.proposal}</p>
-          <p className="text-sm font-bold text-white mt-1">Costo: ${postulation.cost}</p>
+          <p className="text-sm text-gray-300 mt-2 leading-relaxed italic">{postulation.petition?.description}</p>
+          <p className="text-sm text-gray-200 mt-3 font-medium">Propuesta: <span className="text-gray-400">{postulation.proposal}</span></p>
+          <p className="text-lg font-black text-emerald-400 mt-1">Costo: ${postulation.cost}</p>
         </div>
-        <div className="text-right">
+        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto border-t sm:border-t-0 border-gray-700 pt-3 sm:pt-0">
+          <span className="sm:hidden text-xs text-gray-400 uppercase font-bold tracking-widest">Estado</span>
           {postulation.winner ? (
             <div className="flex flex-col items-end gap-1">
-              <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 uppercase tracking-wider`}>
+              <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 uppercase tracking-widest`}>
                 Ganador
               </span>
-              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
                 {postulation.states.state}
               </span>
             </div>
           ) : (
-            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusColor(postulation.states.state)}`}>
+            <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
               {postulation.states.state}
             </span>
           )}
         </div>
       </div>
-      <div className='flex justify-end mt-4 gap-2'>
+      <div className='flex flex-col sm:flex-row flex-wrap sm:justify-end mt-6 gap-3 w-full border-t border-gray-700/50 pt-5'>
         {role === 'provider' && !isPostulationInactive && (
-          <Link href={`/postulation/edit/${postulation.id_postulation}`}>
-            <Button variant='primary' fullWidth={false}>Editar</Button>
+          <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full sm:w-auto">
+            <Button variant='primary' className="w-full">Editar</Button>
           </Link>
         )}
-        {/* --- INICIO: Botón para iniciar conversación --- */}
+        {/* --- INICIO: Botones de Acción --- */}
         {role === 'customer' && isPending && (
-          <>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               variant='primary'
-              fullWidth={false}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto order-2 sm:order-1"
               onClick={() => acceptMutation.mutate()}
               disabled={acceptMutation.isPending || rejectMutation.isPending}
             >
-              <Check size={16} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
+              <Check size={18} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
             </Button>
             <Button
               variant='destructive'
-              fullWidth={false}
+              className="w-full sm:w-auto order-1 sm:order-2"
               onClick={() => rejectMutation.mutate()}
               disabled={acceptMutation.isPending || rejectMutation.isPending}
             >
-              <X size={16} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+              <X size={18} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
             </Button>
-          </>
+          </div>
         )}
         {role === 'customer' && (
           <Button
             variant='secondary'
-            fullWidth={false}
+            className="w-full sm:w-auto order-3 sm:order-last"
             onClick={async () => {
               if (!postulation.createdBy?.id_user || !postulation.petition?.id_petition) return;
               try {
@@ -154,39 +154,37 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
               }
             }}
           >
-            <MessageSquare size={16} className="mr-2" /> Enviar Mensaje
+            <MessageSquare size={18} className="mr-2" /> Enviar Mensaje
           </Button>
         )}
-        <Link href={`/postulation/${postulation.id_postulation}`}>
-          <Button variant='secondary' fullWidth={false}>Ver detalles</Button>
+        <Link href={`/postulation/${postulation.id_postulation}`} className="w-full sm:w-auto">
+          <Button variant='secondary' className="w-full">Ver detalles</Button>
         </Link>
 
         {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
           <Button
             variant='primary'
-            fullWidth={false}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
             onClick={() => finishMutation.mutate()}
             disabled={finishMutation.isPending}
           >
-            <ClipboardCheck size={16} className="mr-2" /> {finishMutation.isPending ? 'Finalizando...' : 'Marcar como Finalizado'}
+            <ClipboardCheck size={18} className="mr-2" /> {finishMutation.isPending ? 'Finalizando...' : 'Marcar como Finalizado'}
           </Button>
         )}
 
         {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
           <Button
             variant='primary'
-            fullWidth={false}
-            className="bg-green-600 hover:bg-green-700 font-bold"
+            className="bg-green-600 hover:bg-green-700 font-bold w-full sm:w-auto"
             onClick={() => completeMutation.mutate()}
             disabled={completeMutation.isPending}
           >
-            <Award size={16} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
+            <Award size={18} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
           </Button>
         )}
 
         {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
-          <Button variant='primary' fullWidth={false} className="bg-yellow-600 hover:bg-yellow-700" onClick={() => setRatingModalOpen(true)}>
+          <Button variant='primary' className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto" onClick={() => setRatingModalOpen(true)}>
             {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
           </Button>
         )}
