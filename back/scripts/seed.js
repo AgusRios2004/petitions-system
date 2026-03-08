@@ -3,7 +3,8 @@ const {
     Country, Province, City, TypePetition, User, UserRole,
     Color, Department, Address, Customer, Provider,
     ProviderCategory, Petition, PetitionCategory, Postulation,
-    Article, Inventory, Grade, GradeProvider, GradeCustomer
+    Article, Inventory, Grade, GradeProvider, GradeCustomer,
+    TypeOffer
 } = require('../models');
 
 async function seed() {
@@ -48,6 +49,13 @@ async function seed() {
         const typePetitions = await TypePetition.bulkCreate([
             { name: 'Servicio', id_user_create: adminUser.id_user },
             { name: 'Producto', id_user_create: adminUser.id_user }
+        ]);
+
+        const typeOffers = await TypeOffer.bulkCreate([
+            { name: 'Promoción Temporal', id_user_create: adminUser.id_user },
+            { name: 'Descuento Especial', id_user_create: adminUser.id_user },
+            { name: 'Pack de Servicios', id_user_create: adminUser.id_user },
+            { name: 'Oferta de Lanzamiento', id_user_create: adminUser.id_user }
         ]);
 
         const categories = await Category.bulkCreate([
