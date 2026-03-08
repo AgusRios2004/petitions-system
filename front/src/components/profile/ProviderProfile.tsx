@@ -17,11 +17,13 @@ import PublicProfileContent from './provider/PublicProfileContent';
 import ProfileSettings from './provider/ProfileSettings';
 import { SOCKET_URL } from '@/service/socketService';
 
+import ProviderDashboard from './provider/ProviderDashboard';
+
 // --- COMPONENTE DE PERFIL DE PROVEEDOR ---
 const ProviderProfile = ({ user }: { user: UserProfile }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'perfil-publico';
+  const initialTab = searchParams.get('tab') || 'dashboard';
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -34,46 +36,57 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
   };
 
   const tabs = [
-    { id: 'perfil-publico', label: 'Mi Perfil Público' },
-    { id: 'oportunidades', label: 'Buscar Oportunidades' },
-    { id: 'ofertas', label: 'Mis Ofertas' },
-    { id: 'postulaciones', label: 'Mis Postulaciones' },
-    { id: 'disponibilidad', label: 'Disponibilidad' },
+    { id: 'dashboard', label: 'Resumen' },
+    { id: 'perfil-publico', label: 'Mi Perfil' },
+    { id: 'oportunidades', label: 'Buscar Trabajos' },
+    { id: 'ofertas', label: 'Ofertas' },
+    { id: 'postulaciones', label: 'Postulaciones' },
+    { id: 'disponibilidad', label: 'Horarios' },
   ];
 
+  const renderContent = () => {
+    if (!user.provider) return <p className="text-white p-10 text-center">No se encontró información de proveedor.</p>;
+
+    switch (activeTab) {
+      case 'dashboard':
+        return <ProviderDashboard providerId={user.provider.id_provider} />;
+      case 'postulaciones':
+        return <ProviderPostulations id_provider={user.provider.id_provider} />;
+      case 'oportunidades':
+        return <ProviderOportunities />;
+      case 'ofertas':
+        return <ProviderOffers providerId={user.provider.id_provider} />;
+      case 'disponibilidad':
+        return <ProviderAvailability />;
+      case 'perfil-publico':
+        return <PublicProfileContent providerId={user.provider.id_provider} />;
+      case 'configuracion':
+        return user.id_user ? <ProfileSettings userId={user.id_user} /> : null;
+      default:
+        return <ProviderDashboard providerId={user.provider.id_provider} />;
+    }
+  };
+
   return (
-    <div>
-      <div className="border-b border-gray-700 mb-6 overflow-x-auto scrollbar-hide">
-        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max px-2" aria-label="Tabs">
+    <div className="space-y-8">
+      <div className="w-full overflow-x-auto scrollbar-hide py-1">
+        <nav className="flex items-center gap-1.5 p-1.5 bg-gray-950/40 backdrop-blur-md rounded-2xl border border-white/5 w-fit min-w-max mx-auto sm:mx-0" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-lg transition-all duration-200 ${activeTab === tab.id
-                ? 'border-blue-500 text-white'
-                : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              className={`whitespace-nowrap py-2.5 px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 ${activeTab === tab.id
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 ring-2 ring-blue-500/20'
+                : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}>
               {tab.label}
             </button>
           ))}
         </nav>
       </div>
-      <div className="p-4 sm:p-6 bg-gray-800 rounded-lg min-h-[400px] shadow-xl border border-gray-700/50">
-        {activeTab === 'postulaciones' && user.provider ? (
-          <ProviderPostulations id_provider={user.provider.id_provider} />
-        ) : activeTab === 'oportunidades' ? (
-          <ProviderOportunities />
-        ) : activeTab === 'ofertas' && user.provider ? (
-          <ProviderOffers providerId={user.provider.id_provider} />
-        ) : activeTab === 'disponibilidad' ? (
-          <ProviderAvailability />
-        ) : activeTab == "perfil-publico" && user.provider ? (
-          <PublicProfileContent providerId={user.provider.id_provider} />
-        ) : activeTab == "configuracion" && user.id_user ? (
-          <ProfileSettings userId={user.id_user} />
-        ) : (
-          <p>Contenido de la pestaña: {activeTab}</p>
-        )}
+
+      <div className="p-0 sm:p-2 bg-transparent min-h-[400px]">
+        {renderContent()}
       </div>
     </div>
   );

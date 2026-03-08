@@ -10,22 +10,32 @@ export default function Header() {
   const { user } = useAuth();
 
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-      <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white hover:text-blue-500 transition-colors">
-          Búsqueda de Trabajo
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-gray-950/70 backdrop-blur-xl shadow-2xl">
+      <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 h-16 sm:h-20">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40 group-hover:rotate-6 transition-transform">
+            <span className="text-white font-black text-lg">BT</span>
+          </div>
+          <span className="text-base sm:text-xl font-extrabold tracking-tight text-white group-hover:text-blue-400 transition-colors uppercase">
+            Búsqueda<span className="text-blue-500">.</span>Trabajo
+          </span>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-4">
+
+        <div className="flex items-center gap-2 sm:gap-6">
           {user ? (
-            <div className="flex items-center gap-1 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-4 bg-gray-900/50 p-1.5 rounded-2xl border border-white/5">
               <NotificationBell />
+              <div className="w-px h-6 bg-white/10 hidden sm:block" />
               <MessageList />
+              <div className="w-px h-6 bg-white/10 hidden sm:block" />
               <LogoutButton />
             </div>
           ) : (
-            <div className="flex items-center gap-3 text-sm sm:text-base font-medium">
-              <Link href="/login" className="hover:text-blue-500">Iniciar Sesión</Link>
-              <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors">Registrarse</Link>
+            <div className="flex items-center gap-3 text-sm sm:text-base font-semibold">
+              <Link href="/login" className="text-gray-400 hover:text-white transition-colors px-2">Iniciar Sesión</Link>
+              <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-900/30 hover:-translate-y-0.5 active:translate-y-0">
+                Registrarse
+              </Link>
             </div>
           )}
         </div>

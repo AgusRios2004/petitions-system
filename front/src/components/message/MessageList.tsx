@@ -38,11 +38,11 @@ export default function MessageList() {
         if (conversationIndex !== -1) {
           // La conversación ya existe en la lista.
           const existingConvo = conversations[conversationIndex];
-          
+
           // Verificamos si el remitente del mensaje es el "otro" usuario.
           // Si es así, usamos sus datos para corregir la preview.
-          const otherUser = newMessage.sender_id !== user?.id_user 
-            ? newMessage.sender 
+          const otherUser = newMessage.sender_id !== user?.id_user
+            ? newMessage.sender
             : existingConvo.users[0]; // Si yo envié el mensaje, mantengo los datos que ya tenía.
 
           const updatedConversation = {
@@ -105,42 +105,65 @@ export default function MessageList() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:ring-gray-700">
-          <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Mensajes</h3>
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="flex justify-center items-center p-4">
-                <Loader2 className="animate-spin text-gray-500" />
-              </div>
-            ) : conversations && conversations.length > 0 ? (
-              conversations.map(convo => {
-                const otherUser = convo.users && convo.users.length > 0 ? convo.users[0] : null;
+        <>
+          {/* Overlay to close on mobile click outside */}
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 sm:hidden" onClick={() => setIsOpen(false)} />
 
-                if (!otherUser) return null;
+          <div className="fixed inset-x-4 top-20 sm:absolute sm:inset-auto sm:right-0 sm:top-full z-50 mt-2 sm:w-96 origin-top-right rounded-2xl bg-gray-900 border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="border-b border-white/5 bg-gray-800/50 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <MessageSquare size={18} className="text-blue-400" />
+                Mensajes
+              </h3>
+              <Link href="/messages" className="text-xs text-blue-500 font-bold hover:underline" onClick={() => setIsOpen(false)}>
+                Ver todos
+              </Link>
+            </div>
+            <div className="max-h-[70vh] sm:max-h-96 overflow-y-auto custom-scrollbar">
+              {isLoading ? (
+                <div className="flex flex-col justify-center items-center p-12">
+                  <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
+                  <p className="text-gray-500 text-sm">Cargando chats...</p>
+                </div>
+              ) : conversations && conversations.length > 0 ? (
+                <div className="divide-y divide-white/5">
+                  {conversations.map(convo => {
+                    const otherUser = convo.users && convo.users.length > 0 ? convo.users[0] : null;
 
-                return (
-                <Link key={convo.id_conversation} href={`/message/${convo.id_conversation}`} onClick={() => setIsOpen(false)} >
-                  <div className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b dark:border-gray-700">
-                    <img src={otherUser.profile_image || '/default-avatar.png'} alt="avatar" className="h-10 w-10 rounded-full object-cover" />
-                    <div className="flex-1 overflow-hidden">
-                      <p className="font-semibold text-sm truncate dark:text-white">{otherUser.name} {otherUser.lastname}</p>
-                      <p className="text-sm text-gray-500 truncate dark:text-gray-400">{convo.last_message_content}</p>
-                    </div>
-                    {convo.last_message_date && (
-                       <p className="text-xs text-gray-400 self-start">
-                         {formatDistanceToNow(new Date(convo.last_message_date), { addSuffix: true, locale: es })}
-                       </p>
-                    )}
+                    if (!otherUser) return null;
+
+                    return (
+                      <Link key={convo.id_conversation} href={`/message/${convo.id_conversation}`} onClick={() => setIsOpen(false)}>
+                        <div className="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+                          <img src={otherUser.profile_image || '/default-avatar.png'} alt="avatar" className="h-12 w-12 rounded-2xl object-cover border border-white/10 shadow-md group-hover:scale-105 transition-transform" />
+                          <div className="flex-1 overflow-hidden">
+                            <div className="flex justify-between items-baseline mb-0.5">
+                              <p className="font-bold text-sm truncate text-white">{otherUser.name} {otherUser.lastname}</p>
+                              {convo.last_message_date && (
+                                <p className="text-[10px] text-gray-500 whitespace-nowrap ml-2">
+                                  {formatDistanceToNow(new Date(convo.last_message_date), { addSuffix: false, locale: es })}
+                                </p>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-400 truncate opacity-80">{convo.last_message_content || 'Sin mensajes aún'}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                    <MessageSquare size={24} className="text-gray-600" />
                   </div>
-                </Link>)
-              })
-            ) : (
-              <p className="p-8 text-center text-sm text-gray-500">No tienes conversaciones.</p>
-            )}
+                  <h4 className="text-white font-semibold mb-1">Bandeja vacía</h4>
+                  <p className="text-gray-500 text-xs px-6">Envía un mensaje a un proveedor para iniciar una conversación.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

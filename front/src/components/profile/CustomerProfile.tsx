@@ -12,11 +12,14 @@ import CustomerPetitions from '@/components/petitions/CustomerPetitions';
 import CustomerInfo from './customer/CustomerInfo';
 import CustomerHistory from './customer/CustomerHistory';
 import CustomerOffers from './customer/CustomerOffers';
+import { FiStar } from 'react-icons/fi';
 import { SOCKET_URL } from '@/service/socketService';
+
+import CustomerDashboard from './customer/CustomerDashboard';
 
 // --- COMPONENTE DE PERFIL DE CLIENTE (CON LÓGICA DE PETICIONES INTEGRADA) ---
 const CustomerProfile = ({ user }: { user: UserProfile }) => {
-  const [activeTab, setActiveTab] = useState('peticiones');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const customerId = user.customer?.id_customer;
 
@@ -49,13 +52,18 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
   });
 
   const customerTabs = [
+    { id: 'dashboard', label: 'Resumen' },
     { id: 'peticiones', label: 'Mis Peticiones' },
     { id: 'ofertas', label: 'Explorar Ofertas' },
-    { id: 'informacion', label: 'Información Personal' },
-    { id: 'historial', label: 'Historial y Calificaciones' },
+    { id: 'informacion', label: 'Info Personal' },
+    { id: 'historial', label: 'Mi Historial' },
   ];
 
   const renderTabContent = () => {
+    if (activeTab === 'dashboard' && detailedCustomer) {
+      return <CustomerDashboard customer={detailedCustomer} />;
+    }
+
     if (activeTab === 'peticiones') {
       return customerId ? <CustomerPetitions customerId={customerId} /> : null;
     }
@@ -65,11 +73,21 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
     }
 
     if (isLoading) {
-      return <p className="text-gray-400">Cargando información del perfil...</p>;
+      return (
+        <div className="flex flex-col items-center justify-center p-20 animate-pulse text-center">
+          <div className="w-16 h-16 bg-gray-700 rounded-full mb-4 mx-auto" />
+          <p className="text-gray-400 font-bold">Cargando información del perfil...</p>
+        </div>
+      );
     }
 
     if (isError) {
-      return <p className="text-red-500">Error al cargar el perfil: {error.message}</p>;
+      return (
+        <div className="p-8 bg-red-900/10 border border-red-900/20 rounded-2xl text-center">
+          <p className="text-red-500 font-bold mb-2">Error al cargar el perfil</p>
+          <p className="text-xs text-red-700">{error.message}</p>
+        </div>
+      );
     }
 
     if (detailedCustomer) {
@@ -81,35 +99,41 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
           <div className="space-y-8">
             <CustomerHistory customer={detailedCustomer} />
 
-            <div className="border-t border-gray-700 pt-6">
-              <h3 className="text-xl font-bold text-white mb-4">Calificaciones Realizadas</h3>
+            <div className="border-t border-white/5 pt-6">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <FiStar className="text-yellow-400" />
+                Calificaciones Realizadas
+              </h3>
               {isLoadingGrades ? (
                 <p className="text-gray-400">Cargando historial de calificaciones...</p>
               ) : givenGrades && givenGrades.length > 0 ? (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   {givenGrades.map((grade: IGrade) => (
-                    <div key={grade.id_grade} className="bg-gray-700/30 p-4 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
+                    <div key={grade.id_grade} className="bg-gray-700/30 p-5 rounded-2xl border border-white/5 hover:bg-gray-700/50 transition-all hover:-translate-y-1">
+                      <div className="flex justify-between items-start mb-3">
                         <div>
-                          <p className="text-cyan-400 font-semibold text-sm uppercase tracking-wide">
+                          <p className="text-blue-400 font-black text-xs uppercase tracking-widest mb-1">
                             A: {grade.provider
                               ? `${grade.provider.user.name} ${grade.provider.user.lastname}`
                               : grade.customer
                                 ? `${grade.customer.user.name} ${grade.customer.user.lastname}`
                                 : 'Usuario'}
                           </p>
-                          <p className="text-xs text-gray-500">{new Date(grade.date_create).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight italic">{new Date(grade.date_create).toLocaleDateString()}</p>
                         </div>
-                        <div className="flex items-center bg-gray-800 px-2 py-1 rounded text-yellow-400 font-bold text-sm">
+                        <div className="flex items-center bg-yellow-500/10 px-3 py-1 rounded-full text-yellow-500 font-black text-xs border border-yellow-500/20 shadow-sm shadow-yellow-950/20">
                           ★ {grade.grade_number}
                         </div>
                       </div>
-                      <p className="text-gray-300 text-sm italic">&quot;{grade.comment}&quot;</p>
+                      <p className="text-gray-300 text-sm italic leading-relaxed font-medium">&quot;{grade.comment}&quot;</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 italic">No has realizado ninguna calificación todavía.</p>
+                <div className="p-12 text-center bg-gray-900/50 rounded-2xl border border-dashed border-white/10">
+                  <FiStar className="mx-auto text-gray-700 mb-4" size={40} />
+                  <p className="text-gray-400 font-medium italic">No has realizado ninguna calificación todavía.</p>
+                </div>
               )}
             </div>
           </div>
@@ -119,23 +143,23 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
   }
 
   return (
-    <div>
-      <div className="border-b border-gray-700 mb-6 overflow-x-auto scrollbar-hide">
-        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max px-2" aria-label="Tabs">
+    <div className="space-y-8">
+      <div className="w-full overflow-x-auto scrollbar-hide py-1">
+        <nav className="flex items-center gap-1.5 p-1.5 bg-gray-950/40 backdrop-blur-md rounded-2xl border border-white/5 w-fit min-w-max mx-auto sm:mx-0" aria-label="Tabs">
           {customerTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm sm:text-lg transition-all duration-200 ${activeTab === tab.id
-                ? 'border-blue-500 text-white'
-                : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              className={`whitespace-nowrap py-2.5 px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 ${activeTab === tab.id
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 ring-2 ring-blue-500/20'
+                : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}>
               {tab.label}
             </button>
           ))}
         </nav>
       </div>
-      <div className="p-4 sm:p-6 bg-gray-800 rounded-lg min-h-[400px] shadow-xl border border-gray-700/50">
+      <div className="p-0 sm:p-2 bg-transparent min-h-[400px]">
         {renderTabContent()}
       </div>
     </div>

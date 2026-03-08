@@ -188,6 +188,7 @@ export interface IProvider {
   }[];
   portfolios?: IPortfolioItem[];
   providerCategories?: IProviderCategory[];
+  postulations?: any[];
 }
 
 export interface IUser {
@@ -214,6 +215,13 @@ export interface IPetition {
   id_petition: number;
   id_customer: number;
   description: string;
+  date_since?: string;
+  date_until?: string;
+  states?: {
+    id_state: number;
+    state: string;
+  };
+  profession?: Profession;
 }
 
 export interface ICustomer {
@@ -227,6 +235,7 @@ export interface ICustomer {
   address: IAddress;
   petitions: IPetition[];
   user: IUser;
+  grades?: any[];
 }
 
 /**

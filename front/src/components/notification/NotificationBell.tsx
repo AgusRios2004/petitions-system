@@ -113,35 +113,61 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:ring-gray-700">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notificaciones</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={() => markAllAsReadMutation.mutate()}
-                disabled={markAllAsReadMutation.isPending}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-gray-700"
-              >
-                <CheckCheck size={14} />
-                Marcar leídas
-              </button>
-            )}
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="flex justify-center items-center p-4">
-                <Loader2 className="animate-spin text-gray-500" />
+        <>
+          {/* Overlay to close on mobile click outside */}
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 sm:hidden" onClick={() => setIsOpen(false)} />
+
+          <div className="fixed inset-x-4 top-20 sm:absolute sm:inset-auto sm:right-0 sm:top-full z-50 mt-2 sm:w-96 origin-top-right rounded-2xl bg-gray-900 border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-white/5 bg-gray-800/50 px-5 py-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Bell size={18} className="text-blue-400" />
+                Notificaciones
+              </h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isPending}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-blue-400 hover:bg-blue-500/10 transition-colors"
+                >
+                  <CheckCheck size={14} />
+                  Marcar todas
+                </button>
+              )}
+            </div>
+            <div className="max-h-[70vh] sm:max-h-96 overflow-y-auto custom-scrollbar">
+              {isLoading ? (
+                <div className="flex flex-col justify-center items-center p-12">
+                  <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
+                  <p className="text-gray-500 text-sm">Sincronizando...</p>
+                </div>
+              ) : notifications && notifications.length > 0 ? (
+                <div className="divide-y divide-white/5">
+                  {notifications.map(notif => (
+                    <NotificationItem
+                      key={notif.id}
+                      notification={notif}
+                      onClose={() => setIsOpen(false)}
+                      onMarkAsRead={markOneAsReadMutation.mutate}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                    <Bell size={24} className="text-gray-600" />
+                  </div>
+                  <h4 className="text-white font-semibold mb-1">Todo al día</h4>
+                  <p className="text-gray-500 text-xs px-6">No tienes notificaciones pendientes por ahora.</p>
+                </div>
+              )}
+            </div>
+            {notifications && notifications.length > 0 && (
+              <div className="bg-gray-800/30 p-3 text-center border-t border-white/5">
+                <button className="text-xs text-blue-500 font-bold hover:underline">Ver todo el historial</button>
               </div>
-            ) : notifications && notifications.length > 0 ? (
-              notifications.map(notif => (
-                <NotificationItem key={notif.id} notification={notif} onClose={() => setIsOpen(false)} onMarkAsRead={markOneAsReadMutation.mutate}
-                />
-              ))
-            ) : (
-              <p className="p-8 text-center text-sm text-gray-500">No tienes notificaciones.</p>
             )}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -16,16 +16,16 @@ interface TabsProps<T = string | number> {
 
 function Tabs<T>({ tabs, activeTab, onTabClick, className = '' }: TabsProps<T>) {
   return (
-    <div className={`border-b border-gray-200 dark:border-gray-700 ${className} overflow-x-auto scrollbar-hide`}>
-      <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max" aria-label="Tabs">
+    <div className={`p-1 bg-gray-950/40 backdrop-blur-md rounded-2xl border border-white/5 w-fit min-w-max mx-auto sm:mx-0 ${className} overflow-x-auto scrollbar-hide`}>
+      <nav className="flex items-center gap-1.5" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
-            key={tab.label}
+            key={String(tab.value)}
             onClick={() => onTabClick(tab.value)}
-            className={`whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200
+            className={`whitespace-nowrap py-2.5 px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 active:scale-95
               ${activeTab === tab.value
-                ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 ring-2 ring-blue-500/10'
+                : 'text-gray-500 hover:text-white hover:bg-white/5'
               }
             `}
             aria-current={activeTab === tab.value ? 'page' : undefined}
