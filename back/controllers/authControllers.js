@@ -2,12 +2,12 @@ const jwt = require('jsonwebtoken')
 const { User, Customer, Provider, Address, sequelize } = require('../models');
 const { error, success } = require('../middlewares/response');
 
-const signAccessToken = (payload) => 
-    jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES || '1h'});
+const signAccessToken = (payload) =>
+    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES || '1h' });
 
 const signRefreshToken = (payload) => {
     const expiration = process.env.REFRESH_EXPIRES || '7d';
-    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: expiration});
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: expiration });
 }
 
 
@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
         const { name, lastname, email, password, role, dni, phone, professionId, typeProviderId, description, address } = req.body;
         const { street, number, floor, apartment, postal_code, id_city } = address;
 
-        if (!name || !lastname || !email || !password || !role || !id_city || !postal_code || !number ||!street) {
+        if (!name || !lastname || !email || !password || !role || !id_city || !postal_code || !number || !street) {
             await transaction.rollback();
             return error(res, 'Faltan campos obligatorios para el registro y la dirección');
         }
@@ -96,18 +96,18 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if(!email || !password) return error(res, 'Email y contraseña requeridos');
+        if (!email || !password) return error(res, 'Email y contraseña requeridos');
 
         const user = await User.findOne({
-            where: {email},
+            where: { email },
             include: [{ model: Customer, as: 'customer' }, { model: Provider, as: 'provider' }]
         });
-        if(!user) return error(res, `Credenciales inválidas.`);
+        if (!user) return error(res, `Credenciales inválidas.`);
 
         if (!user.is_active || !user.enabled) return error(res, 'Usuario deshabilitado');
 
         const ok = await user.comparePassword(password);
-        if(!ok) return error(res, 'Credenciales inválidas.');
+        if (!ok) return error(res, 'Credenciales inválidas.');
 
         user.last_login = new Date();
         await user.save();
@@ -131,6 +131,7 @@ exports.login = async (req, res) => {
             is_staff: user.is_staff,
             customer: user.customer || null,
             provider: user.provider || null,
+            date_create: user.date_create,
         };
 
         return res.json({
@@ -139,8 +140,8 @@ exports.login = async (req, res) => {
             user: userResponse
         });
     } catch (e) {
-        console.error('Error: ', e);
-        return error(res, 'Error en login');
+        console.error('Error completo en login: ', e);
+        return error(res, `Error en login: ${e.message}`, 500, e);
     }
 }
 
@@ -157,11 +158,11 @@ exports.refresh = async (req, res) => {
             is_staff: user.is_staff,
             is_superuser: user.is_superuser,
         };
-        
+
         const accessToken = signAccessToken(tokenPayload);
-        
+
         return success(res, accessToken, 'Token refrescado');
-        
+
     } catch (e) {
         return error(res, e.message, 403);
     }
