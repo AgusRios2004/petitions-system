@@ -131,9 +131,9 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
           <Button variant='secondary' fullWidth={false}>Ver detalles</Button>
         </Link>
 
-        {role === 'provider' && postulation.winner && user?.provider && (
-          <Button variant='primary' fullWidth={false} onClick={() => setRatingModalOpen(true)}>
-            Calificar Cliente
+        {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (
+          <Button variant='primary' fullWidth={false} className="bg-yellow-600 hover:bg-yellow-700" onClick={() => setRatingModalOpen(true)}>
+            {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
           </Button>
         )}
       </div>
@@ -146,15 +146,11 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
         <RatingModal
           isOpen={isRatingModalOpen}
           onClose={() => setRatingModalOpen(false)}
+          petitionId={postulation.petition.id_petition}
           // El proveedor a calificar es quien creó la postulación.
           providerId={postulation.createdBy.provider!.id_provider}
           // El cliente a calificar es quien creó la petición original.
-          // Se usa el 'user' logueado si es el cliente quien califica, o se extrae de la petición si es el proveedor.
-          customerId={
-            role === 'customer'
-              ? user!.customer!.id_customer
-              : postulation.petition!.customers.id_customer
-          }
+          customerId={postulation.petition.customers.id_customer}
           // El objetivo de la calificación depende del rol del usuario actual.
           ratingTarget={role === 'customer' ? 'provider' : 'customer'}
         />

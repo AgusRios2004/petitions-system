@@ -30,6 +30,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             allowNull: true,
         },
+        id_petition: {
+            type: DataTypes.INTEGER,
+            allowNull: true, // Cambiamos a false si es obligatorio
+        }
     }, {
         tableName: 'grade',
         timestamps: false,
@@ -57,6 +61,10 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_grade',
             sourceKey: 'id_grade',
             as: 'gradeProviders',
+        });
+        Grade.belongsTo(models.Petition, {
+            foreignKey: 'id_petition',
+            as: 'petition',
         });
     };
 

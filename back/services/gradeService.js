@@ -1,7 +1,7 @@
 const { Grade, Provider, Customer, User, sequelize } = require('../models');
 
 class GradeService {
-    
+
     async getGrades(filter = {}) {
         if (filter.id_user_create) {
             // Usamos Raw Query para evitar errores de asociación (EagerLoadingError)
@@ -55,7 +55,47 @@ class GradeService {
     }
 
     async createGrade(data) {
-        return await Grade.create(data);
+        const t = await sequelize.transaction();
+        try {
+            // 1. Crear el registro base de Grade
+            const grade = await Grade.create({
+                grade_number: data.grade_number,
+                id_color: data.id_color || 1, // Por defecto 1 si no viene
+                id_user_create: data.id_user_create,
+                id_petition: data.id_petition,
+                date_create: new Date()
+            }, { transaction: t });
+
+            // 2. Crear el registro en la tabla intermedia según corresponda
+            if (data.id_provider) {
+                const { GradeProvider } = require('../models');
+                await GradeProvider.create({
+                    id_provider: data.id_provider,
+                    id_grade: grade.id_grade,
+                    coment: data.comment,
+                    id_user_create: data.id_user_create,
+                    date_create: new Date()
+                }, { transaction: t });
+            } else if (data.id_customer) {
+                const { GradeCustomer } = require('../models');
+                await GradeCustomer.create({
+                    id_customer: data.id_customer,
+                    id_grade: grade.id_grade,
+                    comment: data.comment,
+                    id_user_create: data.id_user_create,
+                    date_create: new Date()
+                }, { transaction: t });
+            } else {
+                throw new Error('Debe proporcionar id_provider o id_customer para calificar.');
+            }
+
+            await t.commit();
+            return grade;
+        } catch (e) {
+            await t.rollback();
+            console.error("Error en createGrade logic:", e);
+            throw e;
+        }
     }
 }
 

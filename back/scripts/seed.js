@@ -22,7 +22,17 @@ async function seed() {
 
         console.log('--- Insertando Datos Básicos ---');
 
-        const { User, UserRole } = require('../models');
+        const { User, UserRole, Color } = require('../models');
+
+        // 0. Colores para calificaciones
+        await Color.bulkCreate([
+            { id_color: 1, color_name: 'Malo' },
+            { id_color: 2, color_name: 'Regular' },
+            { id_color: 3, color_name: 'Bueno' },
+            { id_color: 28, color_name: 'Excelente' },
+            { id_color: 31, color_name: 'Muy Bueno' }
+        ]);
+        console.log('✅ Colores (Color) insertados.');
 
         // 1. Roles
         const roles = await Role.bulkCreate([

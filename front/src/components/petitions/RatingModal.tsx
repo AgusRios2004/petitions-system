@@ -7,16 +7,18 @@ import StarRating from '@/components/ui/StarRating';
 import { gradeService } from '@/service/gradeService';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
+import { IGradeForm } from '@/types/common';
 
 interface RatingModalProps {
   isOpen: boolean;
   onClose: () => void;
   providerId: number;
   customerId: number;
+  petitionId: number;
   ratingTarget: 'provider' | 'customer';
 }
 
-const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, customerId, ratingTarget }) => {
+const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, customerId, petitionId, ratingTarget }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const queryClient = useQueryClient();
@@ -64,10 +66,12 @@ const RatingModal: React.FC<RatingModalProps> = ({ isOpen, onClose, providerId, 
       comment: string;
       id_provider?: number;
       id_customer?: number;
+      id_petition?: number;
     } = {
       grade_number: rating,
       id_color: colorId,
       comment,
+      id_petition: petitionId,
     };
 
     if (ratingTarget === 'provider') {
