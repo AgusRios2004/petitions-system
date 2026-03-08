@@ -54,6 +54,31 @@ function initialize(app) {
             });
         }
     });
+
+    // Escuchamos cuando un proveedor finaliza un trabajo
+    eventBus.on('postulation:finished', ({ postulation, targetUserId }) => {
+        const targetSocketId = userSocketMap.get(targetUserId);
+        if (targetSocketId) {
+            console.log(`[SocketHandler] Emitting 'postulation_finished' to user ${targetUserId}`);
+            io.to(targetSocketId).emit('postulation_finished', {
+                id_postulation: postulation.id_postulation,
+                id_petition: postulation.id_petition,
+                message: 'El trabajo ha sido marcado como finalizado por el proveedor.'
+            });
+        }
+    });
+
+    // Escuchamos cuando un cliente confirma el trabajo
+    eventBus.on('petition:completed', ({ petitionId, targetUserId }) => {
+        const targetSocketId = userSocketMap.get(targetUserId);
+        if (targetSocketId) {
+            console.log(`[SocketHandler] Emitting 'petition_completed' to user ${targetUserId}`);
+            io.to(targetSocketId).emit('petition_completed', {
+                id_petition: petitionId,
+                message: 'El cliente ha confirmado que el trabajo está completo.'
+            });
+        }
+    });
 }
 
 module.exports = { initialize };

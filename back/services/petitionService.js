@@ -330,6 +330,11 @@ class PetitionService {
                         related_postulation_id: winnerPostulation.id_postulation,
                         related_petition_id: petition.id_petition
                     }).catch(err => console.error("Error notificando confirmación:", err));
+
+                    eventBus.emit('petition:completed', {
+                        petitionId: petition.id_petition,
+                        targetUserId: winnerPostulation.id_user_create
+                    });
                 }
             }
 
