@@ -6,9 +6,10 @@ import { FiFileText, FiCheckCircle, FiClock, FiStar, FiTrendingUp } from 'react-
 
 interface CustomerDashboardProps {
     customer: ICustomer;
+    setActiveTab: (tab: string) => void;
 }
 
-const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ customer }) => {
+const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ customer, setActiveTab }) => {
     const petitionsCount = customer.petitions?.length || 0;
     const finishedCount = customer.petitions?.filter(p => p.states?.state === 'Finalizada').length || 0;
     const pendingCount = customer.petitions?.filter(p => p.states?.state === 'Pendiente').length || 0;
@@ -49,7 +50,12 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ customer }) => {
                             <FiTrendingUp className="text-blue-500" />
                             Actividad Reciente
                         </h3>
-                        <button className="text-xs text-blue-400 hover:underline">Ver todo</button>
+                        <button
+                            onClick={() => setActiveTab('peticiones')}
+                            className="text-xs text-blue-400 hover:underline"
+                        >
+                            Ver todo
+                        </button>
                     </div>
 
                     <div className="space-y-4">
@@ -89,7 +95,10 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ customer }) => {
                         <p className="text-xs text-blue-400 font-bold">75% Completado</p>
                     </div>
 
-                    <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40 mt-6">
+                    <button
+                        onClick={() => setActiveTab('informacion')}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40 mt-6"
+                    >
                         Mejorar Perfil
                     </button>
                 </div>

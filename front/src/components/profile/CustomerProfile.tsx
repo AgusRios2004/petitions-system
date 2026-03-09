@@ -61,7 +61,7 @@ const CustomerProfile = ({ user }: { user: UserProfile }) => {
 
   const renderTabContent = () => {
     if (activeTab === 'dashboard' && detailedCustomer) {
-      return <CustomerDashboard customer={detailedCustomer} />;
+      return <CustomerDashboard customer={detailedCustomer} setActiveTab={setActiveTab} />;
     }
 
     if (activeTab === 'peticiones') {

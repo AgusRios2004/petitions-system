@@ -101,7 +101,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
       </div>
 
       {/* --- Botón de Editar Perfil --- */}
-      <div className="mt-8 pt-6 border-t border-gray-700 flex justify-end">
+      <div className="mt-8 pt-6 border-t border-gray-700 flex justify-center">
         <Button variant="primary" size="lg" onClick={() => setIsEditing(true)} className="w-full sm:w-auto px-10 font-bold shadow-lg shadow-blue-900/20">
           Editar Perfil
         </Button>

@@ -4,12 +4,14 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiBriefcase, FiCheckCircle, FiClock, FiStar, FiTrendingUp, FiDollarSign } from 'react-icons/fi';
 import { getProviderByIdWithDetails } from '@/service/providerService';
+import { useRouter } from 'next/navigation';
 
 interface ProviderDashboardProps {
     providerId: number;
 }
 
 const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => {
+    const router = useRouter();
     const { data: provider, isLoading } = useQuery({
         queryKey: ['providerProfile', providerId],
         queryFn: () => getProviderByIdWithDetails(providerId),
@@ -71,7 +73,12 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
                             <FiTrendingUp className="text-blue-500" />
                             Estado de Postulaciones
                         </h3>
-                        <button className="text-xs text-blue-400 hover:underline">Gestionar todo</button>
+                        <button
+                            onClick={() => router.push('/profile?tab=postulaciones')}
+                            className="text-xs text-blue-400 hover:underline"
+                        >
+                            Gestionar todo
+                        </button>
                     </div>
 
                     <div className="space-y-4">
@@ -96,7 +103,10 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
                         ) : (
                             <div className="text-center py-12">
                                 <p className="text-gray-500 text-sm mb-4">Aún no te has postulado a ninguna oportunidad.</p>
-                                <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition-all">
+                                <button
+                                    onClick={() => router.push('/profile?tab=oportunidades')}
+                                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition-all"
+                                >
                                     Explorar trabajos
                                 </button>
                             </div>
@@ -123,7 +133,10 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
 
                     <div className="mt-8 pt-6 border-t border-white/5">
                         <p className="text-xs text-gray-500 text-center mb-4 italic">Mantén tu disponibilidad actualizada para aparecer en las búsquedas.</p>
-                        <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/10">
+                        <button
+                            onClick={() => router.push('/profile?tab=disponibilidad')}
+                            className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/10"
+                        >
                             Gestionar Horarios
                         </button>
                     </div>

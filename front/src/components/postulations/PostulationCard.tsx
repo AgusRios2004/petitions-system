@@ -78,48 +78,77 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
 
   console.log('PostulationCard Props:', postulation)
 
+  const withdrawMutation = useMutation({
+    mutationFn: () => postulationService.withdrawPostulation(postulation.id_postulation.toString(), { id_user_update: user!.id_user }),
+    onSuccess: () => {
+      toast.success('Postulación retirada con éxito');
+      queryClient.invalidateQueries({ queryKey: ['postulations'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al retirar la postulación');
+    }
+  });
+
   return (
-    <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100">
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-        <div className="w-full sm:w-2/3">
-          {postulation.createdBy?.provider?.id_provider ? (
-            <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-xl font-bold text-white hover:text-blue-400 transition-colors inline-block">
-              {postulation.createdBy.name} {postulation.createdBy.lastname}
-            </Link>
-          ) : (
-            <p className="text-xl font-bold text-white">
-              {postulation.createdBy?.name} {postulation.createdBy?.lastname}
-            </p>
-          )}
-          <p className="text-sm text-gray-300 mt-2 leading-relaxed italic">{postulation.petition?.description}</p>
-          <p className="text-sm text-gray-200 mt-3 font-medium">Propuesta: <span className="text-gray-400">{postulation.proposal}</span></p>
-          <p className="text-lg font-black text-emerald-400 mt-1">Costo: ${postulation.cost}</p>
-        </div>
-        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto border-t sm:border-t-0 border-gray-700 pt-3 sm:pt-0">
-          <span className="sm:hidden text-xs text-gray-400 uppercase font-bold tracking-widest">Estado</span>
-          {postulation.winner ? (
-            <div className="flex flex-col items-end gap-1">
-              <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 uppercase tracking-widest`}>
-                Ganador
-              </span>
+    <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100 flex flex-col justify-between">
+      <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="w-full sm:w-2/3">
+            {postulation.createdBy?.provider?.id_provider ? (
+              <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-xl font-bold text-white hover:text-blue-400 transition-colors inline-block">
+                {postulation.createdBy.name} {postulation.createdBy.lastname}
+              </Link>
+            ) : (
+              <p className="text-xl font-bold text-white">
+                {postulation.createdBy?.name} {postulation.createdBy?.lastname}
+              </p>
+            )}
+            <p className="text-sm text-gray-300 mt-2 leading-relaxed italic">{postulation.petition?.description}</p>
+            <p className="text-sm text-gray-200 mt-3 font-medium">Propuesta: <span className="text-gray-400">{postulation.proposal}</span></p>
+            <p className="text-lg font-black text-emerald-400 mt-1">Costo: ${postulation.cost}</p>
+          </div>
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto border-t sm:border-t-0 border-gray-700 pt-3 sm:pt-0">
+            <span className="sm:hidden text-xs text-gray-400 uppercase font-bold tracking-widest">Estado</span>
+            {postulation.winner ? (
+              <div className="flex flex-col items-end gap-1">
+                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 uppercase tracking-widest`}>
+                  Ganador
+                </span>
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
+                  {postulation.states.state}
+                </span>
+              </div>
+            ) : (
               <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
                 {postulation.states.state}
               </span>
-            </div>
-          ) : (
-            <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
-              {postulation.states.state}
-            </span>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
       <div className='flex flex-col sm:flex-row flex-wrap sm:justify-end mt-6 gap-3 w-full border-t border-gray-700/50 pt-5'>
-        {role === 'provider' && !isPostulationInactive && (
-          <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full sm:w-auto">
-            <Button variant='primary' className="w-full">Editar</Button>
-          </Link>
+        {role === 'provider' && isPending && (
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full sm:w-auto">
+              <Button variant='primary' className="w-full">Editar</Button>
+            </Link>
+            <Button
+              variant='destructive'
+              className="w-full sm:w-auto"
+              onClick={() => {
+                if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
+                  withdrawMutation.mutate();
+                }
+              }}
+              disabled={withdrawMutation.isPending}
+            >
+              {withdrawMutation.isPending ? 'Retirando...' : 'Retirar'}
+            </Button>
+          </div>
         )}
-        {/* --- INICIO: Botones de Acción --- */}
+
+        {/* --- INICIO: Botones de Acción Cliente --- */}
         {role === 'customer' && isPending && (
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button

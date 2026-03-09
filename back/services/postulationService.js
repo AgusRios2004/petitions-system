@@ -236,6 +236,14 @@ class PostulationService {
                 throw error;
             }
 
+            // Validamos que la postulación esté en estado PENDIENTE para poder editarla
+            const pendingStateId = await getStateId('PEN');
+            if (postulation.id_state !== pendingStateId) {
+                const error = new Error('No se puede editar una postulación que ya ha sido aceptada, rechazada o finalizada.');
+                error.statusCode = 400;
+                throw error;
+            }
+
             await postulation.update({
                 proposal,
                 cost,
@@ -452,6 +460,15 @@ class PostulationService {
             if (!postulation) {
                 const error = new Error("Postulación no encontrada.");
                 error.statusCode = 404;
+                await t.rollback();
+                throw error;
+            }
+
+            // [NUEVO] Solo se puede retirar si aún está PENDIENTE
+            const pendingStateId = await getStateId('PEN');
+            if (postulation.id_state !== pendingStateId) {
+                const error = new Error("No se puede retirar una postulación que ya ha sido procesada (Aceptada/Rechazada).");
+                error.statusCode = 400;
                 await t.rollback();
                 throw error;
             }

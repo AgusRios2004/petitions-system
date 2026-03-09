@@ -76,7 +76,7 @@ const ProviderAvailability = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {editingId && (
         <EditAvailabilityForm
           availabilityId={editingId}
@@ -88,24 +88,32 @@ const ProviderAvailability = () => {
         <CreateAvailabilityForm onFinished={handleFinishedCreation} />
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Gestionar Disponibilidad
+      <div className="text-center space-y-4 mb-10 bg-gray-900/30 p-8 rounded-3xl border border-white/5 backdrop-blur-sm">
+        <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          Gestionar <span className="text-cyan-500">Disponibilidad</span>
         </h2>
-        <Button
-          className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 font-bold shadow-lg shadow-cyan-900/20 px-8"
-          onClick={() => setIsCreating(true)}
-        >
-          Crear Nuevo Horario
-        </Button>
+        <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
+          Define tus horarios de trabajo para que los clientes puedan encontrarte fácilmente.
+          Un calendario actualizado aumenta tus posibilidades de ser contratado.
+        </p>
+        <div className="flex justify-center pt-2">
+          <Button
+            className="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 font-black shadow-xl shadow-cyan-900/40 px-12 py-7 rounded-2xl text-sm uppercase tracking-widest transform transition duration-300 hover:scale-[1.02] active:scale-95"
+            onClick={() => setIsCreating(true)}
+          >
+            Crear Nuevo Horario
+          </Button>
+        </div>
       </div>
 
-      <div className="flex justify-start mb-4">
-        <Tabs
-          tabs={availabilityTabs}
-          activeTab={activeTab}
-          onTabClick={handleTabChange}
-        />
+      <div className="flex justify-center mb-8 overflow-x-auto scrollbar-hide py-2">
+        <div className="bg-gray-950/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/5">
+          <Tabs
+            tabs={availabilityTabs}
+            activeTab={activeTab}
+            onTabClick={handleTabChange}
+          />
+        </div>
       </div>
 
       {isLoading && <p className="text-center text-gray-400">Cargando disponibilidad...</p>}

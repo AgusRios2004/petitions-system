@@ -55,6 +55,19 @@ class GradeService {
     }
 
     async createGrade(data) {
+        // 0. Validar si ya existe una calificación para esta petición por parte de este usuario
+        if (data.id_petition) {
+            const existingGrade = await Grade.findOne({
+                where: {
+                    id_petition: data.id_petition,
+                    id_user_create: data.id_user_create
+                }
+            });
+            if (existingGrade) {
+                throw new Error('Ya has calificado este trabajo/petición.');
+            }
+        }
+
         const t = await sequelize.transaction();
         try {
             // 1. Crear el registro base de Grade

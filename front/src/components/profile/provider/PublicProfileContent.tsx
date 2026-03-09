@@ -116,7 +116,7 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
 
-        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
           {isOwner ? (
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <AddPortfolioButton providerId={providerId} />
