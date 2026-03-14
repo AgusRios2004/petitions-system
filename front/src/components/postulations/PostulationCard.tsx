@@ -10,7 +10,7 @@ import { startConversation } from '@/service/messageService';
 import { postulationService } from '@/service/postulationService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { MessageSquare, Check, X, ClipboardCheck, Award, Calendar, DollarSign, FileText, User as UserIcon } from 'lucide-react';
+import { MessageSquare, Check, X, ClipboardCheck, Award, Calendar, DollarSign, FileText, User as UserIcon, Edit, Trash2, Eye } from 'lucide-react';
 import * as petitionService from '@/service/petitionService';
 
 interface PostulationCardProps {
@@ -181,13 +181,13 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
             {role === 'provider' && isPending && (
               <>
                 <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full">
-                  <Button variant='primary' className="w-full h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/10">
-                    <Check size={18} className="mr-2" /> Editar Postulación
+                  <Button variant='primary' className="w-full h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/10 font-bold">
+                    <Edit size={18} className="mr-2" /> Editar Postulación
                   </Button>
                 </Link>
                 <Button
                   variant='destructive'
-                  className="w-full h-11 border-red-500/20 hover:bg-red-500/10"
+                  className="w-full h-11 border-red-500/20 hover:bg-red-500/10 font-bold"
                   onClick={() => {
                     if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
                       withdrawMutation.mutate();
@@ -195,7 +195,7 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
                   }}
                   disabled={withdrawMutation.isPending}
                 >
-                  {withdrawMutation.isPending ? 'Procesando...' : 'Retirar Postulación'}
+                  {withdrawMutation.isPending ? 'Procesando...' : <><Trash2 size={18} className="mr-2" /> Retirar Postulación</>}
                 </Button>
               </>
             )}
@@ -248,15 +248,15 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               variant='secondary'
-              className="w-full h-11 bg-gray-800/50 hover:bg-gray-800"
+              className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold"
               onClick={handleMessage}
             >
               <MessageSquare size={18} className="mr-2" /> Mensaje
             </Button>
 
             <Link href={`/postulation/${postulation.id_postulation}`} className="w-full">
-              <Button variant='secondary' className="w-full h-11 bg-gray-800/50 hover:bg-gray-800">
-                Ver Detalles Completos
+              <Button variant='secondary' className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold">
+                <Eye size={18} className="mr-2" /> Ver Detalles Completos
               </Button>
             </Link>
           </div>
