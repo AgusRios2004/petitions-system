@@ -4,7 +4,7 @@ const {
     Color, Department, Address, Customer, Provider,
     ProviderCategory, Petition, PetitionCategory, Postulation,
     Article, Inventory, Grade, GradeProvider, GradeCustomer,
-    TypeOffer
+    TypeOffer, Week, Hour
 } = require('../models');
 
 async function seed() {
@@ -57,6 +57,22 @@ async function seed() {
             { name: 'Pack de Servicios', id_user_create: adminUser.id_user },
             { name: 'Oferta de Lanzamiento', id_user_create: adminUser.id_user }
         ]);
+
+        console.log('--- Insertando Días y Horas ---');
+        const weeks = await Week.bulkCreate([
+            { name: 'Lunes' },
+            { name: 'Martes' },
+            { name: 'Miércoles' },
+            { name: 'Jueves' },
+            { name: 'Viernes' },
+            { name: 'Sábado' },
+            { name: 'Domingo' }
+        ]);
+
+        const hoursData = Array.from({ length: 24 }).map((_, i) => ({
+            name: `${String(i).padStart(2, '0')}:00 hs`
+        }));
+        const hours = await Hour.bulkCreate(hoursData);
 
         const categories = await Category.bulkCreate([
             { name: 'Hogar', id_user_create: adminUser.id_user },
