@@ -33,6 +33,32 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         id_user_update: '',
     });
 
+    const PRESET_SCHEDULES = [
+        { label: '🌅 Mañana', from: '08:00', until: '12:00' },
+        { label: '☀️ Tarde', from: '14:00', until: '18:00' },
+        { label: '🌙 Noche', from: '19:00', until: '23:00' },
+        { label: '🏢 Full Day', from: '08:00', until: '18:00' },
+    ];
+
+    const applyPreset = (from: string, until: string) => {
+        if (!hours) return;
+
+        // Buscamos el ID de la hora que coincida con el preset
+        const fromHour = hours.find(h => h.name.includes(from));
+        const untilHour = hours.find(h => h.name.includes(until));
+
+        if (fromHour && untilHour) {
+            setFormState(prev => ({
+                ...prev,
+                id_from_hour: String(fromHour.id_hour),
+                id_until_hour: String(untilHour.id_hour),
+            }));
+            toast.success('Horario aplicado');
+        } else {
+            toast.error('Este horario no está disponible en la lista');
+        }
+    };
+
     const { data: weeks, isLoading: isLoadingWeeks } = useQuery({
         queryKey: ['weeks'],
         queryFn: () => weekService.getAllWeeks(),
@@ -155,6 +181,22 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                                 />
                                 <div className="absolute right-3 top-9 text-gray-500 pointer-events-none">
                                     <Calendar className="w-4 h-4" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider ml-1">Horarios Sugeridos</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {PRESET_SCHEDULES.map((preset) => (
+                                        <button
+                                            key={preset.label}
+                                            type="button"
+                                            onClick={() => applyPreset(preset.from, preset.until)}
+                                            className="px-3 py-1.5 bg-gray-800 hover:bg-blue-600/30 border border-gray-700 hover:border-blue-500/50 rounded-lg text-xs font-medium text-gray-300 hover:text-blue-400 transition-all active:scale-95"
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 

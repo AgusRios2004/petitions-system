@@ -144,9 +144,11 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
                   <Button onClick={() => onEdit(petition.id_petition)} className="flex-1 lg:flex-none h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-900/40 font-bold transition-all uppercase tracking-widest text-xs">
                     Editar
                   </Button>
-                  <Button onClick={handleCancelPetition} variant="destructive" className="flex-1 lg:flex-none h-14 px-8 rounded-2xl border border-red-900/20 font-bold transition-all uppercase tracking-widest text-xs" disabled={cancelMutation.isPending}>
-                    {cancelMutation.isPending ? 'Procesando...' : 'Anular'}
-                  </Button>
+                  {petition.states?.code !== 'ACE' && petition.states?.code !== 'FIN' && (
+                    <Button onClick={handleCancelPetition} variant="destructive" className="flex-1 lg:flex-none h-14 px-8 rounded-2xl border border-red-900/20 font-bold transition-all uppercase tracking-widest text-xs" disabled={cancelMutation.isPending}>
+                      {cancelMutation.isPending ? 'Procesando...' : 'Anular'}
+                    </Button>
+                  )}
                 </>
               )}
               {!isOwner && user?.provider && petition.states.state === 'Pendiente' && (

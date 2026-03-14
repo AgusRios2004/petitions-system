@@ -254,10 +254,20 @@ class PetitionService {
         // ... (Tu código de cancelPetition se mantiene intacto) ...
         const t = await sequelize.transaction();
         try {
-            const petition = await Petition.findByPk(petitionId, { transaction: t });
+            const petition = await Petition.findByPk(petitionId, {
+                include: [{ model: State, as: 'states' }],
+                transaction: t
+            });
             if (!petition) {
                 const error = new Error("Petición no encontrada.");
                 error.statusCode = 404;
+                throw error;
+            }
+
+            // --- VALIDACIÓN: No cancelar si ya está Aceptada o Finalizada ---
+            if (petition.states && (petition.states.code === 'ACE' || petition.states.code === 'FIN')) {
+                const error = new Error("No puedes cancelar una petición que ya ha sido aceptada por un profesional.");
+                error.statusCode = 400;
                 throw error;
             }
 
