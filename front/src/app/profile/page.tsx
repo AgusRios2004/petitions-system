@@ -37,13 +37,19 @@ export default function ProfilePage() {
     }
   }, [user, loading, router, isClient]);
 
-  if (!isClient || loading || !user) {
+  if (!isClient || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <p className="text-xl">Cargando perfil...</p>
+      <div className="flex-1 flex flex-col items-center justify-center bg-gray-950">
+        <div className="relative w-20 h-20 mb-4">
+          <div className="absolute inset-0 border-4 border-blue-600/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="text-gray-400 font-medium animate-pulse">Cargando tu perfil...</p>
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <main className="min-h-screen bg-gray-900 text-white p-4 sm:p-8">
@@ -57,14 +63,14 @@ export default function ProfilePage() {
         {(() => {
           if (user.role === 'provider') {
             // Si el rol es 'provider', nos aseguramos de que user.provider exista.
-            return user.provider 
-              ? <ProviderProfile user={user as UserProfile} /> 
+            return user.provider
+              ? <ProviderProfile user={user as UserProfile} />
               : <IncompleteProfile role="provider" />;
           }
           if (user.role === 'customer') {
             // Si el rol es 'customer', nos aseguramos de que user.customer exista.
-            return user.customer 
-              ? <CustomerProfile user={user as UserProfile} /> 
+            return user.customer
+              ? <CustomerProfile user={user as UserProfile} />
               : <IncompleteProfile role="customer" />;
           }
           // Si el rol no es ninguno de los dos, mostramos el mensaje por defecto.

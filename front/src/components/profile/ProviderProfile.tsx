@@ -24,16 +24,11 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'dashboard';
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-
   const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
     router.push(`/profile?tab=${tabId}`, { scroll: false });
   };
+
+  const activeTab = initialTab;
 
   const tabs = [
     { id: 'dashboard', label: 'Resumen' },

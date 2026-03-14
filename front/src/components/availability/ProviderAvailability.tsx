@@ -96,9 +96,9 @@ const ProviderAvailability = () => {
           Define tus horarios de trabajo para que los clientes puedan encontrarte fácilmente.
           Un calendario actualizado aumenta tus posibilidades de ser contratado.
         </p>
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-end pt-2">
           <Button
-            className="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 font-black shadow-xl shadow-cyan-900/40 px-12 py-7 rounded-2xl text-sm uppercase tracking-widest transform transition duration-300 hover:scale-[1.02] active:scale-95"
+            className="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 font-bold shadow-lg shadow-cyan-900/20 px-6 py-3 rounded-xl text-xs uppercase tracking-widest transform transition duration-300 hover:scale-[1.02] active:scale-95"
             onClick={() => setIsCreating(true)}
           >
             Crear Nuevo Horario

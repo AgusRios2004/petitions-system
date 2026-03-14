@@ -93,13 +93,7 @@ const ProviderOportunities = () => {
         return availablePetitions;
     }, [data, filterByMyType, providerTypeId, selectedCategoryId]);
 
-    if (isLoading) {
-        return <p className="text-white text-center">Cargando oportunidades...</p>;
-    }
-
-    if (isError || error || (user?.provider && !providerId)) { // Check if user is a provider but providerId is missing
-        return <p className="text-red-500 text-center">Error al cargar las oportunidades o postulaciones.</p>;
-    }
+    const isDataLoading = isLoading || (!!providerId && !pendingStateId);
 
     return (
         <div className="space-y-6">
@@ -135,7 +129,16 @@ const ProviderOportunities = () => {
                     )}
                 </div>
             </div>
-            {petitions.length === 0 ? (
+
+            {isDataLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                        <div key={n} className="h-[280px] rounded-xl bg-gray-800/20 border border-white/5 animate-pulse" />
+                    ))}
+                </div>
+            ) : isError || error || (user?.provider && !providerId) ? (
+                <p className="text-red-500 text-center py-10">Error al cargar las oportunidades o postulaciones.</p>
+            ) : petitions.length === 0 ? (
                 <div className="text-center py-10 bg-gray-800/50 rounded-lg border border-gray-700">
                     <p className="text-gray-400 text-lg">
                         {filterByMyType
