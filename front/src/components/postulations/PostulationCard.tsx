@@ -4,13 +4,13 @@ import { useRouter } from 'next/navigation';
 import { Button } from '../ui/Button';
 import { getStatusColor } from '@/helpers/statusHelper';
 import { IPostulation } from '@/types/common';
-import RatingModal from '../petitions/RatingModal'; // Asegúrate que la ruta sea correcta
+import RatingModal from '../petitions/RatingModal';
 import { useAuth } from '@/context/AuthContext';
 import { startConversation } from '@/service/messageService';
 import { postulationService } from '@/service/postulationService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { MessageSquare, Check, X, ClipboardCheck, Award } from 'lucide-react';
+import { MessageSquare, Check, X, ClipboardCheck, Award, Calendar, DollarSign, FileText, User as UserIcon } from 'lucide-react';
 import * as petitionService from '@/service/petitionService';
 
 interface PostulationCardProps {
@@ -24,9 +24,7 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
   const queryClient = useQueryClient();
   const [isRatingModalOpen, setRatingModalOpen] = useState(false);
 
-  // En el seed actual: 1 = Pendiente, 2 = Aceptado, 3 = Rechazado...
   const isPending = postulation.states.id_state === 1 || postulation.states.state === 'Pendiente';
-  const isPostulationInactive = !isPending;
 
   const acceptMutation = useMutation({
     mutationFn: () => postulationService.acceptPostulation(postulation.id_postulation.toString()),
@@ -76,8 +74,6 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
     }
   });
 
-  console.log('PostulationCard Props:', postulation)
-
   const withdrawMutation = useMutation({
     mutationFn: () => postulationService.withdrawPostulation(postulation.id_postulation.toString(), { id_user_update: user!.id_user }),
     onSuccess: () => {
@@ -89,150 +85,201 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
     }
   });
 
+  const handleMessage = async () => {
+    if (!postulation.createdBy?.id_user || !postulation.petition?.id_petition) return;
+    try {
+      const targetUserId = role === 'customer' ? postulation.createdBy.id_user : postulation.petition.customers.user_id;
+      const conversation = await startConversation(targetUserId, postulation.petition.id_petition);
+      router.push(`/message/${conversation.id_conversation}`);
+    } catch (error) {
+      console.error("Error al iniciar la conversación:", error);
+      toast.error("No se pudo iniciar la conversación");
+    }
+  };
+
   return (
-    <div className="bg-gray-800 shadow-md rounded-lg p-4 border border-gray-700 text-gray-100 flex flex-col justify-between">
-      <div>
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div className="w-full sm:w-2/3">
-            {postulation.createdBy?.provider?.id_provider ? (
-              <Link href={`/provider/${postulation.createdBy.provider.id_provider}`} className="text-xl font-bold text-white hover:text-blue-400 transition-colors inline-block">
-                {postulation.createdBy.name} {postulation.createdBy.lastname}
-              </Link>
-            ) : (
-              <p className="text-xl font-bold text-white">
-                {postulation.createdBy?.name} {postulation.createdBy?.lastname}
-              </p>
-            )}
-            <p className="text-sm text-gray-300 mt-2 leading-relaxed italic">{postulation.petition?.description}</p>
-            <p className="text-sm text-gray-200 mt-3 font-medium">Propuesta: <span className="text-gray-400">{postulation.proposal}</span></p>
-            <p className="text-lg font-black text-emerald-400 mt-1">Costo: ${postulation.cost}</p>
+    <div className="group bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-2xl p-5 sm:p-6 transition-all duration-300 shadow-xl overflow-hidden relative">
+      <div className="absolute top-0 right-0 p-4">
+        {postulation.winner && (
+          <span className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-black px-2 py-1 rounded-full border border-yellow-500/20 uppercase tracking-tighter shadow-sm animate-pulse">
+            <Award size={10} /> Ganador
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-6">
+        {/* Header Section */}
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0">
+            {postulation.createdBy?.name?.charAt(0) || 'U'}
           </div>
-          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto border-t sm:border-t-0 border-gray-700 pt-3 sm:pt-0">
-            <span className="sm:hidden text-xs text-gray-400 uppercase font-bold tracking-widest">Estado</span>
-            {postulation.winner ? (
-              <div className="flex flex-col items-end gap-1">
-                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 uppercase tracking-widest`}>
-                  Ganador
-                </span>
-                <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
-                  {postulation.states.state}
-                </span>
-              </div>
-            ) : (
-              <span className={`text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusColor(postulation.states.state)}`}>
-                {postulation.states.state}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 w-full">
+              {postulation.createdBy?.provider?.id_provider ? (
+                <Link
+                  href={`/provider/${postulation.createdBy.provider.id_provider}`}
+                  className="text-lg font-bold text-white hover:text-blue-400 transition-colors truncate"
+                >
+                  {postulation.createdBy.name} {postulation.createdBy.lastname}
+                </Link>
+              ) : (
+                <p className="text-lg font-bold text-white truncate">
+                  {postulation.createdBy?.name} {postulation.createdBy?.lastname}
+                </p>
+              )}
+              <span className={`inline-flex w-fit text-[11px] font-bold px-3 py-1 rounded-full tracking-wide shadow-sm ${getStatusColor(postulation.states.state)}`}>
+                {postulation.states.state.toUpperCase()}
               </span>
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs">
+              <Calendar size={12} />
+              <span>{new Date(postulation.date_create).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 space-y-3">
+            <div className="flex gap-3">
+              <FileText size={16} className="text-blue-400 shrink-0 mt-1" />
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Descripción de Petición</p>
+                <p className="text-sm text-gray-300 leading-relaxed line-clamp-2 md:line-clamp-none italic">
+                  {postulation.petition?.description}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-3 border-t border-gray-700/50">
+              <FileText size={16} className="text-emerald-400 shrink-0 mt-1" />
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Propuesta del Proveedor</p>
+                <p className="text-sm text-gray-100 font-medium">
+                  {postulation.proposal}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <DollarSign className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Inversión Estimada</p>
+                <p className="text-2xl font-black text-emerald-400">${postulation.cost}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions Section */}
+        <div className="flex flex-col gap-3 pt-2">
+          {/* Action Row 1: Role Specific Principal Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {role === 'provider' && isPending && (
+              <>
+                <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full">
+                  <Button variant='primary' className="w-full h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/10">
+                    <Check size={18} className="mr-2" /> Editar Postulación
+                  </Button>
+                </Link>
+                <Button
+                  variant='destructive'
+                  className="w-full h-11 border-red-500/20 hover:bg-red-500/10"
+                  onClick={() => {
+                    if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
+                      withdrawMutation.mutate();
+                    }
+                  }}
+                  disabled={withdrawMutation.isPending}
+                >
+                  {withdrawMutation.isPending ? 'Procesando...' : 'Retirar Postulación'}
+                </Button>
+              </>
+            )}
+
+            {role === 'customer' && isPending && (
+              <>
+                <Button
+                  variant='primary'
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/10"
+                  onClick={() => acceptMutation.mutate()}
+                  disabled={acceptMutation.isPending || rejectMutation.isPending}
+                >
+                  <Check size={18} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
+                </Button>
+                <Button
+                  variant='destructive'
+                  className="w-full h-11"
+                  onClick={() => rejectMutation.mutate()}
+                  disabled={acceptMutation.isPending || rejectMutation.isPending}
+                >
+                  <X size={18} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+                </Button>
+              </>
+            )}
+
+            {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
+              <Button
+                variant='primary'
+                className="w-full h-11 bg-blue-600 hover:bg-blue-700 col-span-full"
+                onClick={() => finishMutation.mutate()}
+                disabled={finishMutation.isPending}
+              >
+                <ClipboardCheck size={18} className="mr-2" /> {finishMutation.isPending ? 'Procesando...' : 'Marcar como Finalizado'}
+              </Button>
+            )}
+
+            {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
+              <Button
+                variant='primary'
+                className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 font-bold col-span-full"
+                onClick={() => completeMutation.mutate()}
+                disabled={completeMutation.isPending}
+              >
+                <Award size={18} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
+              </Button>
             )}
           </div>
+
+          {/* Action Row 2: Secondary Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              variant='secondary'
+              className="w-full h-11 bg-gray-800/50 hover:bg-gray-800"
+              onClick={handleMessage}
+            >
+              <MessageSquare size={18} className="mr-2" /> Mensaje
+            </Button>
+
+            <Link href={`/postulation/${postulation.id_postulation}`} className="w-full">
+              <Button variant='secondary' className="w-full h-11 bg-gray-800/50 hover:bg-gray-800">
+                Ver Detalles Completos
+              </Button>
+            </Link>
+          </div>
+
+          {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
+            <Button
+              variant='primary'
+              className="w-full h-11 bg-yellow-600 hover:bg-yellow-700 shadow-lg shadow-yellow-600/10 mt-1"
+              onClick={() => setRatingModalOpen(true)}
+            >
+              <Award size={18} className="mr-2" /> {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className='flex flex-col sm:flex-row flex-wrap sm:justify-end mt-6 gap-3 w-full border-t border-gray-700/50 pt-5'>
-        {role === 'provider' && isPending && (
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full sm:w-auto">
-              <Button variant='primary' className="w-full">Editar</Button>
-            </Link>
-            <Button
-              variant='destructive'
-              className="w-full sm:w-auto"
-              onClick={() => {
-                if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
-                  withdrawMutation.mutate();
-                }
-              }}
-              disabled={withdrawMutation.isPending}
-            >
-              {withdrawMutation.isPending ? 'Retirando...' : 'Retirar'}
-            </Button>
-          </div>
-        )}
-
-        {/* --- INICIO: Botones de Acción Cliente --- */}
-        {role === 'customer' && isPending && (
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button
-              variant='primary'
-              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto order-2 sm:order-1"
-              onClick={() => acceptMutation.mutate()}
-              disabled={acceptMutation.isPending || rejectMutation.isPending}
-            >
-              <Check size={18} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
-            </Button>
-            <Button
-              variant='destructive'
-              className="w-full sm:w-auto order-1 sm:order-2"
-              onClick={() => rejectMutation.mutate()}
-              disabled={acceptMutation.isPending || rejectMutation.isPending}
-            >
-              <X size={18} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
-            </Button>
-          </div>
-        )}
-        {role === 'customer' && (
-          <Button
-            variant='secondary'
-            className="w-full sm:w-auto order-3 sm:order-last"
-            onClick={async () => {
-              if (!postulation.createdBy?.id_user || !postulation.petition?.id_petition) return;
-              try {
-                const conversation = await startConversation(postulation.createdBy.id_user, postulation.petition.id_petition);
-                router.push(`/message/${conversation.id_conversation}`);
-              } catch (error) {
-                console.error("Error al iniciar la conversación:", error);
-              }
-            }}
-          >
-            <MessageSquare size={18} className="mr-2" /> Enviar Mensaje
-          </Button>
-        )}
-        <Link href={`/postulation/${postulation.id_postulation}`} className="w-full sm:w-auto">
-          <Button variant='secondary' className="w-full">Ver detalles</Button>
-        </Link>
-
-        {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
-          <Button
-            variant='primary'
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-            onClick={() => finishMutation.mutate()}
-            disabled={finishMutation.isPending}
-          >
-            <ClipboardCheck size={18} className="mr-2" /> {finishMutation.isPending ? 'Finalizando...' : 'Marcar como Finalizado'}
-          </Button>
-        )}
-
-        {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
-          <Button
-            variant='primary'
-            className="bg-green-600 hover:bg-green-700 font-bold w-full sm:w-auto"
-            onClick={() => completeMutation.mutate()}
-            disabled={completeMutation.isPending}
-          >
-            <Award size={18} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
-          </Button>
-        )}
-
-        {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
-          <Button variant='primary' className="bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto" onClick={() => setRatingModalOpen(true)}>
-            {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
-          </Button>
-        )}
-      </div>
-      <div className="text-right text-xs text-gray-400 mt-4">
-        Postulado el: {new Date(postulation.date_create).toLocaleDateString()}
-      </div>
-
-      {/* Renderiza el modal si está abierto, ahora es más flexible */}
       {isRatingModalOpen && (
         <RatingModal
           isOpen={isRatingModalOpen}
           onClose={() => setRatingModalOpen(false)}
           petitionId={postulation.petition.id_petition}
-          // El proveedor a calificar es quien creó la postulación.
           providerId={postulation.createdBy.provider!.id_provider}
-          // El cliente a calificar es quien creó la petición original.
           customerId={postulation.petition.customers.id_customer}
-          // El objetivo de la calificación depende del rol del usuario actual.
           ratingTarget={role === 'customer' ? 'provider' : 'customer'}
         />
       )}

@@ -10,7 +10,7 @@ interface PostulationListProps {
 
 const PostulationList: React.FC<PostulationListProps> = ({ postulations, role }) => {
   if (postulations.length === 0) {
-    const message = role === 'provider' 
+    const message = role === 'provider'
       ? "No hay postulaciones realizadas."
       : "No hay postulaciones para esta petición.";
     return <p className="text-gray-500">{message}</p>;
@@ -18,7 +18,7 @@ const PostulationList: React.FC<PostulationListProps> = ({ postulations, role })
 
   return (
     <div className="mt-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
         {postulations.map((postulation) => (
           <PostulationCard key={postulation.id_postulation} postulation={postulation} role={role} />
         ))}

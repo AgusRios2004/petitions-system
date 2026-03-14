@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { availabilityService } from '@/service/availabilityService';
-// Asumimos que tienes o crearás estos servicios para obtener las listas de días y horas
 import { weekService } from '@/service/weekService';
 import { hourService } from '@/service/hourService';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { IAvailability, IWeek, IHour } from '@/types/common';
+import { IAvailability, IWeek, IHour, ApiResponse } from '@/types/common';
 import toast from 'react-hot-toast';
+import { Calendar, Clock, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface FormState {
     id_week: string;
@@ -23,6 +24,7 @@ interface CreateAvailabilityFormProps {
 }
 
 const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinished }) => {
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [formState, setFormState] = useState<FormState>({
         id_week: '',
@@ -33,21 +35,21 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
 
     const { data: weeks, isLoading: isLoadingWeeks } = useQuery({
         queryKey: ['weeks'],
-        queryFn: () => weekService.getAllWeeks(), // Asume que este servicio existe
+        queryFn: () => weekService.getAllWeeks(),
         select: (response) => response.data,
     });
 
     const { data: hours, isLoading: isLoadingHours } = useQuery({
         queryKey: ['hours'],
-        queryFn: () => hourService.getAllHours(), // Asume que este servicio existe
+        queryFn: () => hourService.getAllHours(),
         select: (response) => response.data,
-    })
+    });
 
-    // Consultamos TODAS las disponibilidades existentes para validar solapamientos
-    const { data: existingAvailabilities } = useQuery({
-        queryKey: ['availabilities', 'all'],
+    const { data: existingAvailabilities } = useQuery<ApiResponse<IAvailability[]>, Error, IAvailability[]>({
+        queryKey: ['availabilities', 'all', user?.provider?.id_provider],
         queryFn: () => availabilityService.getAllAvailabilities({}),
-        select: (response) => response.data,
+        select: (response) => response.data || [],
+        enabled: !!user?.provider?.id_provider,
     });
 
     const createAvailabilityMutation = useMutation({
@@ -57,13 +59,15 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['availabilities'] });
             toast.success('Disponibilidad creada con éxito.');
-            onFinished(); // Cierra el modal al tener éxito
+            onFinished();
         },
-        onError: (error: unknown) => {
+        onError: (error: any) => {
             console.error(error);
-            toast.error('Error al crear la disponibilidad.');
+            const message = error.response?.data?.message || 'Error al crear la disponibilidad.';
+            toast.error(message);
         }
     });
+
     const isLoading = isLoadingWeeks || isLoadingHours;
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -77,25 +81,21 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
         const untilHour = hours?.find(h => h.id_hour === parseInt(formState.id_until_hour));
 
         if (fromHour && untilHour) {
-            // Extraer solo la primera parte de la cadena de la hora (ej. "00:00" de "00:00 - 00:30")
             const fromTimeStr = fromHour.name.split(' ')[0];
             const untilTimeStr = untilHour.name.split(' ')[0];
 
-            // Convertir a formato de fecha para comparación
             const fromTime = new Date(`2000/01/01 ${fromTimeStr}`);
             const untilTime = new Date(`2000/01/01 ${untilTimeStr}`);
 
             if (fromTime >= untilTime) {
-                toast.error('La hora "Desde" no puede ser igual o posterior a la hora "Hasta".');
+                toast.error('La hora "Desde" debe ser anterior a la hora "Hasta".');
                 return;
             }
 
-            // --- VALIDACIÓN DE SOLAPAMIENTO ---
             if (existingAvailabilities) {
-                // Función auxiliar para convertir "HH:mm" a minutos
                 const getMinutes = (timeStr: string) => {
                     const [h, m] = timeStr.split(':').map(Number);
-                    return h * 60 + m;
+                    return h * 60 + (m || 0);
                 };
 
                 const newStart = getMinutes(fromTimeStr);
@@ -103,7 +103,7 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                 const selectedWeekId = parseInt(formState.id_week);
 
                 const hasOverlap = existingAvailabilities.some((avail: IAvailability) => {
-                    if (avail.week.id_week !== selectedWeekId) return false; // Solo comparar mismo día
+                    if (avail.week.id_week !== selectedWeekId) return false;
                     const existStart = getMinutes(avail.fromHour.name.split(' ')[0]);
                     const existEnd = getMinutes(avail.untilHour.name.split(' ')[0]);
                     return (newStart < existEnd && newEnd > existStart);
@@ -123,18 +123,29 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-                <h2 className="text-xl font-bold text-white mb-4">Crear Nueva Disponibilidad</h2>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div className="bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-blue-600/20 rounded-xl">
+                        <Clock className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">Gestionar Horario</h2>
+                        <p className="text-gray-400 text-sm">Define tu disponibilidad para recibir peticiones</p>
+                    </div>
+                </div>
 
                 {isLoading ? (
-                    <p>Cargando datos del formulario...</p>
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                        <p className="text-gray-400 animate-pulse">Cargando datos...</p>
+                    </div>
                 ) : (
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-4">
-                            <div>
+                            <div className="relative">
                                 <Select
-                                    label="Día"
+                                    label="Día de la semana"
                                     id="id_week"
                                     options={weeks?.map((week: IWeek) => ({ value: week.id_week, label: week.name })) || []}
                                     value={formState.id_week ? Number(formState.id_week) : null}
@@ -142,39 +153,68 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                                     placeholder="Selecciona un día"
                                     variant="dark"
                                 />
+                                <div className="absolute right-3 top-9 text-gray-500 pointer-events-none">
+                                    <Calendar className="w-4 h-4" />
+                                </div>
                             </div>
 
-                            <div>
-                                <Select
-                                    label="Hora desde"
-                                    id="id_from_hour"
-                                    options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
-                                    value={formState.id_from_hour ? Number(formState.id_from_hour) : null}
-                                    onChange={(val) => setFormState(prev => ({ ...prev, id_from_hour: String(val || '') }))}
-                                    placeholder="Selecciona una hora"
-                                    variant="dark"
-                                />
-                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="relative">
+                                    <Select
+                                        label="Hora desde"
+                                        id="id_from_hour"
+                                        options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                        value={formState.id_from_hour ? Number(formState.id_from_hour) : null}
+                                        onChange={(val) => setFormState(prev => ({ ...prev, id_from_hour: String(val || '') }))}
+                                        placeholder="08:00"
+                                        variant="dark"
+                                    />
+                                    <div className="absolute right-3 top-9 text-gray-500 pointer-events-none">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Select
-                                    label="Hora hasta"
-                                    id="id_until_hour"
-                                    options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
-                                    value={formState.id_until_hour ? Number(formState.id_until_hour) : null}
-                                    onChange={(val) => setFormState(prev => ({ ...prev, id_until_hour: String(val || '') }))}
-                                    placeholder="Selecciona una hora"
-                                    variant="dark"
-                                />
+                                <div className="relative">
+                                    <Select
+                                        label="Hora hasta"
+                                        id="id_until_hour"
+                                        options={hours?.map((hour: IHour) => ({ value: hour.id_hour, label: hour.name })) || []}
+                                        value={formState.id_until_hour ? Number(formState.id_until_hour) : null}
+                                        onChange={(val) => setFormState(prev => ({ ...prev, id_until_hour: String(val || '') }))}
+                                        placeholder="17:00"
+                                        variant="dark"
+                                    />
+                                    <div className="absolute right-3 top-9 text-gray-500 pointer-events-none">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end space-x-3 mt-6">
-                            <Button type="button" onClick={onFinished} variant="secondary">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-3">
+                            <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-blue-300 leading-relaxed">
+                                Asegúrate de que los rangos horarios no se superpongan con otros ya existentes en el mismo día.
+                                Puedes agregar múltiples bloques por día (ej: mañana y tarde).
+                            </p>
+                        </div>
+
+                        <div className="flex gap-4 pt-4">
+                            <Button
+                                type="button"
+                                onClick={onFinished}
+                                variant="secondary"
+                                className="flex-1 py-3 border-gray-700 hover:bg-gray-800"
+                            >
                                 Cancelar
                             </Button>
-                            <Button type="submit" variant="primary" disabled={createAvailabilityMutation.isPending}>
-                                {createAvailabilityMutation.isPending ? 'Creando...' : 'Crear'}
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={createAvailabilityMutation.isPending}
+                                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+                            >
+                                {createAvailabilityMutation.isPending ? 'Guardando...' : 'Guardar Horario'}
                             </Button>
                         </div>
                     </form>
