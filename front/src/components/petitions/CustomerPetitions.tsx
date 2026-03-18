@@ -23,6 +23,7 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
     id_state: undefined as number | undefined,
   });
 
+  // 1. Obtener los estados posibles de las peticiones
   const { data: petitionStatusTabs, isLoading: isLoadingStates } = useQuery({
     queryKey: ['petitionStates'],
     queryFn: () => stateService.getAllStates(),
@@ -33,18 +34,24 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
       })) || [],
   });
 
+  // 2. Efecto para inicializar el estado seleccionado (por defecto 'Pendiente' o el primero)
   useEffect(() => {
     if (petitionStatusTabs && filters.id_state === undefined) {
-      const pending = petitionStatusTabs.find((s: { value: number }) => s.value === 3);
+      // Intentamos buscar 'Pendiente' (ID=1 usualmente)
+      const pending = petitionStatusTabs.find(
+        (s: { label: string; value: number }) =>
+          s.label.toLowerCase().includes('pendiente') || s.value === 1
+      );
 
       setFilters((prev) => ({
         ...prev,
-        id_state: pending ? pending.value : petitionStatusTabs[0].value,
+        id_state: pending ? pending.value : petitionStatusTabs[0]?.value,
       }));
     }
   }, [petitionStatusTabs, filters.id_state]);
 
-  const { data, isLoading, isError, error } = useQuery({
+  // 3. Obtener las peticiones filtradas
+  const { data, isLoading: isLoadingPetitions, isError, error } = useQuery({
     queryKey: ['petitions', customerId, filters],
     queryFn: () => {
       if (!customerId || filters.id_state === undefined) return Promise.resolve(null);
@@ -72,61 +79,81 @@ const CustomerPetitions: React.FC<CustomerPetitionsProps> = ({ customerId }) => 
     }));
   };
 
-  if (isLoadingStates)
-    return <p className="text-center text-gray-400">Cargando estados...</p>;
-  if (isLoading) return <p className="text-center text-gray-400">Cargando peticiones...</p>;
+  // --- LÓGICA DE CARGA UNIFICADA ---
+  // Consideramos que está cargando si estamos obteniendo estados, 
+  // o si ya tenemos estados pero aún no hemos cargado las peticiones iniciales.
+  const isInitialLoading = isLoadingStates || (filters.id_state !== undefined && isLoadingPetitions && !data);
+
   if (isError)
     return (
-      <p className="text-center text-red-500">
-        Error al cargar peticiones: {error?.message}
-      </p>
+      <div className="p-8 bg-red-900/10 border border-red-900/20 rounded-2xl text-center">
+        <p className="text-red-500 font-bold mb-2">Error al cargar peticiones</p>
+        <p className="text-xs text-red-700">{error?.message}</p>
+      </div>
     );
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        {petitionStatusTabs && filters.id_state !== undefined && (
-          <div className="w-full sm:w-auto overflow-x-auto">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Renderizamos las pestañas si ya las tenemos, incluso si las peticiones cargan después */}
+        {petitionStatusTabs ? (
+          <div className="w-full sm:w-auto overflow-x-auto scrollbar-hide">
             <Tabs
               tabs={petitionStatusTabs}
-              activeTab={filters.id_state}
+              activeTab={filters.id_state || 0}
               onTabClick={handleStatusTabChange}
+              className="!mx-0"
             />
           </div>
+        ) : (
+          <div className="h-10 w-64 bg-gray-800 animate-pulse rounded-xl" />
         )}
 
         <Link href="/petition/create" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-900/20">
+          <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-900/40 border-none px-8">
             Crear Petición
           </Button>
         </Link>
       </div>
 
-      {data && data.petitions && data.petitions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {data.petitions.map((petition: IPetitionCardData) => (
-            <PetitionCard key={petition.id_petition} petition={petition} />
+      {isInitialLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="h-[280px] w-full bg-gray-800/50 animate-pulse rounded-2xl border border-white/5" />
           ))}
         </div>
+      ) : data && data.petitions && data.petitions.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data.petitions.map((petition: IPetitionCardData) => (
+              <PetitionCard key={petition.id_petition} petition={petition} />
+            ))}
+          </div>
+
+          {data.totalPages > 1 && (
+            <div className="pt-8 flex justify-center">
+              <Pagination
+                currentPage={data.currentPage}
+                totalPages={data.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </>
       ) : (
-        <div className="text-center py-16">
-          <h3 className="text-xl font-semibold text-white">
-            No tienes peticiones en este estado
+        <div className="text-center py-20 bg-gray-900/30 rounded-3xl border border-dashed border-white/5">
+          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl text-gray-600">📭</span>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            No hay peticiones
           </h3>
-          <p className="text-gray-400 mt-2">
-            ¡Prueba a cambiar de pestaña o crea una nueva petición!
+          <p className="text-gray-400 max-w-xs mx-auto text-sm italic">
+            No encontramos peticiones para este estado. Puedes cambiar de categoría o crear una nueva.
           </p>
         </div>
       )}
-
-      {data && data.totalPages > 1 && (
-        <Pagination
-          currentPage={data.currentPage}
-          totalPages={data.totalPages}
-          onPageChange={handlePageChange}
-        />
-      )}
-    </>
+    </div>
   );
 };
 

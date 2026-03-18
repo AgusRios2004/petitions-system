@@ -22,13 +22,13 @@ const sequelize = process.env.MYSQL_URL
     }
   })
   : new Sequelize(
-    process.env.DB_NAME || process.env.MYSQLDATABASE,
-    process.env.DB_USER || process.env.MYSQLUSER,
-    process.env.DB_PASSWORD || process.env.MYSQLPASSWORD,
+    process.env.DB_NAME,      // <--- Aquí coincide con process.env.DB_NAME
+    process.env.DB_USER,      // <--- Aquí coincide con process.env.DB_USER
+    process.env.DB_PASSWORD,  // <--- Aquí coincide con process.env.DB_PASSWORD
     {
-      host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
       dialect: 'mysql',
-      port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
       logging: false,
       dialectOptions: {
         connectTimeout: 60000,
