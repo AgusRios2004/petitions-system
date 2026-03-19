@@ -13,9 +13,10 @@ import { useSocket } from "@/context/SocketContext";
 
 interface ChatViewProps {
   conversationId: number;
+  hideBack?: boolean;
 }
 
-export default function ChatView({ conversationId }: ChatViewProps) {
+export default function ChatView({ conversationId, hideBack = false }: ChatViewProps) {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -64,27 +65,36 @@ export default function ChatView({ conversationId }: ChatViewProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-4 h-full">
-        <Loader2 className="animate-spin text-gray-500" />
+        <Loader2 className="animate-spin text-gray-500" size={32} />
       </div>
     );
   }
 
   if (error instanceof Error) {
-    return <div className="p-4">Error: {error.message}</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+        <p className="text-red-500 font-bold mb-2">Error al cargar mensajes</p>
+        <p className="text-xs text-red-700 opacity-60">{error.message}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center border-b p-2 dark:border-gray-800">
-        <Button
-          onClick={() => router.back()}
-          variant="ghost"
-          size="icon"
-          aria-label="Volver"
-        >
-          <ArrowLeft size={22} />
-        </Button>
-      </div>
+    <div className="flex flex-col h-full bg-gray-950/20">
+      {!hideBack && (
+        <div className="flex items-center border-b p-4 dark:border-white/5 bg-gray-900/40 backdrop-blur-md">
+          <Button
+            onClick={() => router.back()}
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10 border-none"
+            aria-label="Volver"
+          >
+            <ArrowLeft size={18} />
+          </Button>
+          <span className="ml-4 font-black text-xs uppercase tracking-widest text-white">Chat</span>
+        </div>
+      )}
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages?.map((msg: IMessage) => {
           const isSender = msg.sender_id === currentUser?.id_user;
@@ -100,10 +110,9 @@ export default function ChatView({ conversationId }: ChatViewProps) {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               )}
-              <div className={`max-w-xs md:max-w-md p-3 rounded-lg transition-opacity duration-300 ${
-                  isSender
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
+              <div className={`max-w-xs md:max-w-md p-3 rounded-lg transition-opacity duration-300 ${isSender
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
                 } opacity-100`}>
                 <p>{msg.content}</p>
               </div>
