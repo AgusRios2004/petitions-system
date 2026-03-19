@@ -11,19 +11,21 @@ export interface SelectOption {
 
 // Props personalizadas para nuestro componente Select
 interface CustomSelectProps
-  extends Omit<SelectProps<SelectOption, false>, 'options' | 'value' | 'onChange' | 'isDisabled'> {
+  extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'value' | 'onChange' | 'isDisabled' | 'isMulti'> {
   label: string;
   options: SelectOption[];
   error?: string;
   placeholder?: string;
   disabled?: boolean;
-  value?: number | string | null; // <-- el value viene como primitivo de RHF
-  onChange?: (value: number | string | null) => void; // <-- también ajustamos el tipo
+  isMulti?: boolean;
+  value?: number | string | (number | string)[] | null;
+  onChange?: (value: any) => void;
   variant?: 'dark' | 'white';
+  menuPlacement?: 'auto' | 'top' | 'bottom';
 }
 
 // Función para generar estilos según la variante
-const getStyles = (variant: 'dark' | 'white'): StylesConfig<SelectOption, false> => {
+const getStyles = (variant: 'dark' | 'white'): StylesConfig<SelectOption, boolean> => {
   const isDark = variant === 'dark';
   return {
     control: (provided, state) => ({
@@ -44,6 +46,23 @@ const getStyles = (variant: 'dark' | 'white'): StylesConfig<SelectOption, false>
       border: `1px solid ${isDark ? '#4b5563' : '#e5e7eb'}`,
       borderRadius: '0.375rem',
     }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      borderRadius: '4px',
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: isDark ? '#f9fafb' : '#111827',
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      '&:hover': {
+        backgroundColor: '#ef4444',
+        color: '#ffffff',
+      },
+    }),
     // Estilo para el portal
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     option: (provided, state) => ({
@@ -51,8 +70,8 @@ const getStyles = (variant: 'dark' | 'white'): StylesConfig<SelectOption, false>
       backgroundColor: state.isSelected
         ? '#3b82f6'
         : state.isFocused
-        ? (isDark ? '#374151' : '#f3f4f6')
-        : 'transparent',
+          ? (isDark ? '#374151' : '#f3f4f6')
+          : 'transparent',
       color: state.isSelected ? '#ffffff' : (isDark ? '#d1d5db' : '#1f2937'),
     }),
     indicatorSeparator: () => ({ display: 'none' }),
@@ -72,15 +91,22 @@ export const Select: React.FC<CustomSelectProps> = ({
   value,
   onChange,
   disabled,
+  isMulti = false,
   variant = 'dark', // Por defecto sigue siendo oscuro
+  menuPlacement = 'auto',
   ...rest
 }) => {
   // Convertimos el valor primitivo en un objeto SelectOption
-  const selectedOption =
-    options.find((option) => option.value === value) || null;
+  const selectedOption = isMulti
+    ? options.filter((option) => Array.isArray(value) && value.includes(option.value))
+    : options.find((option) => option.value === value) || null;
 
-  const handleChange = (option: SelectOption | null) => {
-    onChange?.(option ? option.value : null);
+  const handleChange = (option: any) => {
+    if (isMulti) {
+      onChange?.(option ? option.map((opt: any) => opt.value) : []);
+    } else {
+      onChange?.(option ? option.value : null);
+    }
   };
 
   // Usamos un useEffect para renderizar en el cliente y evitar errores de SSR con document.body
@@ -101,6 +127,7 @@ export const Select: React.FC<CustomSelectProps> = ({
         <ReactSelect
           {...rest}
           id={id}
+          isMulti={isMulti}
           options={options}
           styles={styles}
           value={selectedOption}
@@ -108,6 +135,7 @@ export const Select: React.FC<CustomSelectProps> = ({
           placeholder={rest.placeholder || 'Seleccionar...'}
           isDisabled={disabled}
           noOptionsMessage={() => 'No hay opciones'}
+          menuPlacement={menuPlacement}
           // Renderiza el menú en el body para evitar problemas de layout
           menuPortalTarget={document.body}
         />
@@ -116,3 +144,4 @@ export const Select: React.FC<CustomSelectProps> = ({
     </div>
   );
 };
+

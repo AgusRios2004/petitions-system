@@ -66,7 +66,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ customer, setActi
                                         {idx + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-white truncate">{petition.profession?.name || 'Petición sin título'}</p>
+                                        <p className="text-sm font-bold text-white truncate">{petition.profession?.name || petition.typePetitions?.name || 'Petición de Servicio'}</p>
                                         <p className="text-xs text-gray-500 truncate">{petition.description}</p>
                                     </div>
                                     <div className="text-right">

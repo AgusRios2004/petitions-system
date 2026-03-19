@@ -237,8 +237,21 @@ export default function PostulationDetailPage() {
             )}
 
             {/* --- NAVEGACIÓN Y ACCIONES GENERALES --- */}
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              <Button onClick={() => router.back()} variant="secondary">Volver</Button>
+            <div className="flex bg-gray-900 px-3 py-3 rounded-2xl border border-gray-700/50 gap-3 w-fit">
+              <Button
+                onClick={() => router.back()}
+                variant="secondary"
+                className="flex items-center gap-2 h-10 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all text-xs uppercase tracking-widest border-none"
+              >
+                Volver
+              </Button>
+              <Button
+                onClick={() => router.push('/profile')}
+                variant="ghost"
+                className="flex items-center gap-2 h-10 px-6 rounded-xl text-gray-400 hover:text-white font-bold transition-all text-xs uppercase tracking-widest"
+              >
+                Dashboard
+              </Button>
             </div>
           </div>
         </div>

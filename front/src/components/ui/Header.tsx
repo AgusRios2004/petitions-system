@@ -21,14 +21,19 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           {user ? (
-            <div className="flex items-center gap-1 sm:gap-4 bg-gray-900/50 p-1.5 rounded-2xl border border-white/5">
-              <NotificationBell />
-              <div className="w-px h-6 bg-white/10 hidden sm:block" />
-              <MessageList />
-              <div className="w-px h-6 bg-white/10 hidden sm:block" />
-              <LogoutButton />
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link href="/profile" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all">
+                Dashboard
+              </Link>
+              <div className="flex items-center gap-1 sm:gap-4 bg-gray-900/50 p-1.5 rounded-2xl border border-white/5">
+                <NotificationBell />
+                <div className="w-px h-6 bg-white/10 hidden sm:block" />
+                <MessageList />
+                <div className="w-px h-6 bg-white/10 hidden sm:block" />
+                <LogoutButton />
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-3 text-sm sm:text-base font-semibold">

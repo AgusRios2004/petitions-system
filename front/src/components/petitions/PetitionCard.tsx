@@ -48,6 +48,11 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
     }
   }, [petition.customers]);
 
+  // ✔ 4. ¿Ya fue calificado por este usuario?
+  const hasBeenRated = useMemo(() => {
+    return petition.grades?.some(g => g.id_user_create === user?.id_user);
+  }, [petition.grades, user?.id_user]);
+
   return (
     <Fragment>
       <div className="group relative rounded-xl border border-white/10 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 flex flex-col justify-between h-full">
@@ -73,7 +78,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
 
           <div className="flex justify-between items-start mb-3">
             <span className="text-sm font-medium text-gray-400">
-              {petition.typePetitions?.name || 'Sin Categoría'}
+              {petition.typePetitions?.name || 'Servicio'}
             </span>
             <span
               className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-normal ${getStatusColor(
@@ -84,7 +89,7 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
             </span>
           </div>
 
-          <h3 className="text-lg font-bold text-white mb-4 [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical] [overflow:hidden]">
+          <h3 className="text-lg font-bold text-white mb-4 [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical] [overflow:hidden] leading-snug">
             {petition.description}
           </h3>
 
@@ -112,26 +117,32 @@ const PetitionCard: React.FC<PetitionCardProps> = ({ petition }) => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-white/10 gap-4">
-          <span className="text-xs text-gray-500 dark:text-gray-400 capitalize bg-gray-900/40 px-3 py-1 rounded-full border border-white/5">
-            Creada: {creationDate}
-          </span>
+        <div className="flex flex-col mt-6 pt-4 border-t border-white/10 gap-3">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 capitalize bg-gray-900/40 px-3 py-1 rounded-full border border-white/5">
+              Fecha: {creationDate}
+            </span>
+          </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* Botón Calificar SOLO si hay proveedor asignado */}
-            {showProviderAssigned && (
+          <div className="grid grid-cols-2 gap-2 w-full">
+            {/* Botón Calificar SOLO si hay proveedor asignado y NO ha sido calificado */}
+            {showProviderAssigned && !hasBeenRated ? (
               <Button
                 size="sm"
                 variant="secondary"
-                className="flex-1 sm:flex-initial"
+                className="w-full text-[10px] font-bold uppercase tracking-wider h-9"
                 onClick={() => setIsRatingModalOpen(true)}
               >
                 Calificar
               </Button>
-            )}
+            ) : showProviderAssigned && hasBeenRated ? (
+              <div className="flex items-center justify-center bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold rounded-lg uppercase tracking-wider px-2 h-9">
+                Calificado
+              </div>
+            ) : null}
 
-            <Link href={`/petition/${petition.id_petition}`} className="flex-1 sm:flex-initial">
-              <Button size="sm" variant="primary" className="w-full">
+            <Link href={`/petition/${petition.id_petition}`} className={showProviderAssigned ? "" : "col-span-2"}>
+              <Button size="sm" variant="primary" className="w-full text-[10px] font-bold uppercase tracking-wider h-9">
                 Ver Detalles
               </Button>
             </Link>

@@ -49,10 +49,9 @@ class PetitionService {
     _getPetitionIncludes() {
         return [
             'attachments',
-            // 2. NUEVO INCLUDE: Para ver las categorías de la petición
             {
                 model: PetitionCategory,
-                as: 'petitionCategories', // Asegúrate de que este alias coincida con tu modelo Petition.hasMany(PetitionCategory)
+                as: 'petitionCategories',
                 include: [
                     {
                         model: Category,
@@ -71,7 +70,6 @@ class PetitionService {
                         attributes: ['name', 'lastname', 'profile_image']
                     }
                 ],
-                // ... (tu lógica de rating se queda igual) ...
             },
             'typePetitions',
             'states',
@@ -92,6 +90,11 @@ class PetitionService {
                         }]
                     }
                 ]
+            },
+            {
+                model: require('../models').Grade,
+                as: 'grades',
+                attributes: ['id_grade', 'id_user_create']
             }
         ];
     }
@@ -162,7 +165,6 @@ class PetitionService {
 
     async getPetitionById(id) {
         return await Petition.findByPk(id, {
-            // ADAPTACIÓN: Incluir categories aquí también
             include: [
                 'attachments',
                 'customers',
@@ -174,6 +176,11 @@ class PetitionService {
                     model: Category,
                     as: 'categories',
                     through: { attributes: [] }
+                },
+                {
+                    model: require('../models').Grade,
+                    as: 'grades',
+                    attributes: ['id_grade', 'id_user_create']
                 }
             ]
         });

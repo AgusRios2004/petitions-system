@@ -222,6 +222,7 @@ export interface IPetition {
     state: string;
   };
   profession?: Profession;
+  typePetitions?: TypePetition;
 }
 
 export interface ICustomer {
@@ -263,6 +264,7 @@ export interface IPetitionCardData {
   };
   postulations: Pick<IPostulation, 'id_provider' | 'states' | 'provider'>[];
   petitionCategories?: { category: ICategory }[];
+  grades?: { id_grade: number, id_user_create: number }[];
 }
 
 export interface IProfile extends IUser {
