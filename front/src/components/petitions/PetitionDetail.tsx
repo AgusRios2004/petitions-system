@@ -318,7 +318,12 @@ const PetitionDetail: React.FC<PetitionDetailProps> = ({ petition, onEdit }) => 
         {showPostulations && (
           <div className="mt-12 animate-in slide-in-from-top-12 fade-in duration-700 fill-mode-forwards relative">
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-12 bg-gradient-to-b from-transparent via-green-500 to-transparent" />
-            <div className="bg-gray-950/50 rounded-[3rem] border border-green-500/20 p-2 sm:p-6 overflow-hidden">
+            <div className="bg-gray-950/30 rounded-[3rem] border border-green-500/10 p-4 sm:p-10">
+              <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                  Propuestas Recibidas <span className="text-green-500 text-sm">({petition.id_petition})</span>
+                </h3>
+              </div>
               <PetitionPostulations petitionId={petition.id_petition} />
             </div>
           </div>

@@ -116,21 +116,24 @@ const PublicProfileContent: React.FC<PublicProfileContentProps> = ({ providerId 
           Perfil Público de {provider.user.name} {provider.user.lastname}
         </h1>
 
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-center items-stretch gap-4 mb-12">
           {isOwner ? (
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <AddPortfolioButton providerId={providerId} />
+            <>
+              <div className="flex-1">
+                <AddPortfolioButton providerId={providerId} />
+              </div>
               <Button
                 onClick={() => router.push('/profile/edit')}
-                className="!bg-blue-600 !hover:bg-blue-700 w-full sm:w-auto font-bold px-6"
+                className="flex-1 !bg-blue-600 !hover:bg-blue-700 !text-white font-black text-xs uppercase tracking-[0.2em] h-12 rounded-2xl shadow-xl shadow-blue-900/40 relative overflow-hidden group border-none transition-all hover:scale-[1.02]"
               >
-                Editar Perfil
+                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                <span className="relative z-10">Editar Perfil</span>
               </Button>
-            </div>
+            </>
           ) : user?.customer ? (
             <Link
               href={`/provider/${providerId}/postulations`}
-              className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-cyan-900/20 text-center"
+              className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3.5 px-10 rounded-2xl transition-all shadow-xl shadow-cyan-900/30 text-center uppercase text-xs tracking-widest"
             >
               Ver Historial de Postulaciones
             </Link>

@@ -15,9 +15,8 @@ export default function AddPortfolioButton({ providerId }: AddPortfolioButtonPro
         <>
             <Button
                 onClick={() => setIsModalOpen(true)}
-                className="!bg-green-600 !hover:bg-green-700"
+                className="w-full !bg-emerald-600 !hover:bg-emerald-700 !text-white font-black text-xs uppercase tracking-[0.2em] h-12 rounded-2xl shadow-xl shadow-emerald-900/40 border-none transition-all hover:scale-[1.02]"
             >
-                
                 Agregar Portfolio
             </Button>
             {isModalOpen && (

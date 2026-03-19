@@ -17,8 +17,8 @@ const PostulationList: React.FC<PostulationListProps> = ({ postulations, role })
   }
 
   return (
-    <div className="mt-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
+    <div className="mt-4">
+      <div className="flex flex-col gap-6">
         {postulations.map((postulation) => (
           <PostulationCard key={postulation.id_postulation} postulation={postulation} role={role} />
         ))}

@@ -151,14 +151,11 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
             <div className="bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-blue-600/20 rounded-xl">
-                        <Clock className="w-6 h-6 text-blue-500" />
+                <div className="flex flex-col items-center justify-center mb-8 text-center pt-4">
+                    <div className="p-4 bg-blue-600/10 rounded-2xl mb-4 ring-1 ring-blue-500/20">
+                        <Clock className="w-8 h-8 text-blue-500" />
                     </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-white">Gestionar Horario</h2>
-                        <p className="text-gray-400 text-sm">Define tu disponibilidad para recibir peticiones</p>
-                    </div>
+                    <h2 className="text-xl font-black text-white uppercase tracking-widest">Crear Nuevo Horario</h2>
                 </div>
 
                 {isLoading ? (
@@ -233,13 +230,6 @@ const CreateAvailabilityForm: React.FC<CreateAvailabilityFormProps> = ({ onFinis
                             </div>
                         </div>
 
-                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-3">
-                            <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-blue-300 leading-relaxed">
-                                Asegúrate de que los rangos horarios no se superpongan con otros ya existentes en el mismo día.
-                                Puedes agregar múltiples bloques por día (ej: mañana y tarde).
-                            </p>
-                        </div>
 
                         <div className="flex gap-4 pt-4">
                             <Button

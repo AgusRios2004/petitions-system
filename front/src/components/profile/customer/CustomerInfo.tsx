@@ -101,11 +101,13 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer, user }) => {
       </div>
 
       {/* --- Botón de Editar Perfil --- */}
-      <div className="mt-8 pt-6 border-t border-gray-700 flex justify-center">
-        <Button variant="primary" size="lg" onClick={() => setIsEditing(true)} className="w-full sm:w-auto px-10 font-bold shadow-lg shadow-blue-900/20">
-          Editar Perfil
-        </Button>
-      </div>
+      <Button
+        variant="primary"
+        onClick={() => setIsEditing(true)}
+        className="w-full !bg-blue-600 !hover:bg-blue-700 !text-white font-black text-xs uppercase tracking-[0.2em] h-12 rounded-2xl shadow-xl shadow-blue-900/40 border-none transition-all hover:scale-[1.01]"
+      >
+        Editar Perfil
+      </Button>
     </div>
   );
 };

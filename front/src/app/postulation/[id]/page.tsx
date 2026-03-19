@@ -237,20 +237,20 @@ export default function PostulationDetailPage() {
             )}
 
             {/* --- NAVEGACIÓN Y ACCIONES GENERALES --- */}
-            <div className="flex bg-gray-900 px-3 py-3 rounded-2xl border border-gray-700/50 gap-3 w-fit">
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
               <Button
                 onClick={() => router.back()}
                 variant="secondary"
-                className="flex items-center gap-2 h-10 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all text-xs uppercase tracking-widest border-none"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-8 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all border border-white/5 shadow-xl shadow-black/20"
               >
-                Volver
+                Volver Atrás
               </Button>
               <Button
                 onClick={() => router.push('/profile')}
                 variant="ghost"
-                className="flex items-center gap-2 h-10 px-6 rounded-xl text-gray-400 hover:text-white font-bold transition-all text-xs uppercase tracking-widest"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-8 rounded-2xl text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:bg-white/5"
               >
-                Dashboard
+                Ir al Dashboard
               </Button>
             </div>
           </div>

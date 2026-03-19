@@ -98,179 +98,183 @@ const PostulationCard: React.FC<PostulationCardProps> = ({ postulation, role }) 
   };
 
   return (
-    <div className="group bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-2xl p-5 sm:p-6 transition-all duration-300 shadow-xl overflow-hidden relative">
-      <div className="absolute top-0 right-0 p-4">
+    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/20 rounded-3xl p-6 sm:p-8 transition-all duration-300 shadow-2xl relative mb-4 last:mb-0">
+      {/* Background Accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-3xl rounded-full -mr-10 -mt-10 pointer-events-none" />
+
+      <div className="absolute top-6 right-6 z-10">
         {postulation.winner && (
-          <span className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-black px-2 py-1 rounded-full border border-yellow-500/20 uppercase tracking-tighter shadow-sm animate-pulse">
-            <Award size={10} /> Ganador
+          <span className="flex items-center gap-2 bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-4 py-1.5 rounded-full border border-yellow-500/20 uppercase tracking-widest shadow-sm">
+            <Award size={12} /> Ganador
           </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* Header Section */}
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0">
-            {postulation.createdBy?.name?.charAt(0) || 'U'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 w-full">
+      <div className="flex flex-col lg:flex-row gap-8 relative z-10 mb-8">
+        {/* Left Section - Provider & State */}
+        <div className="lg:w-1/3 space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-blue-500/10">
+              {postulation.createdBy?.name?.charAt(0) || 'U'}
+            </div>
+            <div>
               {postulation.createdBy?.provider?.id_provider ? (
                 <Link
                   href={`/provider/${postulation.createdBy.provider.id_provider}`}
-                  className="text-lg font-bold text-white hover:text-blue-400 transition-colors truncate"
+                  className="text-xl font-black text-white hover:text-blue-400 transition-colors block mb-1"
                 >
                   {postulation.createdBy.name} {postulation.createdBy.lastname}
                 </Link>
               ) : (
-                <p className="text-lg font-bold text-white truncate">
+                <p className="text-xl font-black text-white mb-1">
                   {postulation.createdBy?.name} {postulation.createdBy?.lastname}
                 </p>
               )}
-              <span className={`inline-flex w-fit text-[11px] font-bold px-3 py-1 rounded-full tracking-wide shadow-sm ${getStatusColor(postulation.states.state)}`}>
-                {postulation.states.state.toUpperCase()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs">
-              <Calendar size={12} />
-              <span>{new Date(postulation.date_create).toLocaleDateString()}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="space-y-4">
-          <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 space-y-3">
-            <div className="flex gap-3">
-              <FileText size={16} className="text-blue-400 shrink-0 mt-1" />
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Descripción de Petición</p>
-                <p className="text-sm text-gray-300 leading-relaxed line-clamp-2 md:line-clamp-none italic">
-                  {postulation.petition?.description}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 pt-3 border-t border-gray-700/50">
-              <FileText size={16} className="text-emerald-400 shrink-0 mt-1" />
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Propuesta del Proveedor</p>
-                <p className="text-sm text-gray-100 font-medium">
-                  {postulation.proposal}
-                </p>
+              <div className={`inline-flex items-center gap-2 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${getStatusColor(postulation.states.state)}`}>
+                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                {postulation.states.state}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <DollarSign className="w-5 h-5 text-emerald-400" />
+          <div className="space-y-4 pt-4 border-t border-white/5">
+            <div className="flex items-center gap-3 bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
+              <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400">
+                <DollarSign size={20} />
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Inversión Estimada</p>
-                <p className="text-2xl font-black text-emerald-400">${postulation.cost}</p>
+                <p className="text-[10px] uppercase font-black text-gray-500 tracking-widest">Inversión Propuesta</p>
+                <p className="text-2xl font-black text-white">${postulation.cost.toLocaleString('es-AR')}</p>
               </div>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500 text-[10px] px-2 uppercase font-black tracking-widest">
+              <Calendar size={12} /> {new Date(postulation.date_create).toLocaleDateString()}
             </div>
           </div>
         </div>
 
-        {/* Actions Section */}
-        <div className="flex flex-col gap-3 pt-2">
-          {/* Action Row 1: Role Specific Principal Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {role === 'provider' && isPending && (
-              <>
-                <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full">
-                  <Button variant='primary' className="w-full h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/10 font-bold">
-                    <Edit size={18} className="mr-2" /> Editar Postulación
-                  </Button>
-                </Link>
-                <Button
-                  variant='destructive'
-                  className="w-full h-11 border-red-500/20 hover:bg-red-500/10 font-bold"
-                  onClick={() => {
-                    if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
-                      withdrawMutation.mutate();
-                    }
-                  }}
-                  disabled={withdrawMutation.isPending}
-                >
-                  {withdrawMutation.isPending ? 'Procesando...' : <><Trash2 size={18} className="mr-2" /> Retirar Postulación</>}
-                </Button>
-              </>
-            )}
+        {/* Right Section - Proposal Details */}
+        <div className="flex-1 space-y-6 lg:border-l lg:border-white/5 lg:pl-8">
+          <div className="space-y-6">
+            <section>
+              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                <FileText size={12} /> Propuesta del Profesional
+              </h4>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/5 leading-relaxed text-gray-300 text-sm font-medium italic">
+                {postulation.proposal}
+              </div>
+            </section>
 
-            {role === 'customer' && isPending && (
-              <>
-                <Button
-                  variant='primary'
-                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/10"
-                  onClick={() => acceptMutation.mutate()}
-                  disabled={acceptMutation.isPending || rejectMutation.isPending}
-                >
-                  <Check size={18} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar'}
-                </Button>
-                <Button
-                  variant='destructive'
-                  className="w-full h-11"
-                  onClick={() => rejectMutation.mutate()}
-                  disabled={acceptMutation.isPending || rejectMutation.isPending}
-                >
-                  <X size={18} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
-                </Button>
-              </>
-            )}
-
-            {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
-              <Button
-                variant='primary'
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700 col-span-full"
-                onClick={() => finishMutation.mutate()}
-                disabled={finishMutation.isPending}
-              >
-                <ClipboardCheck size={18} className="mr-2" /> {finishMutation.isPending ? 'Procesando...' : 'Marcar como Finalizado'}
-              </Button>
-            )}
-
-            {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
-              <Button
-                variant='primary'
-                className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 font-bold col-span-full"
-                onClick={() => completeMutation.mutate()}
-                disabled={completeMutation.isPending}
-              >
-                <Award size={18} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo y Calificar'}
-              </Button>
+            {postulation.inventories && postulation.inventories.length > 0 && (
+              <section>
+                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Materiales e Insumos</h4>
+                <div className="flex flex-wrap gap-2">
+                  {postulation.inventories.map((item) => (
+                    <div key={item.id_inventory} className="bg-gray-800/80 px-4 py-2 rounded-xl text-xs text-gray-400 border border-white/5">
+                      <span className="font-black text-white">{item.article?.name}</span> (x{item.quantity})
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Action Row 2: Secondary Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              variant='secondary'
-              className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold"
-              onClick={handleMessage}
-            >
-              <MessageSquare size={18} className="mr-2" /> Mensaje
-            </Button>
-
-            <Link href={`/postulation/${postulation.id_postulation}`} className="w-full">
-              <Button variant='secondary' className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold">
-                <Eye size={18} className="mr-2" /> Ver Detalles Completos
+      {/* Actions Section */}
+      <div className="flex flex-col gap-4 relative z-10 pt-6 border-t border-white/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {role === 'provider' && isPending && (
+            <>
+              <Link href={`/postulation/edit/${postulation.id_postulation}`} className="w-full">
+                <Button variant='primary' className="w-full h-12 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/10 font-bold">
+                  <Edit size={18} className="mr-2" /> Editar Postulación
+                </Button>
+              </Link>
+              <Button
+                variant='destructive'
+                className="w-full h-12 border-red-500/20 hover:bg-red-500/10 font-bold"
+                onClick={() => {
+                  if (window.confirm('¿Estás seguro de que quieres retirar tu postulación?')) {
+                    withdrawMutation.mutate();
+                  }
+                }}
+                disabled={withdrawMutation.isPending}
+              >
+                {withdrawMutation.isPending ? 'Procesando...' : <><Trash2 size={18} className="mr-2" /> Retirar</>}
               </Button>
-            </Link>
-          </div>
+            </>
+          )}
 
-          {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
+          {role === 'customer' && isPending && (
+            <>
+              <Button
+                variant='primary'
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-900/20 font-black text-xs uppercase tracking-widest"
+                onClick={() => acceptMutation.mutate()}
+                disabled={acceptMutation.isPending || rejectMutation.isPending}
+              >
+                <Check size={18} className="mr-2" /> {acceptMutation.isPending ? 'Aceptando...' : 'Aceptar Postulación'}
+              </Button>
+              <Button
+                variant='destructive'
+                className="w-full h-12 font-black text-xs uppercase tracking-widest"
+                onClick={() => rejectMutation.mutate()}
+                disabled={acceptMutation.isPending || rejectMutation.isPending}
+              >
+                <X size={18} className="mr-2" /> {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+              </Button>
+            </>
+          )}
+
+          {role === 'provider' && postulation.winner && postulation.states.state === 'Aceptado' && (
             <Button
               variant='primary'
-              className="w-full h-11 bg-yellow-600 hover:bg-yellow-700 shadow-lg shadow-yellow-600/10 mt-1"
-              onClick={() => setRatingModalOpen(true)}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 col-span-full font-black text-xs uppercase tracking-widest"
+              onClick={() => finishMutation.mutate()}
+              disabled={finishMutation.isPending}
             >
-              <Award size={18} className="mr-2" /> {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
+              <ClipboardCheck size={18} className="mr-2" /> {finishMutation.isPending ? 'Procesando...' : 'Marcar como Finalizado'}
+            </Button>
+          )}
+
+          {role === 'customer' && postulation.winner && postulation.states.state === 'Finalizado' && (
+            <Button
+              variant='primary'
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 font-bold col-span-full font-black text-xs uppercase tracking-widest"
+              onClick={() => completeMutation.mutate()}
+              disabled={completeMutation.isPending}
+            >
+              <Award size={18} className="mr-2" /> {completeMutation.isPending ? 'Confirmando...' : 'Confirmar Trabajo'}
             </Button>
           )}
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant='secondary'
+            className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold"
+            onClick={handleMessage}
+          >
+            <MessageSquare size={18} className="mr-2" /> Enviar Mensaje
+          </Button>
+
+          <Link href={`/postulation/${postulation.id_postulation}`} className="w-full">
+            <Button variant='secondary' className="w-full h-11 bg-gray-800/50 hover:bg-gray-800 font-bold w-full">
+              <Eye size={18} className="mr-2" /> Ver Detalles
+            </Button>
+          </Link>
+        </div>
+
+        {((role === 'provider' && user?.provider) || role === 'customer') && postulation.winner && (postulation.states.state === 'Aceptado' || postulation.states.state === 'Finalizado') && (
+          <Button
+            variant='primary'
+            className="w-full h-11 bg-yellow-600 hover:bg-yellow-700 shadow-lg shadow-yellow-600/10"
+            onClick={() => setRatingModalOpen(true)}
+          >
+            <Award size={18} className="mr-2" /> {role === 'customer' ? 'Calificar Proveedor' : 'Calificar Cliente'}
+          </Button>
+        )}
       </div>
 
       {isRatingModalOpen && (
