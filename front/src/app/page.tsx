@@ -121,12 +121,9 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link href="/register" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full px-12 h-14 text-lg font-bold bg-white text-blue-600 hover:bg-gray-100 shadow-xl">
+                <Button size="lg" className="w-full px-12 h-14 text-lg font-black uppercase tracking-widest bg-gray-950 text-white hover:bg-black transition-all shadow-2xl shadow-black/40 border-none rounded-2xl">
                   Registrarse Gratis
                 </Button>
-              </Link>
-              <Link href="/about" className="text-white font-bold hover:underline underline-offset-4 text-lg">
-                Saber más sobre nosotros →
               </Link>
             </div>
           </div>

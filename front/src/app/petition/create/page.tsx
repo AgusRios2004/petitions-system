@@ -393,32 +393,22 @@ export default function CreatePetitionPage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-700/50 mt-8">
-            <div className="flex bg-gray-900 px-2 py-2 rounded-2xl border border-gray-700/50 gap-2 flex-1">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleBackClick}
-                className="flex-1 h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all text-xs uppercase tracking-widest border-none"
-              >
-                Volver
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => router.push('/profile')}
-                className="flex-1 h-12 rounded-xl text-gray-400 hover:text-white font-bold transition-all text-xs uppercase tracking-widest"
-              >
-                Dashboard
-              </Button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12 pt-8 border-t border-gray-700/50">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleBackClick}
+              className="h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all border border-white/5 shadow-xl shadow-black/20"
+            >
+              Volver Atrás
+            </Button>
 
             <Button
               type="submit"
               disabled={isSubmitting || isAnyDataLoading}
-              className="flex-1 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-900/40 border-none"
+              className="h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-900/40 border-none transition-all hover:scale-[1.02]"
             >
-              {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Crear Petición'}
+              {isSubmitting || isAnyDataLoading ? 'Procesando...' : 'Publicar Petición'}
             </Button>
           </div>
         </form>

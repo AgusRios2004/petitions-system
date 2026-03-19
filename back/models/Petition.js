@@ -67,22 +67,22 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_petition',
             as: 'attachments',
         });
-        
+
         Petition.belongsTo(models.Customer, {
             foreignKey: 'id_customer',
             as: 'customers',
         });
-        
+
         Petition.belongsTo(models.TypePetition, {
             foreignKey: 'id_type_petition',
             as: 'typePetitions',
         });
-        
+
         Petition.hasMany(models.Postulation, {
-            foreignKey: 'id_petition', 
+            foreignKey: 'id_petition',
             as: 'postulations',
         });
-        
+
         Petition.belongsTo(models.State, {
             foreignKey: 'id_state',
             as: 'states',
@@ -97,12 +97,12 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'id_type_provider',
             as: 'typeProvider',
         });
-        
+
         Petition.belongsTo(models.User, {
             foreignKey: 'id_user_create',
             as: 'createdBy',
         });
-        
+
         Petition.belongsTo(models.User, {
             foreignKey: 'id_user_update',
             as: 'updatedBy',
@@ -112,14 +112,19 @@ module.exports = (sequelize, DataTypes) => {
             through: models.PetitionCategory,
             foreignKey: 'id_petition',
             otherKey: 'id_category',
-            as: 'categories' 
+            as: 'categories'
         });
 
         Petition.hasMany(models.PetitionCategory, {
             foreignKey: 'id_petition',
             as: 'petitionCategories' // Este alias debe coincidir con el del include en el servicio
         });
+
+        Petition.hasMany(models.Grade, {
+            foreignKey: 'id_petition',
+            as: 'grades'
+        });
     };
-    
+
     return Petition;
 };
