@@ -133,37 +133,11 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-12 border-t border-gray-800 bg-gray-950 px-4">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-1 md:col-span-1">
-              <h3 className="text-2xl font-bold text-white mb-6">Búsqueda de Trabajo</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                Nuestra misión es empoderar a los profesionales y brindar soluciones de calidad a los clientes en todo el mundo.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Plataforma</h4>
-              <ul className="space-y-4 text-gray-500 text-sm">
-                <li><Link href="/explore" className="hover:text-blue-400 transition-colors">Explorar</Link></li>
-                <li><Link href="/providers" className="hover:text-blue-400 transition-colors">Proveedores</Link></li>
-                <li><Link href="/how-it-works" className="hover:text-blue-400 transition-colors">Cómo Funciona</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Compañía</h4>
-              <ul className="space-y-4 text-gray-500 text-sm">
-                <li><Link href="/about" className="hover:text-blue-400 transition-colors">Acerca de</Link></li>
-                <li><Link href="/careers" className="hover:text-blue-400 transition-colors">Carreras</Link></li>
-                <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contacto</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-6 uppercase tracking-widest text-xs">Legal</h4>
-              <ul className="space-y-4 text-gray-500 text-sm">
-                <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacidad</Link></li>
-                <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Términos</Link></li>
-                <li><Link href="/help" className="hover:text-blue-400 transition-colors">Ayuda</Link></li>
-              </ul>
-            </div>
+          <div className="flex flex-col items-center justify-center text-center max-w-2xl mx-auto py-8">
+            <h3 className="text-3xl font-black text-white mb-6 uppercase tracking-[0.2em] italic">Búsqueda de Trabajo</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-lg">
+              Conectando el talento con la oportunidad. Nuestra misión es empoderar a los profesionales y brindar soluciones de excelencia a clientes en todo el país.
+            </p>
           </div>
           <div className="pt-8 border-t border-gray-800/60 text-center text-gray-600 text-sm">
             <p>&copy; {new Date().getFullYear()} Búsqueda de Trabajo. Todos los derechos reservados.</p>

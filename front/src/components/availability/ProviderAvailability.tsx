@@ -88,22 +88,13 @@ const ProviderAvailability = () => {
         <CreateAvailabilityForm onFinished={handleFinishedCreation} />
       )}
 
-      <div className="text-center space-y-4 mb-10 bg-gray-900/30 p-8 rounded-3xl border border-white/5 backdrop-blur-sm">
-        <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-          Gestionar <span className="text-cyan-500">Disponibilidad</span>
-        </h2>
-        <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
-          Define tus horarios de trabajo para que los clientes puedan encontrarte fácilmente.
-          Un calendario actualizado aumenta tus posibilidades de ser contratado.
-        </p>
-        <div className="flex justify-end pt-2">
-          <Button
-            className="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 font-bold shadow-lg shadow-cyan-900/20 px-6 py-3 rounded-xl text-xs uppercase tracking-widest transform transition duration-300 hover:scale-[1.02] active:scale-95"
-            onClick={() => setIsCreating(true)}
-          >
-            Crear Nuevo Horario
-          </Button>
-        </div>
+      <div className="flex justify-center py-8">
+        <Button
+          className="w-full sm:w-auto px-12 h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-xl shadow-blue-900/40 border-none transition-all hover:scale-[1.02] active:scale-95"
+          onClick={() => setIsCreating(true)}
+        >
+          Crear Nuevo Horario
+        </Button>
       </div>
 
       <div className="flex justify-center mb-8 overflow-x-auto scrollbar-hide py-2">
