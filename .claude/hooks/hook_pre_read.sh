@@ -1,0 +1,1 @@
+../../.harness/scripts/hook_pre_read.sh

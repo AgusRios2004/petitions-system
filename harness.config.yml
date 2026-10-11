@@ -1,0 +1,129 @@
+# harness.config.yml — ÚNICO archivo a editar al instalar el harness en un repo.
+#
+# Todo lo demás del kit (skills, agentes, hooks, CI, spec_coverage) lee de acá
+# y no se toca. Si tenés que editar otra cosa para que ande en tu proyecto,
+# eso es un bug del kit: reportalo en commons/ en vez de parchear el repo.
+
+project:
+  name: "jobfinder"
+  language: "typescript"   # monorepo: back/ en Node (JS) y front/ en Next (TS)
+
+# Comandos reales del proyecto. Se evalúan desde la raíz del repo, por eso
+# todos van con `npm --prefix back|front`.
+#
+# lint, typecheck y test quedan VACÍOS a propósito hasta cerrar S0
+# (docs/PRD.md §8): hoy no hay tests (T-01), el lint del front da 15 errores y
+# tsc da 1 (F-07). Con esos comandos puestos, hook_stop.sh bloquearía cada
+# respuesta con una compuerta que nadie puede poner en verde sin tocar código
+# fuera de spec. Una compuerta inalcanzable es un bug, no rigor.
+# Se completan en S0, cada uno en el mismo commit que lo pone en verde:
+#   test:      "npm --prefix back test && npm --prefix front test"  (T-01, T-04)
+#   lint:      "npm --prefix front run lint"                  (F-07)
+#   typecheck: "npm --prefix front exec -- tsc --noEmit"      (F-07)
+commands:
+  install: "npm --prefix back ci && npm --prefix front ci"
+  test: ""
+  lint: ""
+  format: ""
+  typecheck: ""
+  run: "npm --prefix back run dev & npm --prefix front run dev"
+
+  # Gate rápido tras cada Edit/Write. Vacíos por el mismo motivo que lint:
+  # el front tiene errores de ESLint previos. Se completan con F-07:
+  #   lint_file: "npx --prefix front eslint {file}"
+  format_file: ""
+  lint_file: ""
+
+paths:
+  source: "back/ front/src/"
+  tests: "back/test/"
+  specs: "specs/"
+  docs: "docs/"
+
+spec_coverage:
+  # Tests de API del back (Jest/Vitest + supertest, a definir en T-01) y, si
+  # aparecen, tests del front junto al componente.
+  test_glob:
+    - "back/test/**/*.test.js"
+    - "front/src/**/*.test.ts"
+    - "front/src/**/*.test.tsx"
+  ac_pattern: "AC-[0-9]{4}-[0-9]{2}"
+  # Activar cuando T-01 genere reportes JUnit (jest-junit / vitest --reporter=junit):
+  # junit_glob: "back/reportes/*.xml"
+
+# Modelo por rol. Valores válidos: opus | sonnet | haiku | inherit.
+# Sin versiones pineadas: el kit no debe quedar atado a un modelo puntual.
+#
+# En sandcastle (rol spec-driven) cada rol puede usar otro proveedor con
+# `proveedor:modelo` — claude | pi | codex. Sin prefijo es Claude.
+#
+#   test_author: "pi:<id de Gemini que acepte pi --model>"
+#   implementer: "codex:<id de OpenAI>"
+#
+# Entre comillas. El reviewer tiene que ser Claude (su read-only es
+# permissionMode: "plan"): cualquier otro proveedor corta la corrida.
+# Requisitos de imagen y claves: sandcastle-template/roles/spec-driven/README.md
+agents:
+  spec_writer: opus
+  planner: opus
+  test_author: sonnet
+  implementer: sonnet
+  reviewer: opus
+  merger: sonnet
+  curator: haiku
+
+  # Vuelta de corrección del rol spec-driven: los hallazgos de la revisión
+  # vuelven a un fixer (modelo de `implementer`) en vez de al humano.
+  # max_fix_rounds: 0 la apaga, y un hallazgo alta bloquea directo.
+  # fix_severidades: qué entra al fixer. Bloquear el merge lo hace solo `alta`.
+  max_fix_rounds: 2
+  fix_severidades: "alta,media"
+
+# Delegación de I/O: el modelo caro razona, un modelo barato carga las cajas.
+#
+# Es una capa ORTOGONAL a `agents`. No cambia quién piensa: cuando cualquiera
+# de esos roles necesita tragarse un archivo grande, lo lee un subagente y
+# devuelve la respuesta. El planner sigue siendo opus.
+#
+# `enabled` prende la BARRERA (hook_pre_read.sh). La vía por defecto a la que
+# redirige es el subagente `lector` (.claude/agents/lector.md, haiku, sin
+# claves externas). El worker de abajo es opcional: solo si querés un modelo
+# de otro proveedor y aceptás que el código salga de la máquina.
+delegacion:
+  enabled: true
+
+  # Umbral de bloqueo. Un Read sin offset/limit sobre un archivo con más
+  # líneas que esto se rechaza.
+  #
+  # 350 es el default de Spotify, calibrado contra su latencia de red: por
+  # debajo, el viaje de ida y vuelta cuesta más de lo que ahorra. Si tu repo
+  # no tiene archivos grandes el hook no va a saltar nunca — bajalo a 150
+  # por unos días para medir cuánto volumen tenés de verdad.
+  max_read_lines: 350
+
+  # Worker por operación. Separados a propósito: resumir volumen premia lo
+  # barato, generar código que imite un estilo premia que el modelo sea un
+  # poco mejor. Empezá con el mismo en los dos y subí solo `worker_write`
+  # si el código generado te da retrabajo.
+  #
+  # Acepta gemini-* o claude-*; el proveedor se infiere del nombre.
+  #
+  # OJO: los ids de modelo caducan. gemini-2.5-flash dejó de aceptar
+  # usuarios nuevos y la API devolvió 404 pidiendo gemini-3.6-flash
+  # (verificado el 10/09/2026, contra la API real). Si ves un 404 acá,
+  # es esto: actualizá el id, no el código.
+  worker_read: "gemini-3.6-flash"
+  worker_write: "gemini-3.6-flash"
+
+  timeout_seconds: 60
+  max_tokens_salida: 4096
+
+  # De qué variable de entorno sale cada clave. Las claves NO van acá:
+  # van en el .env del proyecto, que está gitignoreado.
+  api_key_env_gemini: "GEMINI_API_KEY"
+  api_key_env_anthropic: "ANTHROPIC_API_KEY"
+
+# Variables extra que el agente necesita ver dentro del sandbox de sandcastle
+# (JAVA_HOME, DATABASE_URL, etc.). Solo nombres — los valores van en el .env
+# del proyecto, que nunca se commitea.
+sandbox_env: []

@@ -1,0 +1,1 @@
+../../.harness/scripts/spec_coverage.py

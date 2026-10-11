@@ -1,0 +1,1 @@
+../../.harness/scripts/hook_readonly_guard.sh

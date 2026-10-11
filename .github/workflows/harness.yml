@@ -1,0 +1,68 @@
+# Compuerta G4 — la única que sobrevive a que alguien trabaje sin el harness puesto.
+#
+# Corre EXACTAMENTE el mismo verify.sh que los hooks locales y que Cowork. Si la
+# compuerta de CI y la local difieren, la local no sirve para nada.
+#
+# Usa los scripts vendoreados en .harness/scripts/ del propio repo (los deja
+# install.sh). No clona commons: el runner no tiene por qué conocer tu workspace,
+# y un CI que depende de una ruta local de tu máquina no es un CI.
+#
+# Se copia a .github/workflows/harness.yml del proyecto.
+
+name: harness
+
+# push solo a las ramas base: un push a una rama con PR abierto ya lo cubre
+# pull_request, y con "**" cada PR corría el gate dos veces.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # --- Ajustar al lenguaje del proyecto -------------------------------
+      # Descomentá el que corresponda. Los scripts del harness solo necesitan
+      # python3; esto es para el proyecto en sí.
+      #
+      # - uses: actions/setup-java@v4
+      #   with: { distribution: temurin, java-version: "21" }
+      #
+      # - uses: actions/setup-node@v4 (activado abajo)
+      #
+      # uv NO viene en ubuntu-latest: sin esto, "uv sync" falla en el paso
+      # de instalación.
+      # - uses: astral-sh/setup-uv@v6
+      # --------------------------------------------------------------------
+
+      # Monorepo: dos lockfiles, back/ y front/.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            back/package-lock.json
+            front/package-lock.json
+
+      - name: Instalar dependencias del proyecto
+        run: |
+          INSTALL="$(python3 .harness/scripts/harness_config.py commands.install --default '')"
+          if [ -n "$INSTALL" ]; then
+            eval "$INSTALL"
+          else
+            echo "Sin commands.install en harness.config.yml — se omite."
+          fi
+
+      - name: verify — lint + typecheck + tests + spec_coverage
+        run: bash .harness/scripts/verify.sh
+
+      - name: Reporte de cobertura de specs
+        if: always()
+        run: python3 .harness/scripts/spec_coverage.py --json

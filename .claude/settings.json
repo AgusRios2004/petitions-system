@@ -1,0 +1,70 @@
+{
+  "$comentario": [
+    "Hooks del harness. Esquema verificado contra la doc de Claude Code el 08/09/2026.",
+    "Se copia a .claude/settings.json del proyecto. Los comandos reales no viven acá:",
+    "los scripts leen harness.config.yml, así un mismo settings.json sirve para Python,",
+    "Java o TypeScript sin tocarlo.",
+    "",
+    "PreToolUse  -> barrera de I/O: bloquea leer archivos grandes enteros, y cuenta",
+    "               bloqueos y usos del lector en .harness/.estado/delegacion.jsonl.",
+    "PreToolUse  -> guarda de solo-lectura: bloquea Edit/Write/NotebookEdit",
+    "               cuando HARNESS_READONLY=1 (el reviewer de spec-driven).",
+    "               No opina en ninguna otra corrida.",
+    "PostToolUse -> compuerta rápida sobre el archivo editado (formato + lint).",
+    "Stop        -> compuerta completa: lint, typecheck, tests y spec_coverage.",
+    "",
+    "Los scripts salen con 2 cuando corresponde, que es lo que devuelve el",
+    "error al agente en vez de dejarlo gastar o cerrar la tarea."
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Bash|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/hook_pre_read.sh",
+            "timeout": 15,
+            "statusMessage": "Chequeando el costo de la lectura"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/hook_readonly_guard.sh",
+            "timeout": 5,
+            "statusMessage": "Chequeando la garantía de solo-lectura"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/hook_post_edit.sh",
+            "timeout": 60,
+            "statusMessage": "Verificando el archivo"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/hook_stop.sh",
+            "timeout": 600,
+            "statusMessage": "Corriendo la compuerta del harness"
+          }
+        ]
+      }
+    ]
+  }
+}

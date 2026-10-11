@@ -1,0 +1,1 @@
+../../.harness/scripts/hook_stop.sh

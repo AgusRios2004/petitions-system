@@ -7,6 +7,7 @@ yarn-error.log*
 # Environment files
 .env
 .env.*
+!.env.example
 
 # OS files
 .DS_Store
@@ -35,3 +36,12 @@ coverage/
 *.local
 *.cache
 *.tmp
+# harness
+.claude/skills/
+.claude/settings.local.json
+.sandcastle/.env
+.sandcastle/logs/
+.sandcastle/worktrees/
+.sandcastle/mediciones.jsonl
+.harness/.estado/
+__pycache__/
