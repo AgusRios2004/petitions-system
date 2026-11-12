@@ -98,7 +98,8 @@ exports.login = async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password) return error(res, 'Email y contraseña requeridos');
 
-        const user = await User.findOne({
+        // Único lugar que lee el hash: lo necesita comparePassword.
+        const user = await User.scope('withPassword').findOne({
             where: { email },
             include: [{ model: Customer, as: 'customer' }, { model: Provider, as: 'provider' }]
         });
