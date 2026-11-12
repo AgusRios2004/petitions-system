@@ -1,5 +1,4 @@
 const { Provider, Addrress } = require('../models');
-const userService = require('./userService');
 const addressService = require('./addressService')
 
 class ProviderService {
@@ -72,10 +71,6 @@ class ProviderService {
     }
 
 
-    async createProvider(data){
-        return await Provider.create(data);
-    }
-
     async updateProvider(id, data){
         const { address, ...providerData} = data;
 
@@ -98,25 +93,6 @@ class ProviderService {
         await provider.update(providerData);
 
         return await this.getProviderById(provider.id_provider);
-    }
-
-    async registerProvider(userData, providerData){
-        const user = await userService.createUser({
-            name: userData.name,
-            lastname: userData.lastname,
-            email: userData.email,
-            password: userData.password,
-            is_staff: userData.isStaff,
-        });
-        const provider = await Provider.create({
-            user_id: user.id_user,
-            id_type_provider: providerData.idTypeProvider,
-            id_profession: providerData.idProfession,
-            address_id: providerData.addressId,
-            description: providerData.description,
-        });
-
-        return {user, provider};
     }
 
     async deleteProvider(id){};

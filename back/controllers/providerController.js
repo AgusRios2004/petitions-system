@@ -32,35 +32,11 @@ exports.getPublicProfile = async(req, res) => {
     }
 }
 
-exports.createProvider = async(req, res) => {
-    try {
-        const provider = await service.createProvider(req.body);
-        return response.success(res, provider, 'Proveedor creado', 201);
-    } catch (e) {
-        return response.error(res, e.message, 500);
-    }
-}
-
 exports.updateProvider = async(req, res) => {
     try {
         const provider = await service.updateProvider(req.params.id, req.body);
         if(!provider) return response.error(res, 'Proveedor no encontrado.', 404);
         return response.success(res, provider, 'Proveedor actualizado');
-    } catch (e) {
-        return response.error(res, e.message, 500);
-    }
-}
-
-exports.registerProvider = async(req, res) => {
-    try {
-        const {name, lastname, email, password, idTypeProvider, idProfession, addressId, description, isStaff} = req.body;
-
-        const result = await service.registerProvider(
-            {name, lastname, email, password, isStaff}, //user data
-            {idTypeProvider, idProfession, addressId, description} //provider data
-        )
-        
-        return response.success(res, result, 'Registrado correctamente', 201);
     } catch (e) {
         return response.error(res, e.message, 500);
     }
