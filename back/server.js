@@ -62,6 +62,12 @@ io.on("connection", (socket) => {
 postulationSocketHandler.initialize(app);
 notificationSocketHandler.initialize(app);
 
-server.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+// Solo escucha cuando se ejecuta directamente (`node server.js`). Los tests lo
+// importan y eligen su propio puerto.
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { server, io };
