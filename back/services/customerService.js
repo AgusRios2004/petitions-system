@@ -1,12 +1,18 @@
 const { Customer } = require('../models');
 const models = require('../models');
 const AddressService = require('../services/addressService');
+const { httpError, parseId } = require('../middlewares/ownership');
+
+const CUSTOMER_FIELDS = ['dni', 'phone'];
+const USER_ATTRS = ['id_user', 'name', 'lastname', 'email', 'profile_image'];
 
 class CustomerService {
-    async getCustomerById(id){
-        return await Customer.findByPk(id, {
+    async getCustomerById(id, userId){
+        const pk = parseId(id);
+        if (pk === null) throw httpError(404, 'Cliente no encontrado.');
+        const customer = await Customer.findByPk(pk, {
             include: [
-                'user',
+                { association: 'user', attributes: USER_ATTRS },
                 'petitions',
                 {
                     model: models.Address,
@@ -44,31 +50,39 @@ class CustomerService {
                 },
             ],
         });
+        if (!customer) throw httpError(404, 'Cliente no encontrado.');
+        if (customer.user_id !== userId) throw httpError(403, 'No es tu perfil.');
+        return customer;
     }
 
-    async updateCustomer(id, data) {
-        const { address, ...customerData } = data;
-    
-        const customer = await Customer.findByPk(id);
-    
-        if (!customer) {
-            throw new Error('Cliente no encontrado.');
+    async updateCustomer(id, data, userId) {
+        const pk = parseId(id);
+        const customer = pk === null ? null : await Customer.findByPk(pk);
+        if (!customer) throw httpError(404, 'Cliente no encontrado.');
+        if (customer.user_id !== userId) throw httpError(403, 'No es tu perfil.');
+
+        const { address } = data || {};
+        const customerData = {};
+        for (const f of CUSTOMER_FIELDS) {
+            if (data && data[f] !== undefined) customerData[f] = data[f];
         }
-    
-        if (address) {
-            let updatedAddress;
-            if (address.id_address) {
-                updatedAddress = await AddressService.update(address.id_address, address);
-            } else {
-                updatedAddress = await AddressService.create(address);
-            }
-            customer.address_id = updatedAddress.id_address;
+        const hasAddress = address && typeof address === 'object';
+        if (!hasAddress && Object.keys(customerData).length === 0) {
+            throw httpError(400, 'No se proporcionaron datos para actualizar');
         }
-    
+
+        if (hasAddress) {
+            // El domicilio a editar es siempre el propio, nunca el id_address del body.
+            const saved = customer.address_id
+                ? await AddressService.update(customer.address_id, address)
+                : await AddressService.create(address);
+            customerData.address_id = saved.id_address;
+        }
+
         await customer.update(customerData);
-    
-        return await Customer.findByPk(id, {
-            include: ['user', 'address', 'interests'],
+
+        return await Customer.findByPk(pk, {
+            include: [{ association: 'user', attributes: USER_ATTRS }, 'address', 'interests'],
         });
     }
 

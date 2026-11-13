@@ -34,11 +34,10 @@ exports.getPublicProfile = async(req, res) => {
 
 exports.updateProvider = async(req, res) => {
     try {
-        const provider = await service.updateProvider(req.params.id, req.body);
-        if(!provider) return response.error(res, 'Proveedor no encontrado.', 404);
+        const provider = await service.updateProvider(req.params.id, req.body, req.user.sub);
         return response.success(res, provider, 'Proveedor actualizado');
     } catch (e) {
-        return response.error(res, e.message, 500);
+        return response.error(res, e.message, e.statusCode || 500);
     }
 }
 

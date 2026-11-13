@@ -1,5 +1,8 @@
 const { Provider, Addrress } = require('../models');
 const addressService = require('./addressService')
+const { httpError, parseId } = require('../middlewares/ownership');
+
+const PROVIDER_FIELDS = ['id_type_provider', 'id_profession', 'description'];
 
 class ProviderService {
     async getProviders(){
@@ -71,23 +74,28 @@ class ProviderService {
     }
 
 
-    async updateProvider(id, data){
-        const { address, ...providerData} = data;
+    async updateProvider(id, data, userId){
+        const pk = parseId(id);
+        const provider = pk === null ? null : await Provider.findByPk(pk);
+        if(!provider) throw httpError(404, 'Proveedor no encontrado.');
+        if(provider.user_id !== userId) throw httpError(403, 'No es tu perfil.');
 
-        const provider = await Provider.findByPk(id);
-
-        if(!provider) {
-            throw new Error('Proveedor no encontrado.')
+        const { address } = data || {};
+        const providerData = {};
+        for (const f of PROVIDER_FIELDS) {
+            if (data && data[f] !== undefined) providerData[f] = data[f];
+        }
+        const hasAddress = address && typeof address === 'object';
+        if (!hasAddress && Object.keys(providerData).length === 0) {
+            throw httpError(400, 'No se proporcionaron datos para actualizar');
         }
 
-        if(address) {
-            let savedAddress;
-            if(address.id_address){
-                savedAddress = await addressService.update(address.id_address, address);
-            } else {
-                savedAddress = await addressService.create(address);
-            }
-            provider.address_id = savedAddress.id_address;
+        if(hasAddress) {
+            // El domicilio a editar es siempre el propio, nunca el id_address del body.
+            const saved = provider.address_id
+                ? await addressService.update(provider.address_id, address)
+                : await addressService.create(address);
+            providerData.address_id = saved.id_address;
         }
 
         await provider.update(providerData);
