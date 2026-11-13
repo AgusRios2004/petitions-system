@@ -1,6 +1,7 @@
 const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
 const UserService = require('../services/userService');
+const { parseId } = require('../middlewares/ownership');
 
 exports.getProfile = async (req, res) => {
     try {
@@ -50,7 +51,12 @@ exports.getProfile = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const userId = req.params.id;
+        const userId = parseId(req.params.id);
+        if (userId === null) return error(res, 'Usuario no encontrado', 404);
+        if (userId !== req.user.sub) {
+            const exists = await User.findByPk(userId, { attributes: ['id_user'] });
+            return exists ? error(res, 'No es tu usuario.', 403) : error(res, 'Usuario no encontrado', 404);
+        }
         const { name, lastname, email, profile_image } = req.body;
 
         const dataToUpdate = {};
