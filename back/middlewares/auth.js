@@ -16,11 +16,11 @@ exports.authRequired = (req, res, next) => {
 }
 
 exports.onlyStaff = (req, res, next) => {
-    if(!req.user?.is_staff && !req.user?.is_superuser) return error(res, 'Requere staff');
+    if(!req.user?.is_staff && !req.user?.is_superuser) return error(res, 'Requere staff', 403);
     next();
 }
 
 exports.onlySuperuser = (req, res, next) => {
-    if(!req.user?.is_superuser) return error(res, 'Requiere superuser');
+    if(!req.user?.is_superuser) return error(res, 'Requiere superuser', 403);
     next();
 }

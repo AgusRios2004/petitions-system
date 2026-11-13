@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const departmentController = require('../controllers/departmentController');
+const { authRequired, onlySuperuser } = require('../middlewares/auth');
+
+// Leer es público (lo usa el registro); escribir es de administración.
+const admin = [authRequired, onlySuperuser];
 
 /**
  * @swagger
@@ -89,9 +93,9 @@ const departmentController = require('../controllers/departmentController');
 // Rutas para Departamentos
 router.get('/', departmentController.getDepartments);
 router.get('/:id', departmentController.getDepartmentById);
-router.post('/', departmentController.createDepartment);
-router.put('/:id', departmentController.updateDepartment);
-router.delete('/:id', departmentController.deleteDepartment);
+router.post('/', admin, departmentController.createDepartment);
+router.put('/:id', admin, departmentController.updateDepartment);
+router.delete('/:id', admin, departmentController.deleteDepartment);
 
 // Nueva ruta para obtener departamentos por ID de provincia
 router.get('/:id_province/provinces', departmentController.getDepartmentsByProvinceId);
