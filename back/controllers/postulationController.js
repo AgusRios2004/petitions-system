@@ -110,7 +110,9 @@ exports.acceptPostulation = async (req, res) => {
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
-        return error(res, e.message, 500);
+        const status = e.statusCode || 500;
+        // Los errores 5xx no exponen el detalle interno.
+        return error(res, status >= 500 ? 'Error interno' : e.message, status);
     }
 }
 
