@@ -218,7 +218,10 @@ class PetitionService {
         }
     }
 
-    async updatePetition(id, petitionData, categoryIds) {
+    async updatePetition(id, petitionData, categoryIds, userId) {
+        if (!/^\d+$/.test(String(id))) {
+            throw Object.assign(new Error('Petición no encontrada'), { statusCode: 404 });
+        }
 
         console.log("DEBUG UPDATE - ID:", id);
         console.log("DEBUG UPDATE - Body:", JSON.stringify(petitionData));
@@ -232,7 +235,13 @@ class PetitionService {
         const t = await sequelize.transaction();
         try {
             const petition = await Petition.findByPk(id, { transaction: t });
-            if (!petition) throw new Error("Petición no encontrada");
+            if (!petition) throw Object.assign(new Error("Petición no encontrada"), { statusCode: 404 });
+
+            // Solo el cliente dueño (según el token); el superusuario tampoco lo saltea.
+            const customer = await Customer.findOne({ where: { user_id: userId }, transaction: t });
+            if (!customer || petition.id_customer !== customer.id_customer) {
+                throw Object.assign(new Error('No tienes permiso para editar esta petición.'), { statusCode: 403 });
+            }
 
             // 1. Actualizar datos básicos
             await petition.update(petitionData, { transaction: t });

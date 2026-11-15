@@ -99,7 +99,9 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 
-(async () => {
+// app.ready: promesa que se resuelve cuando la base quedó conectada y
+// sincronizada. La usan los tests para no pegarle a una base a medio crear.
+app.ready = (async () => {
   try {
     await sequelize.authenticate();
     console.log('🟢 DB conectada');

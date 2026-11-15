@@ -282,38 +282,42 @@ class PostulationService {
         let petition;
         let postulation;
         try {
-            postulation = await Postulation.findByPk(id, {
-                transaction: t,
-                lock: true // Bloquea la fila para evitar conflictos concurrentes
-            });
-            if (!postulation) {
-                const error = new Error("Postulación no encontrada.")
-                error.statusCode = 404;
-                throw error;
+            const httpErr = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+            if (!/^\d+$/.test(String(id))) throw httpErr(404, 'Postulación no encontrada.');
+
+            // 1. Se bloquea la petición primero: todo aceptador de la misma petición
+            //    espera acá, y recién después lee los estados.
+            const found = await Postulation.findByPk(id, { attributes: ['id_postulation', 'id_petition'], transaction: t });
+            if (!found) throw httpErr(404, 'Postulación no encontrada.');
+            petition = await Petition.findByPk(found.id_petition, { transaction: t, lock: t.LOCK.UPDATE });
+            if (!petition) throw httpErr(404, 'Petición no encontrada');
+            postulation = await Postulation.findByPk(id, { transaction: t, lock: t.LOCK.UPDATE });
+
+            // 2. Dueño: el cliente de la petición según el token (el superusuario no saltea).
+            const owner = await Customer.findByPk(petition.id_customer, { attributes: ['user_id'], transaction: t });
+            if (!owner || owner.user_id !== userId) throw httpErr(403, 'No tienes permiso para aceptar esta postulación.');
+
+            // 3. Estados, ya con la petición bloqueada.
+            const pendingState = await getStateId('PEN');
+            if (petition.id_state !== pendingState || postulation.id_state !== pendingState) {
+                throw httpErr(409, 'La petición o la postulación ya no están pendientes.');
             }
 
-            const postulationWinState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
-            const petitionClosedState = await getStateId('ACE'); // ACE = Aceptado (ID 1)
+            const postulationWinState = await getStateId('ACE');
+            const petitionClosedState = await getStateId('ACE');
+
+            // Compare-and-set: aunque la base no respete el bloqueo de fila, solo
+            // una transacción logra pasar la petición de PEN a ACE.
+            const [closed] = await Petition.update({
+                id_state: petitionClosedState,
+                id_user_update: userId,
+                date_update: new Date(),
+            }, { where: { id_petition: petition.id_petition, id_state: pendingState }, transaction: t });
+            if (closed !== 1) throw httpErr(409, 'La petición ya no está pendiente.');
 
             await postulation.update({
                 winner: true,
                 id_state: postulationWinState,
-                id_user_update: userId,
-                date_update: new Date(), // Corregido: data_update -> date_update
-            }, { transaction: t });
-
-            petition = await Petition.findByPk(postulation.id_petition, {
-                transaction: t,
-                lock: true // Bloquea la petición para asegurar su estado
-            });
-            if (!petition) {
-                const e = new Error("Petición no encontrada");
-                e.statusCode = 404;
-                throw e;
-            }
-
-            await petition.update({
-                id_state: petitionClosedState,
                 id_user_update: userId,
                 date_update: new Date(),
             }, { transaction: t });

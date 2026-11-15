@@ -1,7 +1,7 @@
 ---
 id: 0001
 titulo: Cerrar el acceso
-estado: propuesta        # draft | propuesta | aprobada | implementada | archivada
+estado: implementada     # draft | propuesta | aprobada | implementada | archivada. Aprobada el 12/11/2026 por pedido de Agustín de avanzar sin más consultas (relevado por el agente; se ratifica al mergear la rama spec-0001)
 autor_humano: Diego Agustín Rios
 fecha: 28/09/2026
 adrs_relacionados: []    # no hay ADRs; la decisión de roles vive en docs/PRD.md §3.1

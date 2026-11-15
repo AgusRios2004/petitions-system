@@ -65,6 +65,16 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: true, // Habilitar timestamps
         createdAt: 'date_create', // Mapear createdAt a date_create
         updatedAt: 'date_update', // Mapear updatedAt a date_update
+        // El hash nunca sale en una consulta común. Solo el login lo pide, con
+        // User.scope('withPassword'), para comparar la contraseña (B-01).
+        defaultScope: {
+            attributes: { exclude: ['password'] },
+        },
+        scopes: {
+            withPassword: {
+                attributes: { include: ['password'] },
+            },
+        },
         hooks: {
             beforeCreate: async (user) => {
                 user.password = await bcrypt.hash(user.password, 10);

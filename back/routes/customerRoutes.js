@@ -1,10 +1,8 @@
 const router = require('express').Router();
 const ctrl = require('../controllers/customerController');
+const { authRequired } = require('../middlewares/auth');
 
-router.get('/', ctrl.getAllCustomers);
-router.get('/:id', ctrl.getCustomerById);
-router.post('/', ctrl.createCustomer);
-router.put('/:id',  ctrl.updateCustomer);
-router.post('/register', ctrl.registerCustomer);
+router.get('/:id', authRequired, ctrl.getCustomerById);
+router.put('/:id', authRequired, ctrl.updateCustomer);
 
 module.exports = router;
