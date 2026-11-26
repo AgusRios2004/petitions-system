@@ -74,7 +74,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
                             Estado de Postulaciones
                         </h3>
                         <button
-                            onClick={() => router.push('/profile?tab=postulaciones')}
+                            onClick={() => router.push('/profile?mode=provider&tab=postulaciones')}
                             className="text-xs text-blue-400 hover:underline"
                         >
                             Gestionar todo
@@ -104,7 +104,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
                             <div className="text-center py-12">
                                 <p className="text-gray-500 text-sm mb-4">Aún no te has postulado a ninguna oportunidad.</p>
                                 <button
-                                    onClick={() => router.push('/profile?tab=oportunidades')}
+                                    onClick={() => router.push('/profile?mode=provider&tab=oportunidades')}
                                     className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition-all"
                                 >
                                     Explorar trabajos
@@ -134,7 +134,7 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ providerId }) => 
                     <div className="mt-8 pt-6 border-t border-white/5">
                         <p className="text-xs text-gray-500 text-center mb-4 italic">Mantén tu disponibilidad actualizada para aparecer en las búsquedas.</p>
                         <button
-                            onClick={() => router.push('/profile?tab=disponibilidad')}
+                            onClick={() => router.push('/profile?mode=provider&tab=disponibilidad')}
                             className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/10"
                         >
                             Gestionar Horarios

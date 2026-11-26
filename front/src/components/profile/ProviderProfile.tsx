@@ -25,7 +25,11 @@ const ProviderProfile = ({ user }: { user: UserProfile }) => {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'dashboard';
   const handleTabClick = (tabId: string) => {
-    router.push(`/profile?tab=${tabId}`, { scroll: false });
+    // Conserva el resto de la query y fija el modo: este componente es el modo proveedor.
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('mode', 'provider');
+    params.set('tab', tabId);
+    router.push(`/profile?${params.toString()}`, { scroll: false });
   };
 
   const activeTab = initialTab;

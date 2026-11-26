@@ -88,7 +88,7 @@ export default function CreatePostulationPage() {
       if (user?.provider?.id_provider) {
         queryClient.invalidateQueries({ queryKey: ['openPetitions', user.provider.id_provider] });
       }
-      router.push(`/profile?tab=oportunidades`); // Redirigir a la página de oportunidades del perfil
+      router.push(`/profile?mode=provider&tab=oportunidades`); // Redirigir a la página de oportunidades del perfil
     },
     onError: (error: unknown) => {
       const err = error as { response?: { status?: number }, message?: string };
