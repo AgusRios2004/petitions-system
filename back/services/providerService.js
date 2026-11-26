@@ -1,6 +1,7 @@
 const { Provider, Addrress } = require('../models');
 const addressService = require('./addressService')
 const { httpError, parseId } = require('../middlewares/ownership');
+const { activateProfile } = require('./profileActivation');
 
 const PROVIDER_FIELDS = ['id_type_provider', 'id_profession', 'description'];
 
@@ -101,6 +102,19 @@ class ProviderService {
         await provider.update(providerData);
 
         return await this.getProviderById(provider.id_provider);
+    }
+
+    // Activa el perfil de proveedor de un usuario que ya es cliente (spec 0002).
+    async activateProvider(userId, data, current) {
+        const { id_profession, id_type_provider, description } = data || {};
+        const missing = [['id_profession', id_profession], ['id_type_provider', id_type_provider], ['description', description]]
+            .filter(([, v]) => !v).map(([k]) => k);
+        if (missing.length) throw httpError(400, `Faltan campos obligatorios: ${missing.join(', ')}`);
+        return activateProfile({
+            userId, data, current, kind: 'provider',
+            create: (address_id, transaction) =>
+                Provider.create({ user_id: userId, id_profession, id_type_provider, description, address_id }, { transaction }),
+        });
     }
 
     async deleteProvider(id){};

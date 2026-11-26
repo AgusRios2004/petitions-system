@@ -9,18 +9,28 @@ import {
   IRegisterPayload,
   ILoginResponse
 } from '@/types/common';
+import {
+  deriveCapabilities,
+  resolveMode,
+  readStoredMode,
+  writeStoredMode,
+  clearStoredMode,
+  Mode,
+} from '@/lib/roles';
 
 // --- TIPOS ---
 export interface AuthUser extends IUser {
   customer?: ICustomer | null;
   provider?: IProvider | null;
-  role: 'provider' | 'customer' | 'admin' | 'unknown';
-  is_staff?: boolean | number;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  isCustomer: boolean;
+  isProvider: boolean;
+  activeMode: Mode | null;
+  setActiveMode: (mode: Mode) => void;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (payload: IRegisterPayload) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
@@ -37,6 +47,7 @@ const authApi = axios.create({ baseURL: `${API_BASE_URL}/auth` });
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storedMode, setStoredMode] = useState<Mode | null>(null);
 
   // Inicializa desde localStorage (token + user)
   useEffect(() => {
@@ -51,10 +62,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (rawUser) {
         try {
           const parsed = JSON.parse(rawUser);
-          const role =
-            (parsed.is_staff === true || parsed.is_staff === 1)
-              ? 'provider'
-              : 'customer';
+          const customer = parsed.customer ?? null;
+          const provider = parsed.provider ?? null;
 
           setUser({
             id_user: parsed.id_user,
@@ -62,10 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             lastname: parsed.lastname,
             email: parsed.email,
             profile_image: parsed.profile_image ?? null,
-            customer: parsed.customer ?? null,
-            provider: parsed.provider ?? null,
-            role,
-            is_staff: parsed.is_staff ?? false,
+            customer,
+            provider,
             date_create: parsed.date_create ?? '',
           });
         } catch (err) {
@@ -76,6 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       }
 
+      setStoredMode(readStoredMode());
       setLoading(false);
     };
 
@@ -119,11 +127,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       authApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-      const role =
-        (basicUser.is_staff === true || basicUser.is_staff === 1)
-          ? 'provider'
-          : 'customer';
-
       const u: AuthUser = {
         id_user: basicUser.id_user,
         name: basicUser.name,
@@ -132,9 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile_image: basicUser.profile_image ?? null,
         customer: basicUser.customer ?? null,
         provider: basicUser.provider ?? null,
-        is_staff: basicUser.is_staff ?? false,
         date_create: basicUser.date_create,
-        role,
       };
 
       setUser(u);
@@ -165,13 +166,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('pending_profile_role');
+    clearStoredMode();
     delete authApi.defaults.headers.common['Authorization'];
     window.location.href = '/login';
+  };
+
+  const { isCustomer, isProvider } = deriveCapabilities(user);
+  // Siempre un modo que el usuario puede usar (o null si no tiene perfiles).
+  const activeMode = resolveMode({ isCustomer, isProvider }, storedMode);
+
+  const setActiveMode = (mode: Mode) => {
+    setStoredMode(mode);
+    writeStoredMode(mode);
   };
 
   const value: AuthContextType = {
     user,
     loading,
+    isCustomer,
+    isProvider,
+    activeMode,
+    setActiveMode,
     login,
     register,
     logout,

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function ProfileCompletionGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isCustomer, isProvider } = useAuth();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -12,10 +12,8 @@ export default function ProfileCompletionGuard({ children }: { children: React.R
     setIsClient(true);
   }, []);
 
-  const needsProfileCompletion = user && (
-    (user.role === 'customer' && !user.customer) ||
-    (user.role === 'provider' && !user.provider)
-  );
+  // Sin ningun perfil no hay nada que mostrar: hay que completar uno (spec 0002).
+  const needsProfileCompletion = user && !isCustomer && !isProvider;
 
   // We only render the warning on the client side to avoid hydration mismatch
   const shouldShowWarning = isClient && !loading && needsProfileCompletion;

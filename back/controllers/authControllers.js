@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { User, Customer, Provider, Address, sequelize } = require('../models');
+const { deriveRoles } = require('../middlewares/auth');
 const { error, success } = require('../middlewares/response');
 
 const signAccessToken = (payload) =>
@@ -54,13 +55,11 @@ exports.register = async (req, res) => {
         }, { transaction });
 
         // 2. Crear el usuario
-        const is_staff = role === 'provider';
         const user = await User.create({
             name,
             lastname,
             email,
             password,
-            is_staff,
             is_active: true,
             enabled: true,
         }, { transaction });
@@ -116,7 +115,6 @@ exports.login = async (req, res) => {
         const payload = {
             sub: user.id_user,
             email: user.email,
-            is_staff: user.is_staff,
             is_superuser: user.is_superuser,
         };
 
@@ -129,9 +127,9 @@ exports.login = async (req, res) => {
             name: user.name,
             lastname: user.lastname,
             email: user.email,
-            is_staff: user.is_staff,
             customer: user.customer || null,
             provider: user.provider || null,
+            roles: deriveRoles(user.customer, user.provider),
             date_create: user.date_create,
         };
 
@@ -156,7 +154,6 @@ exports.refresh = async (req, res) => {
         const tokenPayload = {
             sub: user.id_user,
             email: user.email,
-            is_staff: user.is_staff,
             is_superuser: user.is_superuser,
         };
 

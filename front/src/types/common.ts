@@ -121,7 +121,7 @@ export interface ILoginResponse {
   user: IUser & {
     customer?: ICustomer | null;
     provider?: IProvider | null;
-    is_staff: boolean | number;
+    roles?: { customer: boolean; provider: boolean };
   };
 }
 
@@ -286,8 +286,6 @@ export interface UserProfile {
     id_type_provider?: number;
   } | null;
   profile_picture_url?: string | null;
-  role: 'customer' | 'provider' | 'admin' | 'unknown';
-  is_staff?: boolean | number
 }
 
 export interface ProfileFormData {

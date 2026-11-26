@@ -1,30 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
+import { Mode, resolveMode } from '@/lib/roles';
 
 import { UserProfile } from '@/types/common'; // Importamos UserProfile desde common.ts
 
-import ProviderPostulations from '@/components/postulations/ProviderPostulations';
-import ProviderOportunities from '@/components/petitions/ProviderOportunities';
-import ProviderAvailability from '@/components/availability/ProviderAvailability';
-
-import { useSearchParams } from 'next/navigation';
-
 import ProviderProfile from '@/components/profile/ProviderProfile';
-
-import CustomerPetitions from '@/components/petitions/CustomerPetitions';
-
-import IncompleteProfile from '@/components/profile/IncompleteProfile';
-
 import CustomerProfile from '@/components/profile/CustomerProfile';
-
+import ProfileModeSwitch from '@/components/profile/ProfileModeSwitch';
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE PERFIL ---
-export default function ProfilePage() {
-  const { user, loading } = useAuth();
+function ProfileContent() {
+  const { user, loading, isCustomer, isProvider, activeMode, setActiveMode } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -51,6 +44,17 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
+  // El modo sale de ?mode=, si no del ultimo elegido, si no del default del usuario.
+  // Un modo sin perfil se ignora (spec 0002, casos de borde).
+  const mode = resolveMode({ isCustomer, isProvider }, searchParams.get('mode'), activeMode);
+
+  const handleModeChange = (next: Mode) => {
+    if (next === mode) return;
+    setActiveMode(next);
+    queryClient.invalidateQueries();
+    router.push(`/profile?mode=${next}`, { scroll: false });
+  };
+
   return (
     <main className="min-h-screen bg-gray-900 text-white p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
@@ -60,27 +64,29 @@ export default function ProfilePage() {
           </h1>
         </header>
 
-        {(() => {
-          if (user.role === 'provider') {
-            // Si el rol es 'provider', nos aseguramos de que user.provider exista.
-            return user.provider
-              ? <ProviderProfile user={user as UserProfile} />
-              : <IncompleteProfile role="provider" />;
-          }
-          if (user.role === 'customer') {
-            // Si el rol es 'customer', nos aseguramos de que user.customer exista.
-            return user.customer
-              ? <CustomerProfile user={user as UserProfile} />
-              : <IncompleteProfile role="customer" />;
-          }
-          // Si el rol no es ninguno de los dos, mostramos el mensaje por defecto.
-          return (
-            <p className="text-center text-gray-400 mt-10">
-              Rol desconocido o sin asignar.
-            </p>
-          );
-        })()}
+        {isCustomer && isProvider && mode && (
+          <div className="mb-6">
+            <ProfileModeSwitch mode={mode} onChange={handleModeChange} />
+          </div>
+        )}
+
+        {mode === 'provider' && <ProviderProfile user={user as UserProfile} />}
+        {mode === 'customer' && <CustomerProfile user={user as UserProfile} />}
+        {mode === null && (
+          <p className="text-center text-gray-400 mt-10">
+            Rol desconocido o sin asignar.
+          </p>
+        )}
       </div>
     </main>
+  );
+}
+
+// useSearchParams exige un limite de Suspense para que `next build` pueda prerenderizar.
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <ProfileContent />
+    </Suspense>
   );
 }

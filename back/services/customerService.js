@@ -2,6 +2,7 @@ const { Customer } = require('../models');
 const models = require('../models');
 const AddressService = require('../services/addressService');
 const { httpError, parseId } = require('../middlewares/ownership');
+const { activateProfile } = require('./profileActivation');
 
 const CUSTOMER_FIELDS = ['dni', 'phone'];
 const USER_ATTRS = ['id_user', 'name', 'lastname', 'email', 'profile_image'];
@@ -83,6 +84,19 @@ class CustomerService {
 
         return await Customer.findByPk(pk, {
             include: [{ association: 'user', attributes: USER_ATTRS }, 'address', 'interests'],
+        });
+    }
+
+    // Activa el perfil de cliente de un usuario que ya tiene otra cuenta de proveedor (spec 0002).
+    // `current` son los perfiles cargados por loadProfiles ({ customer, provider }).
+    async activateCustomer(userId, data, current) {
+        const { dni, phone } = data || {};
+        const missing = [['dni', dni], ['phone', phone]].filter(([, v]) => !v).map(([k]) => k);
+        if (missing.length) throw httpError(400, `Faltan campos obligatorios: ${missing.join(', ')}`);
+        return activateProfile({
+            userId, data, current, kind: 'customer',
+            create: (address_id, transaction) =>
+                Customer.create({ user_id: userId, dni, phone, address_id }, { transaction }),
         });
     }
 

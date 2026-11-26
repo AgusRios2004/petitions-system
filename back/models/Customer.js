@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         user_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            unique: true,
         },
         dni: {
             type: DataTypes.STRING(20),

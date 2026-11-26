@@ -1,11 +1,13 @@
 ---
 id: 0002
 titulo: Roles múltiples
-estado: propuesta        # draft | propuesta | aprobada | implementada | archivada
+estado: implementada    # draft | propuesta | aprobada | implementada | archivada
 autor_humano: Diego Agustín Rios
 fecha: 28/09/2026
 adrs_relacionados: []    # la decisión de diseño vive en docs/PRD.md §3.1
 ---
+
+- **Aprobada:** 25/11/2026, por el humano ("dale con la 0002"). En la misma conversación decidió B-33: **el ganador no se puede rechazar**. Se suman B-32, B-33 y B-34 (hallados en la spec 0003) en el punto 5 y en AC-0002-18/19.
 
 ## Objetivo
 
@@ -41,8 +43,10 @@ Precondiciones:
 4. **Un perfil de cada tipo por usuario**, garantizado por la base con un índice único en `Customer.user_id` y en `Provider.user_id`.
 5. **Postulaciones por relación.**
    - `GET /api/postulation` le da todas las postulaciones de una petición a su cliente dueño. A cualquier proveedor le da solo la propia.
-   - `PATCH /:id/state` pasa a ser solo de superusuario.
+   - `PATCH /:id/state` pasa a ser solo de superusuario, y funciona: hoy llama a un método que no existe y responde siempre 500 (B-32). Recibe `id_state`; un estado inexistente → 400.
    - Nadie puede postularse a una petición propia.
+   - **El ganador no se puede rechazar** (decisión del humano, 25/11/2026, B-33): `reject` solo vale sobre una postulación en `PEN`; si no, 409 y nada cambia.
+   - `cancel` (retirar) verifica la autoría antes que el estado, y el conflicto de estado responde 409 como `accept` (B-34).
 6. **Front.**
    - `AuthContext` expone `isCustomer`/`isProvider` (derivados de `user.customer`/`user.provider`) y `activeMode`.
    - Con los dos perfiles, `/profile` muestra un selector. El modo sale de `?mode=`, si no del último elegido (guardado en el navegador), y si no, `customer`.
@@ -69,23 +73,25 @@ Precondiciones:
 
 | ID | Criterio | Test |
 |:---|:---|:---|
-| AC-0002-01 | Registrar un cliente y un proveedor por `POST /api/auth/register` deja `is_staff = false` en los dos usuarios. | |
-| AC-0002-02 | El login y `GET /api/profile/me` devuelven `roles` igual a `{customer:true, provider:false}` para un cliente, `{false, true}` para un proveedor y `{true, true}` para un usuario con los dos perfiles. | |
-| AC-0002-03 | Un cliente sin perfil de proveedor hace `POST /api/profile/me/provider` con un body válido → 201. Un `GET /api/profile/me` con el **mismo token** devuelve `roles.provider = true`. | |
-| AC-0002-04 | Con el mismo token de AC-0002-03, sin volver a loguearse, `POST /api/postulation` a una petición de otro cliente responde 2xx, y la postulación queda con el `id_provider` del perfil recién creado. | |
-| AC-0002-05 | Un usuario con los dos perfiles hace `POST /api/postulation` a una petición propia → 403, y la cantidad de postulaciones de esa petición no cambia. | |
-| AC-0002-06 | `POST /api/profile/me/provider` de un usuario que ya es proveedor → 409, y sigue habiendo una sola fila `Provider` para ese `user_id`. Lo mismo para `/customer`. | |
-| AC-0002-07 | Crear por modelo un segundo `Customer`, o un segundo `Provider`, con un `user_id` que ya tiene uno falla con `SequelizeUniqueConstraintError`. | |
-| AC-0002-08 | `POST /api/profile/me/customer` sin `dni` o sin `phone` → 400 y no crea nada. Con `reuseAddress: true`, desde un proveedor, → 201, y el `address_id` del cliente nuevo es igual al del proveedor. | |
-| AC-0002-09 | `GET /api/postulation?id_petition=X` con token de un proveedor que no es dueño devuelve solo postulaciones con su propio `id_provider`. Con token del cliente dueño devuelve las dos del fixture. | |
-| AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | |
-| AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | |
-| AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | |
-| AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | |
-| AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | |
-| AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | |
-| AC-0002-16 | (front) Elegir el modo proveedor y volver a montar `/profile` sin `?mode` renderiza `ProviderProfile`. Cambiar de pestaña dentro de `ProviderProfile` deja `mode=provider` en la URL. | |
-| AC-0002-17 | (front) Cambiar de modo en el selector llama a `queryClient.invalidateQueries` exactamente una vez. | |
+| AC-0002-01 | Registrar un cliente y un proveedor por `POST /api/auth/register` deja `is_staff = false` en los dos usuarios. | `back/test/t11-0002-identidad.test.js` |
+| AC-0002-02 | El login y `GET /api/profile/me` devuelven `roles` igual a `{customer:true, provider:false}` para un cliente, `{false, true}` para un proveedor y `{true, true}` para un usuario con los dos perfiles. | `back/test/t11-0002-identidad.test.js` |
+| AC-0002-03 | Un cliente sin perfil de proveedor hace `POST /api/profile/me/provider` con un body válido → 201. Un `GET /api/profile/me` con el **mismo token** devuelve `roles.provider = true`. | `back/test/t11-0002-activar-perfil.test.js`, `back/test/t11-0002-postularse.test.js` |
+| AC-0002-04 | Con el mismo token de AC-0002-03, sin volver a loguearse, `POST /api/postulation` a una petición de otro cliente responde 2xx, y la postulación queda con el `id_provider` del perfil recién creado. | `back/test/t11-0002-postularse.test.js` |
+| AC-0002-05 | Un usuario con los dos perfiles hace `POST /api/postulation` a una petición propia → 403, y la cantidad de postulaciones de esa petición no cambia. | `back/test/t11-0002-postularse.test.js` |
+| AC-0002-06 | `POST /api/profile/me/provider` de un usuario que ya es proveedor → 409, y sigue habiendo una sola fila `Provider` para ese `user_id`. Lo mismo para `/customer`. | `back/test/t11-0002-activar-perfil.test.js` |
+| AC-0002-07 | Crear por modelo un segundo `Customer`, o un segundo `Provider`, con un `user_id` que ya tiene uno falla con `SequelizeUniqueConstraintError`. | `back/test/t11-0002-indice-unico.test.js` |
+| AC-0002-08 | `POST /api/profile/me/customer` sin `dni` o sin `phone` → 400 y no crea nada. Con `reuseAddress: true`, desde un proveedor, → 201, y el `address_id` del cliente nuevo es igual al del proveedor. | `back/test/t11-0002-activar-perfil.test.js` |
+| AC-0002-09 | `GET /api/postulation?id_petition=X` con token de un proveedor que no es dueño devuelve solo postulaciones con su propio `id_provider`. Con token del cliente dueño devuelve las dos del fixture. | `back/test/t11-0002-postulaciones-relacion.test.js` |
+| AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | `back/test/t11-0002-postulaciones-relacion.test.js` |
+| AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | `back/test/t11-0002-compat.test.js` |
+| AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | `back/test/t11-0002-compat.test.js` |
+| AC-0002-18 | `PATCH /api/postulation/:id/state` con token del superusuario y un `id_state` existente → 200 y la postulación queda en ese estado; con un `id_state` inexistente → 400 y no cambia. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
+| AC-0002-19 | `PATCH /:id/reject` del cliente dueño sobre una postulación en `ACE` o en `FIN` → 409, y `winner`, `id_state` y la petición no cambian. `PATCH /:id/cancel` de un proveedor no autor sobre una postulación que no está en `PEN` → 403; del autor sobre una que no está en `PEN` → 409. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
+| AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | `front/src/lib/__tests__/roles.test.tsx` |
+| AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | `front/src/app/profile/__tests__/page.test.tsx` |
+| AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | `front/src/app/profile/__tests__/page.test.tsx` |
+| AC-0002-16 | (front) Elegir el modo proveedor y volver a montar `/profile` sin `?mode` renderiza `ProviderProfile`. Cambiar de pestaña dentro de `ProviderProfile` deja `mode=provider` en la URL. | `front/src/app/profile/__tests__/page.test.tsx`, `front/src/components/profile/__tests__/ProviderProfile.test.tsx` |
+| AC-0002-17 | (front) Cambiar de modo en el selector llama a `queryClient.invalidateQueries` exactamente una vez. | `front/src/app/profile/__tests__/page.test.tsx` |
 
 ## Fuera de alcance
 
