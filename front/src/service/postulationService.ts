@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { IProviderHistoryItem } from '@/types/common';
 
 export const postulationService = {
     getAllPostulations: async (filters?: { id_state?: number; id_customer?: number; id_petition?: number; id_provider?: number; }) => {
@@ -85,6 +86,17 @@ export const postulationService = {
     getPostulationsByProvider: async (providerId: string, status?: string) => {
         try {
             const response = await apiClient.get('/postulation', { params: { id_provider: providerId, id_state: status } });
+            return response.data.data;
+        } catch (e) {
+            console.error("Error: ", e);
+            throw e;
+        }
+    },
+
+    // Historial público: trabajos ganados, sin propuesta ni costo (spec 0004).
+    getProviderHistory: async (providerId: string): Promise<IProviderHistoryItem[]> => {
+        try {
+            const response = await apiClient.get(`/provider/${providerId}/history`);
             return response.data.data;
         } catch (e) {
             console.error("Error: ", e);

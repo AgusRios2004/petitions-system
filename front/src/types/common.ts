@@ -432,3 +432,11 @@ export interface IOffer {
     }
   };
 }
+
+// Elemento del historial público de un proveedor (GET /provider/:id/history).
+export interface IProviderHistoryItem {
+  id_postulation: number;
+  state: string;
+  date: string;
+  petition: { id_petition: number; description: string } | null;
+}

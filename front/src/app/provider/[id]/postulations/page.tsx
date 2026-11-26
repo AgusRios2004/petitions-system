@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { IPostulation } from '@/types/common';
+import { IPostulation, IProviderHistoryItem } from '@/types/common';
+import { POSTULATION_FILTER_OPTIONS } from '@/lib/states';
 import { postulationService } from '@/service/postulationService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
+
+const formatDate = (date: string) => new Date(date).toLocaleDateString('es-AR');
 
 const ProviderPostulationsPage: React.FC = () => {
   const params = useParams();
@@ -15,27 +18,27 @@ const ProviderPostulationsPage: React.FC = () => {
   const { user } = useAuth();
 
   const providerId = params.id as string;
-  const [isOwner, setIsOwner] = useState(false);
+  const isOwner = !!user?.provider && user.provider.id_provider.toString() === providerId;
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  useEffect(() => {
-    if (user && user.provider) {
-      setIsOwner(user.provider.id_provider.toString() === providerId);
-    }
-  }, [user, providerId]);
-
-  useEffect(() => {
-    if (!isOwner) {
-      // If the viewer is not the owner, automatically set the status to 'Accepted'
-      setSelectedStatus('1'); // Backend ID for 'Aceptada' is 1
-    }
-  }, [isOwner]);
-
-  const { data: postulations, isLoading, isError, error, isFetching } = useQuery<IPostulation[], Error>({
+  // Dueño: sus postulaciones completas, filtradas por estado.
+  const owned = useQuery<IPostulation[], Error>({
     queryKey: ['providerPostulations', providerId, selectedStatus],
     queryFn: () => postulationService.getPostulationsByProvider(providerId, selectedStatus),
-    enabled: !!providerId && !!selectedStatus, // Query runs when providerId and a status are available
+    enabled: isOwner && !!selectedStatus,
   });
+
+  // Resto: historial público con los campos mínimos (sin propuesta ni costo).
+  const history = useQuery<IProviderHistoryItem[], Error>({
+    queryKey: ['providerHistory', providerId],
+    queryFn: () => postulationService.getProviderHistory(providerId),
+    enabled: !isOwner && !!providerId,
+  });
+
+  const active = isOwner ? owned : history;
+  const { isLoading, isError, error, isFetching } = active;
+  const items = active.data;
+  const showEmpty = (isOwner ? !!selectedStatus : true) && !isLoading && !isFetching && !isError && (!items || items.length === 0);
 
   return (
     <div className="min-h-screen bg-gray-800 text-gray-100 py-10 px-4">
@@ -56,9 +59,9 @@ const ProviderPostulationsPage: React.FC = () => {
               className="block w-full p-2 mb-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-cyan-500 focus:border-cyan-500"
             >
               <option value="">Selecciona un estado</option>
-              <option value="3">Pendiente</option>
-              <option value="1">Aceptada</option>
-              <option value="2">Rechazada</option>
+              {POSTULATION_FILTER_OPTIONS.map((o) => (
+                <option key={o.value} value={String(o.value)}>{o.label}</option>
+              ))}
             </select>
           </div>
         )}
@@ -75,15 +78,15 @@ const ProviderPostulationsPage: React.FC = () => {
             </div>
           )}
 
-          {selectedStatus && !isLoading && !isFetching && !isError && (!postulations || postulations.length === 0) && (
+          {showEmpty && (
             <div className="text-center p-8 bg-gray-700/50 rounded-lg">
               <p className="text-lg">No se encontraron postulaciones para el criterio seleccionado.</p>
             </div>
           )}
 
-          {postulations && postulations.length > 0 && (
+          {isOwner && owned.data && owned.data.length > 0 && (
             <div className="grid grid-cols-1 gap-6">
-              {postulations.map((postulation) => (
+              {owned.data.map((postulation) => (
                 <div key={postulation.id_postulation} className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
                   <h3 className="text-xl font-semibold mb-2 text-cyan-400">
                     Postulación a: {postulation.petition?.description}
@@ -99,6 +102,29 @@ const ProviderPostulationsPage: React.FC = () => {
                   </p>
                   {postulation.petition && (
                     <Link href={`/petition/${postulation.petition.id_petition}`} className="text-cyan-400 hover:text-cyan-300 underline">
+                      Ver Detalles de la Petición
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isOwner && history.data && history.data.length > 0 && (
+            <div className="grid grid-cols-1 gap-6">
+              {history.data.map((item) => (
+                <div key={item.id_postulation} className="bg-gray-700/90 backdrop-blur-md shadow-lg shadow-black/40 rounded-2xl p-6 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+                  <h3 className="text-xl font-semibold mb-2 text-cyan-400">
+                    {item.petition?.description ?? 'Petición no disponible'}
+                  </h3>
+                  <p className="text-gray-300 mb-2">
+                    <strong className="text-white">Estado:</strong> {item.state}
+                  </p>
+                  <p className="text-gray-300 mb-2">
+                    <strong className="text-white">Fecha:</strong> {formatDate(item.date)}
+                  </p>
+                  {item.petition && (
+                    <Link href={`/petition/${item.petition.id_petition}`} className="text-cyan-400 hover:text-cyan-300 underline">
                       Ver Detalles de la Petición
                     </Link>
                   )}
