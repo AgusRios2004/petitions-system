@@ -412,6 +412,26 @@ class PostulationService {
      * [CORREGIDO] Rechaza una postulación. Solo el cliente dueño de la petición puede hacerlo.
      * No afecta el estado de la petición.
      */
+    // Cambio de estado administrativo (solo superusuario, por ruta). No toca winner ni la petición.
+    async changePostulationState(id, data, userId) {
+        const httpErr = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+        if (!/^\d+$/.test(String(id))) return null;
+        const postulation = await Postulation.findByPk(Number(id));
+        if (!postulation) return null;
+
+        const id_state = data && data.id_state;
+        if (!/^\d+$/.test(String(id_state))) throw httpErr(400, 'id_state inválido');
+        const state = await State.findByPk(Number(id_state));
+        if (!state) throw httpErr(400, 'El estado no existe');
+
+        await postulation.update({
+            id_state: state.id_state,
+            id_user_update: userId,
+            date_update: new Date(),
+        });
+        return await this.getPostulationById(postulation.id_postulation);
+    }
+
     async rejectPostulation(postulationId, userId, eventBus) {
         const t = await sequelize.transaction();
         try {
@@ -430,6 +450,13 @@ class PostulationService {
             if (petitionOwner.user_id !== userId) {
                 const error = new Error("No tienes permiso para rechazar esta postulación.");
                 error.statusCode = 403;
+                throw error;
+            }
+
+            // El ganador no se puede rechazar (decisión del 25/11/2026, B-33): solo vale sobre PEN.
+            if (postulation.id_state !== await getStateId('PEN')) {
+                const error = new Error('Solo se puede rechazar una postulación pendiente.');
+                error.statusCode = 409;
                 throw error;
             }
 
@@ -493,18 +520,17 @@ class PostulationService {
                 throw error;
             }
 
-            // [NUEVO] Solo se puede retirar si aún está PENDIENTE
-            const pendingStateId = await getStateId('PEN');
-            if (postulation.id_state !== pendingStateId) {
-                const error = new Error("No se puede retirar una postulación que ya ha sido procesada (Aceptada/Rechazada).");
-                error.statusCode = 400;
-                throw error;
-            }
-
             const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
             if (!provider || postulation.id_provider !== provider.id_provider) {
                 const error = new Error("No tienes permiso para retirar esta postulación.");
                 error.statusCode = 403; // Forbidden
+                throw error;
+            }
+
+            // Solo se puede retirar si aún está PENDIENTE; se revisa después de la autoría (B-34).
+            if (postulation.id_state !== await getStateId('PEN')) {
+                const error = new Error("No se puede retirar una postulación que ya ha sido procesada (Aceptada/Rechazada).");
+                error.statusCode = 409;
                 throw error;
             }
 

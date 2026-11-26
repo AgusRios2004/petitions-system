@@ -99,11 +99,11 @@ exports.updatePostulation = async (req, res) => {
 
 exports.changePostulationState = async (req, res) => {
     try {
-        const postulation = await service.changePostulationState(req.params.id, req.body);
+        const postulation = await service.changePostulationState(req.params.id, req.body, req.user.sub);
         if (!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {
-        return error(res, e.message, 500);
+        return fail(res, e);
     }
 }
 
