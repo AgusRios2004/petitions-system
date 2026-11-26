@@ -14,7 +14,7 @@ describe('spec 0001 T1: fixtures de acceso', () => {
   test('los fixtures se crean: A, B, C y superusuario; petición de A en PEN con dos postulaciones; conversación A–B', async () => {
     const { Petition, Postulation, ConversationParticipants, User } = models;
 
-    expect(await User.count()).toBe(5);
+    expect(await User.count()).toBe(6);
     expect(fx.users.admin.is_superuser).toBe(true);
 
     const petition = await Petition.findByPk(fx.petition.id_petition);

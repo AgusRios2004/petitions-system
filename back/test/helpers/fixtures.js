@@ -4,6 +4,7 @@
 //   B      proveedor, autor de una postulación a la petición de A
 //   C      cliente ajeno: no participa de nada de A ni de B
 //   D      segundo proveedor, autor de la otra postulación
+//   E      usuario con los dos perfiles (spec 0002): cliente y proveedor
 //   admin  superusuario (is_superuser), sin perfil
 //
 // Una petición de A en PEN con dos postulaciones en PEN (B y D) y una
@@ -84,6 +85,22 @@ async function createAccessFixtures(models) {
   const C = await newCustomer('C');
   const D = await newProvider('D');
 
+  // E: una cuenta con los dos perfiles (spec 0002). Un solo domicilio compartido.
+  const userE = await User.create({
+    name: 'UsuarioE', lastname: 'Test', email: 'e@test.local',
+    password: PASSWORD, is_staff: false, is_active: true, enabled: true,
+  });
+  const addressE = await newAddress('Calle E');
+  const customerE = await Customer.create({
+    user_id: userE.id_user, dni: `3000000${userE.id_user}`, phone: `261400${userE.id_user}`,
+    address_id: addressE.id_address,
+  });
+  const providerE = await Provider.create({
+    user_id: userE.id_user, address_id: addressE.id_address,
+    id_type_provider: typeProvider.id_type_provider, id_profession: profession.id_profession,
+    description: 'Proveedor E',
+  });
+
   const petition = await Petition.create({
     id_customer: A.customer.id_customer, id_type_petition: typePetition.id_type_petition,
     description: 'Reparación de cañería (petición de A)', id_profession: profession.id_profession,
@@ -120,9 +137,11 @@ async function createAccessFixtures(models) {
   return {
     password: PASSWORD,
     states,
-    users: { A: A.user, B: B.user, C: C.user, D: D.user, admin },
+    users: { A: A.user, B: B.user, C: C.user, D: D.user, E: userE, admin },
     customerA: A.customer,
     customerC: C.customer,
+    customerE,
+    providerE,
     providerB: B.provider,
     providerD: D.provider,
     petition,
