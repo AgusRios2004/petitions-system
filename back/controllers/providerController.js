@@ -1,6 +1,9 @@
 const service = require('../services/providerService');
 const response = require('../middlewares/response');
 const providerService = require('../services/providerService');
+const postulationService = require('../services/postulationService');
+const { parseId } = require('../middlewares/ownership');
+const { Provider } = require('../models');
 
 exports.getAllProviders = async(req, res) => {
     try {
@@ -53,5 +56,19 @@ exports.getProviderByIdWithDetails = async(req, res) => {
     } catch (e) {
         console.error("Error obtener al proveedor: ", e);
         return response.error(res, e.message, 500, e);
+    }
+}
+
+// Historial público: trabajos ganados con los campos mínimos (spec 0004).
+exports.getProviderHistory = async (req, res) => {
+    try {
+        const id = parseId(req.params.id);
+        const provider = id && await Provider.findByPk(id, { attributes: ['id_provider'] });
+        if (!provider) return response.error(res, 'Proveedor no encontrado.', 404);
+        const history = await postulationService.getProviderHistory(provider.id_provider);
+        return response.success(res, history, 'Historial del proveedor.');
+    } catch (e) {
+        console.error('Error: ', e);
+        return response.error(res, 'Error interno', 500);
     }
 }

@@ -67,6 +67,29 @@ class PostulationService {
         });
     }
 
+    // Historial público de un proveedor: solo trabajos ganados (ACE y FIN) y solo
+    // los campos mínimos. Sin propuesta, costo, inventario, cliente ni usuarios (spec 0004).
+    async getProviderHistory(id_provider) {
+        const rows = await Postulation.findAll({
+            where: { id_provider },
+            attributes: ['id_postulation', 'date_create', 'date_update'],
+            include: [
+                { model: State, as: 'states', attributes: ['state', 'code'], where: { code: { [Op.in]: ['ACE', 'FIN'] } }, required: true },
+                { model: Petition, as: 'petition', attributes: ['id_petition', 'description'], required: false },
+            ],
+        });
+        return rows
+            .map((r) => ({
+                id_postulation: r.id_postulation,
+                state: r.states.state,
+                date: r.date_update || r.date_create,
+                petition: r.petition
+                    ? { id_petition: r.petition.id_petition, description: r.petition.description }
+                    : null,
+            }))
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
     async getPostulationById(id) {
         return await Postulation.findByPk(id, {
             include: [
