@@ -595,22 +595,25 @@ class PostulationService {
     async finishPostulation(id, userId, eventBus) {
         const t = await sequelize.transaction();
         try {
+            const httpErr = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+            if (!/^\d+$/.test(String(id))) throw httpErr(404, 'Postulación no encontrada.');
             const postulation = await Postulation.findByPk(id, {
                 include: [{ model: Petition, as: 'petition' }],
-                transaction: t
+                transaction: t,
+                lock: { level: t.LOCK.UPDATE, of: Postulation }
             });
+            if (!postulation) throw httpErr(404, 'Postulación no encontrada.');
 
-            if (!postulation) {
-                const error = new Error("Postulación no encontrada.");
-                error.statusCode = 404;
-                throw error;
+            // Solo el proveedor autor finaliza (el superusuario tampoco).
+            const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
+            if (!provider || provider.id_provider !== postulation.id_provider) {
+                throw httpErr(403, 'No tienes permiso para finalizar este trabajo.');
             }
 
-            // Solo el ganador puede finalizar
-            if (!postulation.winner || postulation.id_user_create !== userId) {
-                const error = new Error("No tienes permiso para finalizar este trabajo.");
-                error.statusCode = 403;
-                throw error;
+            // Solo la ganadora aceptada se finaliza.
+            const acceptedState = await getStateId('ACE');
+            if (!postulation.winner || postulation.id_state !== acceptedState) {
+                throw httpErr(409, 'Solo se puede finalizar una postulación ganadora y aceptada.');
             }
 
             const stateFin = await getStateId('FIN');
