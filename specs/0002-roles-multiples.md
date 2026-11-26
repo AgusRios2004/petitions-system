@@ -1,11 +1,13 @@
 ---
 id: 0002
 titulo: Roles múltiples
-estado: propuesta        # draft | propuesta | aprobada | implementada | archivada
+estado: aprobada         # draft | propuesta | aprobada | implementada | archivada
 autor_humano: Diego Agustín Rios
 fecha: 28/09/2026
 adrs_relacionados: []    # la decisión de diseño vive en docs/PRD.md §3.1
 ---
+
+- **Aprobada:** 25/11/2026, por el humano ("dale con la 0002"). En la misma conversación decidió B-33: **el ganador no se puede rechazar**. Se suman B-32, B-33 y B-34 (hallados en la spec 0003) en el punto 5 y en AC-0002-18/19.
 
 ## Objetivo
 
@@ -41,8 +43,10 @@ Precondiciones:
 4. **Un perfil de cada tipo por usuario**, garantizado por la base con un índice único en `Customer.user_id` y en `Provider.user_id`.
 5. **Postulaciones por relación.**
    - `GET /api/postulation` le da todas las postulaciones de una petición a su cliente dueño. A cualquier proveedor le da solo la propia.
-   - `PATCH /:id/state` pasa a ser solo de superusuario.
+   - `PATCH /:id/state` pasa a ser solo de superusuario, y funciona: hoy llama a un método que no existe y responde siempre 500 (B-32). Recibe `id_state`; un estado inexistente → 400.
    - Nadie puede postularse a una petición propia.
+   - **El ganador no se puede rechazar** (decisión del humano, 25/11/2026, B-33): `reject` solo vale sobre una postulación en `PEN`; si no, 409 y nada cambia.
+   - `cancel` (retirar) verifica la autoría antes que el estado, y el conflicto de estado responde 409 como `accept` (B-34).
 6. **Front.**
    - `AuthContext` expone `isCustomer`/`isProvider` (derivados de `user.customer`/`user.provider`) y `activeMode`.
    - Con los dos perfiles, `/profile` muestra un selector. El modo sale de `?mode=`, si no del último elegido (guardado en el navegador), y si no, `customer`.
@@ -81,6 +85,8 @@ Precondiciones:
 | AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | |
 | AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | |
 | AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | |
+| AC-0002-18 | `PATCH /api/postulation/:id/state` con token del superusuario y un `id_state` existente → 200 y la postulación queda en ese estado; con un `id_state` inexistente → 400 y no cambia. | |
+| AC-0002-19 | `PATCH /:id/reject` del cliente dueño sobre una postulación en `ACE` o en `FIN` → 409, y `winner`, `id_state` y la petición no cambian. `PATCH /:id/cancel` de un proveedor no autor sobre una postulación que no está en `PEN` → 403; del autor sobre una que no está en `PEN` → 409. | |
 | AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | |
 | AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | |
 | AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | |
