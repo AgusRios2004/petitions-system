@@ -1,6 +1,6 @@
 const service = require('../services/postulationService');
 const { error, success } = require('../middlewares/response');
-const { Petition, Customer } = require('../models');
+const { Petition, Customer, Provider } = require('../models');
 const notificationService = require('../services/notificationService');
 
 // Los errores llevan su código; los 5xx no exponen el detalle interno.
@@ -58,11 +58,23 @@ exports.getAllPostulations = async (req, res) => {
 exports.getPostulationById = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!/^\d+$/.test(String(id))) return error(res, 'Postulación no encontrada', 404);
         const postulation = await service.getPostulationById(id);
         if (!postulation) return error(res, 'Postulación no encontrada', 404);
+
+        // Lo lee el superusuario, el proveedor autor o el cliente dueño de la petición.
+        if (!req.user.is_superuser) {
+            const userId = req.user.sub;
+            const provider = await Provider.findOne({ where: { user_id: userId }, attributes: ['id_provider'] });
+            const isAuthor = !!provider && provider.id_provider === postulation.id_provider;
+            const owner = await Customer.findByPk(postulation.petition && postulation.petition.id_customer, { attributes: ['user_id'] });
+            const isOwner = !!owner && owner.user_id === userId;
+            if (!isAuthor && !isOwner) return error(res, 'No tienes permiso para ver esta postulación', 403);
+        }
         return success(res, postulation);
     } catch (e) {
-        return error(res, e.message, 500);
+        console.error("Error: ", e);
+        return fail(res, e);
     }
 };
 
