@@ -1,7 +1,7 @@
 ---
 id: 0003
 titulo: Postulaciones solo para su autor
-estado: aprobada        # draft | propuesta | aprobada | implementada | archivada
+estado: implementada   # draft | propuesta | aprobada | implementada | archivada
 autor_humano: Diego Agustín Rios
 fecha: 25/11/2026
 adrs_relacionados: []
@@ -60,17 +60,17 @@ Cerrar B-30: que una postulación solo la edite, la finalice o la lea quien corr
 
 | ID | Criterio | Test |
 |:---|:---|:---|
-| AC-0003-01 | `PUT /api/postulation/:id` sobre la postulación de B con token de D, A, C y del superusuario → 403, y `proposal`, `cost` e inventario no cambian. | |
-| AC-0003-02 | `PUT` de B con `proposal`, `cost` y dos `articles` → 200; quedan guardados, y `id_user_update` es el de B aunque el body traiga otro. | |
-| AC-0003-03 | `PUT` de B con `id_state`, `winner`, `id_provider` e `id_petition` en el body → 200, y esos cuatro campos quedan como estaban. | |
-| AC-0003-04 | `PUT` de B sin `articles` deja el inventario igual; con `articles: []` lo deja vacío. | |
-| AC-0003-05 | `PUT` de B con `cost` negativo, `cost` no numérico, `quantity` 0, `quantity` no entera o `id_article` inexistente → 400 cada uno, y ni `proposal` ni el inventario cambian. | |
-| AC-0003-06 | `PUT` de B sobre su postulación en `ACE` → 409 sin cambios; `PUT` a un id inexistente → 404. | |
-| AC-0003-07 | `PATCH /api/postulation/:id/winner` → 404, y `winner` no cambia. | |
-| AC-0003-08 | `PATCH /:id/finish` con token de D, A o C → 403; con token de B sobre su postulación en `PEN` → 409; en ningún caso cambia el estado. | |
-| AC-0003-09 | Con la postulación de B ganadora y en `ACE`, `PATCH /finish` de B → 200 y queda en `FIN`; un segundo `PATCH /finish` → 409. | |
-| AC-0003-10 | `PATCH /:id/cancel` de D sobre la postulación de B → 403; `PATCH /:id/reject` de C → 403; `PATCH /:id/finish` a un id inexistente → 404. Ninguno responde 500. | |
-| AC-0003-11 | `GET /api/postulation/:id` de la postulación de B: con token de B, A o del superusuario → 200; con token de D o C → 403; un id inexistente → 404. | |
+| AC-0003-01 | `PUT /api/postulation/:id` sobre la postulación de B con token de D, A, C y del superusuario → 403, y `proposal`, `cost` e inventario no cambian. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-02 | `PUT` de B con `proposal`, `cost` y dos `articles` → 200; quedan guardados, y `id_user_update` es el de B aunque el body traiga otro. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-03 | `PUT` de B con `id_state`, `winner`, `id_provider` e `id_petition` en el body → 200, y esos cuatro campos quedan como estaban. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-04 | `PUT` de B sin `articles` deja el inventario igual; con `articles: []` lo deja vacío. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-05 | `PUT` de B con `cost` negativo, `cost` no numérico, `quantity` 0, `quantity` no entera o `id_article` inexistente → 400 cada uno, y ni `proposal` ni el inventario cambian. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-06 | `PUT` de B sobre su postulación en `ACE` → 409 sin cambios; `PUT` a un id inexistente → 404. | `back/test/t10-0003-editar.test.js` |
+| AC-0003-07 | `PATCH /api/postulation/:id/winner` → 404, y `winner` no cambia. | `back/test/t10-0003-errores.test.js` |
+| AC-0003-08 | `PATCH /:id/finish` con token de D, A o C → 403; con token de B sobre su postulación en `PEN` → 409; en ningún caso cambia el estado. | `back/test/t10-0003-finalizar.test.js` |
+| AC-0003-09 | Con la postulación de B ganadora y en `ACE`, `PATCH /finish` de B → 200 y queda en `FIN`; un segundo `PATCH /finish` → 409. | `back/test/t10-0003-finalizar.test.js` |
+| AC-0003-10 | `PATCH /:id/cancel` de D sobre la postulación de B → 403; `PATCH /:id/reject` de C → 403; `PATCH /:id/finish` a un id inexistente → 404. Ninguno responde 500. | `back/test/t10-0003-errores.test.js` |
+| AC-0003-11 | `GET /api/postulation/:id` de la postulación de B: con token de B, A o del superusuario → 200; con token de D o C → 403; un id inexistente → 404. | `back/test/t10-0003-leer.test.js` |
 
 ## Fuera de alcance
 
