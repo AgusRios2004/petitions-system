@@ -2,7 +2,7 @@
 
 Spec: [`0003-postulaciones-del-autor.md`](./0003-postulaciones-del-autor.md) · Estimado: 3 días-ideales.
 
-Cada tarea empieza con su test en rojo (`back/test/t3-0003-*.test.js`, con los fixtures de la 0001). Cada test lleva su AC-ID en el nombre.
+Cada tarea empieza con su test en rojo (`back/test/t10-0003-*.test.js`, con los fixtures de la 0001). Cada test lleva su AC-ID en el nombre.
 
 | # | Tarea | Archivos | Depende de | AC | Tam. |
 |:--|:---|:---|:---|:---|:--|
