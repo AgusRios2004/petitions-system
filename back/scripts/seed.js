@@ -7,6 +7,16 @@ const {
     TypeOffer, Week, Hour
 } = require('../models');
 
+// Estados del sistema. Se exporta para poder verificarlos sin ejecutar el seed.
+const STATES = [
+    { id_state: 1, state: 'Pendiente', code: 'PEN' },
+    { id_state: 2, state: 'Aceptado', code: 'ACE' },
+    { id_state: 3, state: 'Rechazado', code: 'REC' },
+    { id_state: 4, state: 'Cancelado', code: 'CAN' },
+    { id_state: 5, state: 'Baja', code: 'BJA' },
+    { id_state: 6, state: 'Finalizado', code: 'FIN' },
+];
+
 async function seed() {
     try {
         console.log('--- Iniciando Sincronización de Base de Datos ---');
@@ -38,13 +48,9 @@ async function seed() {
             { id_color: 31, color_name: 'Muy Bueno', id_user_create: adminUser.id_user }
         ]);
 
-        const states = await State.bulkCreate([
-            { id_state: 1, state: 'Pendiente', code: 'PEN', id_user_create: adminUser.id_user },
-            { id_state: 2, state: 'Aceptado', code: 'ACE', id_user_create: adminUser.id_user },
-            { id_state: 3, state: 'Rechazado', code: 'REC', id_user_create: adminUser.id_user },
-            { id_state: 4, state: 'Cancelado', code: 'CAN', id_user_create: adminUser.id_user },
-            { id_state: 5, state: 'Baja', code: 'BJA', id_user_create: adminUser.id_user }
-        ]);
+        const states = await State.bulkCreate(
+            STATES.map((s) => ({ ...s, id_user_create: adminUser.id_user }))
+        );
 
         const typePetitions = await TypePetition.bulkCreate([
             { name: 'Servicio', id_user_create: adminUser.id_user },
@@ -201,4 +207,9 @@ async function seed() {
     }
 }
 
-seed();
+// Solo corre con `node scripts/seed.js` (npm run seed); un require no ejecuta nada.
+if (require.main === module) {
+    seed();
+}
+
+module.exports = { STATES, seed };
