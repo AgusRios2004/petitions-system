@@ -1,7 +1,7 @@
 ---
 id: 0002
 titulo: Roles múltiples
-estado: aprobada         # draft | propuesta | aprobada | implementada | archivada
+estado: implementada    # draft | propuesta | aprobada | implementada | archivada
 autor_humano: Diego Agustín Rios
 fecha: 28/09/2026
 adrs_relacionados: []    # la decisión de diseño vive en docs/PRD.md §3.1
@@ -83,15 +83,15 @@ Precondiciones:
 | AC-0002-08 | `POST /api/profile/me/customer` sin `dni` o sin `phone` → 400 y no crea nada. Con `reuseAddress: true`, desde un proveedor, → 201, y el `address_id` del cliente nuevo es igual al del proveedor. | `back/test/t11-0002-activar-perfil.test.js` |
 | AC-0002-09 | `GET /api/postulation?id_petition=X` con token de un proveedor que no es dueño devuelve solo postulaciones con su propio `id_provider`. Con token del cliente dueño devuelve las dos del fixture. | `back/test/t11-0002-postulaciones-relacion.test.js` |
 | AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | `back/test/t11-0002-postulaciones-relacion.test.js` |
-| AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | |
-| AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | |
+| AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | `back/test/t11-0002-compat.test.js` |
+| AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | `back/test/t11-0002-compat.test.js` |
 | AC-0002-18 | `PATCH /api/postulation/:id/state` con token del superusuario y un `id_state` existente → 200 y la postulación queda en ese estado; con un `id_state` inexistente → 400 y no cambia. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
 | AC-0002-19 | `PATCH /:id/reject` del cliente dueño sobre una postulación en `ACE` o en `FIN` → 409, y `winner`, `id_state` y la petición no cambian. `PATCH /:id/cancel` de un proveedor no autor sobre una postulación que no está en `PEN` → 403; del autor sobre una que no está en `PEN` → 409. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
-| AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | |
-| AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | |
-| AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | |
-| AC-0002-16 | (front) Elegir el modo proveedor y volver a montar `/profile` sin `?mode` renderiza `ProviderProfile`. Cambiar de pestaña dentro de `ProviderProfile` deja `mode=provider` en la URL. | |
-| AC-0002-17 | (front) Cambiar de modo en el selector llama a `queryClient.invalidateQueries` exactamente una vez. | |
+| AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | `front/src/lib/__tests__/roles.test.tsx` |
+| AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | `front/src/app/profile/__tests__/page.test.tsx` |
+| AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | `front/src/app/profile/__tests__/page.test.tsx` |
+| AC-0002-16 | (front) Elegir el modo proveedor y volver a montar `/profile` sin `?mode` renderiza `ProviderProfile`. Cambiar de pestaña dentro de `ProviderProfile` deja `mode=provider` en la URL. | `front/src/app/profile/__tests__/page.test.tsx`, `front/src/components/profile/__tests__/ProviderProfile.test.tsx` |
+| AC-0002-17 | (front) Cambiar de modo en el selector llama a `queryClient.invalidateQueries` exactamente una vez. | `front/src/app/profile/__tests__/page.test.tsx` |
 
 ## Fuera de alcance
 
