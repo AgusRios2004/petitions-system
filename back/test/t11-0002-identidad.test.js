@@ -26,7 +26,8 @@ describe('spec 0002 T2: identidad sin is_staff, roles derivados de los perfiles'
     expect(c.status).toBe(200);
     expect(p.status).toBe(200);
     for (const email of ['reg-c@test.local', 'reg-p@test.local']) {
-      const u = await models.User.findOne({ where: { email } });
+      // unscoped: is_staff ya no sale en las consultas comunes (T8), pero la columna sigue en la base.
+      const u = await models.User.unscoped().findOne({ where: { email } });
       expect(u.is_staff).toBe(false);
     }
   });
@@ -56,15 +57,6 @@ describe('spec 0002 T2: identidad sin is_staff, roles derivados de los perfiles'
       expect(res.status).toBe(200);
       expect(res.body.data.roles).toEqual(roles);
     }
-  });
-
-  test('spec punto 7 (compatibilidad): role derivado: provider solo si tiene únicamente perfil de proveedor', async () => {
-    const role = async (user) => (await request(app).get('/api/profile/me').set(await bearer(user))).body.data.role;
-    expect(await role(fx.users.A)).toBe('customer');
-    expect(await role(fx.users.B)).toBe('provider');
-    expect(await role(fx.users.E)).toBe('customer');
-    const login = await request(app).post('/api/auth/login').send({ email: fx.users.B.email, password: PASSWORD });
-    expect(login.body.user.role).toBe('provider');
   });
 
   test('AC-0002-02: loadProfiles deja req.customer y req.provider (o null) después de authRequired', async () => {

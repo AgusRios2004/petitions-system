@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { User, Customer, Provider, Address, sequelize } = require('../models');
-const { deriveRoles, deriveLegacyRole } = require('../middlewares/auth');
+const { deriveRoles } = require('../middlewares/auth');
 const { error, success } = require('../middlewares/response');
 
 const signAccessToken = (payload) =>
@@ -115,7 +115,6 @@ exports.login = async (req, res) => {
         const payload = {
             sub: user.id_user,
             email: user.email,
-            is_staff: user.is_staff,
             is_superuser: user.is_superuser,
         };
 
@@ -128,11 +127,9 @@ exports.login = async (req, res) => {
             name: user.name,
             lastname: user.lastname,
             email: user.email,
-            is_staff: user.is_staff,
             customer: user.customer || null,
             provider: user.provider || null,
             roles: deriveRoles(user.customer, user.provider),
-            role: deriveLegacyRole(user.customer, user.provider), // compat hasta la tarea 8
             date_create: user.date_create,
         };
 
@@ -157,7 +154,6 @@ exports.refresh = async (req, res) => {
         const tokenPayload = {
             sub: user.id_user,
             email: user.email,
-            is_staff: user.is_staff,
             is_superuser: user.is_superuser,
         };
 

@@ -67,8 +67,10 @@ module.exports = (sequelize, DataTypes) => {
         updatedAt: 'date_update', // Mapear updatedAt a date_update
         // El hash nunca sale en una consulta común. Solo el login lo pide, con
         // User.scope('withPassword'), para comparar la contraseña (B-01).
+        // is_staff tampoco sale: nada lo lee y la API no lo expone (spec 0002 T8).
+        // La columna sigue en la base hasta B-28.
         defaultScope: {
-            attributes: { exclude: ['password'] },
+            attributes: { exclude: ['password', 'is_staff'] },
         },
         scopes: {
             withPassword: {

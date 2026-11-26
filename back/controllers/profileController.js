@@ -3,7 +3,7 @@ const { error, success } = require('../middlewares/response');
 const UserService = require('../services/userService');
 const ProviderService = require('../services/providerService');
 const CustomerService = require('../services/customerService');
-const { deriveRoles, deriveLegacyRole } = require('../middlewares/auth');
+const { deriveRoles } = require('../middlewares/auth');
 const { parseId } = require('../middlewares/ownership');
 
 // Payload de /profile/me: lo comparten el GET y las activaciones de perfil.
@@ -33,8 +33,6 @@ const buildProfile = async (userId) => {
     };
 
     userJSON.roles = deriveRoles(user.customer, user.provider);
-    // Compatibilidad hasta la tarea 8: role derivado de los perfiles, no de is_staff.
-    userJSON.role = deriveLegacyRole(user.customer, user.provider);
     return userJSON;
 };
 

@@ -40,6 +40,3 @@ exports.loadProfiles = async (req, res, next) => {
 }
 
 exports.deriveRoles = (customer, provider) => ({ customer: !!customer, provider: !!provider });
-
-// Compatibilidad hasta la tarea 8: provider solo si tiene unicamente perfil de proveedor.
-exports.deriveLegacyRole = (customer, provider) => (provider && !customer ? 'provider' : 'customer');

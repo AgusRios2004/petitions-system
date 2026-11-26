@@ -22,16 +22,6 @@ import {
 export interface AuthUser extends IUser {
   customer?: ICustomer | null;
   provider?: IProvider | null;
-  // Transitorio hasta la tarea 8 (spec 0002): derivado de los perfiles, no de is_staff.
-  role: 'provider' | 'customer' | 'admin' | 'unknown';
-}
-
-// Compatibilidad temporal: los componentes que aun leen `user.role` (tarea 8 los migra).
-function legacyRole(u: { customer?: unknown; provider?: unknown }): AuthUser['role'] {
-  const { isCustomer, isProvider } = deriveCapabilities(u);
-  if (isCustomer) return 'customer';
-  if (isProvider) return 'provider';
-  return 'unknown';
 }
 
 interface AuthContextType {
@@ -83,7 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             profile_image: parsed.profile_image ?? null,
             customer,
             provider,
-            role: legacyRole({ customer, provider }),
             date_create: parsed.date_create ?? '',
           });
         } catch (err) {
@@ -147,7 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         customer: basicUser.customer ?? null,
         provider: basicUser.provider ?? null,
         date_create: basicUser.date_create,
-        role: legacyRole(basicUser),
       };
 
       setUser(u);

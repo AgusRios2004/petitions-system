@@ -286,7 +286,6 @@ export interface UserProfile {
     id_type_provider?: number;
   } | null;
   profile_picture_url?: string | null;
-  role?: 'customer' | 'provider' | 'admin' | 'unknown'; // transitorio hasta la tarea 8
 }
 
 export interface ProfileFormData {
