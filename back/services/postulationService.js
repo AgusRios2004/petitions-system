@@ -101,7 +101,7 @@ class PostulationService {
         let newPostulationId; // Variable para guardar el ID y usarlo fuera de la transacción
 
         try {
-            const provider = await Provider.findOne({ where: { user_id: userId } }, { transaction: t });
+            const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
             if (!provider) {
                 const error = new Error('Proveedor no encontrado para el usuario dado');
                 error.statusCode = 403;
@@ -116,6 +116,14 @@ class PostulationService {
             if (!petition) {
                 const error = new Error('Petición no encontrada');
                 error.statusCode = 404;
+                throw error;
+            }
+
+            // Nadie se postula a su propia petición (B-24): se compara el dueño con el usuario.
+            const owner = await Customer.findByPk(petition.id_customer, { attributes: ['user_id'], transaction: t });
+            if (owner && owner.user_id === userId) {
+                const error = new Error('No podés postularte a tu propia petición');
+                error.statusCode = 403;
                 throw error;
             }
 
