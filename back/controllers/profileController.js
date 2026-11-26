@@ -1,6 +1,7 @@
 const { User, Customer, Provider } = require('../models');
 const { error, success } = require('../middlewares/response');
 const UserService = require('../services/userService');
+const { deriveRoles, deriveLegacyRole } = require('../middlewares/auth');
 const { parseId } = require('../middlewares/ownership');
 
 exports.getProfile = async (req, res) => {
@@ -39,8 +40,9 @@ exports.getProfile = async (req, res) => {
             hasCompletedProfile,
         };
         
-        // Añadir la propiedad 'role' basada en is_staff
-        userJSON.role = user.is_staff ? 'provider' : 'customer';
+        userJSON.roles = deriveRoles(user.customer, user.provider);
+        // Compatibilidad hasta la tarea 8: role derivado de los perfiles, no de is_staff.
+        userJSON.role = deriveLegacyRole(user.customer, user.provider);
 
         return success(res, userJSON, 'Perfil obtenido correctamente');
     } catch (e) {
