@@ -3,6 +3,12 @@ const { error, success } = require('../middlewares/response');
 const { Petition, Customer } = require('../models');
 const notificationService = require('../services/notificationService');
 
+// Los errores llevan su código; los 5xx no exponen el detalle interno.
+const fail = (res, e) => {
+    const status = e.statusCode || 500;
+    return error(res, status >= 500 ? 'Error interno' : e.message, status);
+};
+
 exports.getAllPostulations = async (req, res) => {
     try {
         const { id_state, id_customer, id_petition, id_provider } = req.query;
@@ -77,7 +83,7 @@ exports.updatePostulation = async (req, res) => {
         if (!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {
-        return error(res, e.message, 500);
+        return fail(res, e);
     }
 }
 
@@ -90,17 +96,6 @@ exports.changePostulationState = async (req, res) => {
         return error(res, e.message, 500);
     }
 }
-
-exports.winnerPostulation = async (req, res) => {
-    try {
-        const postulation = await service.updatePostulationWinnerStatus(req.params.id, req.body.winner, req.user.sub);
-        if (!postulation) return error(res, 'Postulación no encontrada', 404);
-        return success(res, postulation);
-    } catch (e) {
-        console.error("Error: ", e.message);
-        return error(res, e.message, 500)
-    }
-};
 
 exports.acceptPostulation = async (req, res) => {
     try {
@@ -124,7 +119,7 @@ exports.rejectPostulation = async (req, res) => {
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
-        return error(res, e.message, 500);
+        return fail(res, e);
     }
 }
 
@@ -136,7 +131,7 @@ exports.withdrawPostulation = async (req, res) => {
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
-        return error(res, e.message, 500);
+        return fail(res, e);
     }
 }
 
@@ -147,6 +142,6 @@ exports.finishPostulation = async (req, res) => {
         return success(res, postulation);
     } catch (e) {
         console.error("Error: ", e);
-        return error(res, e.message, 500);
+        return fail(res, e);
     }
 }

@@ -395,7 +395,6 @@ class PostulationService {
             if (!postulation) {
                 const error = new Error("Postulación no encontrada.");
                 error.statusCode = 404;
-                await t.rollback();
                 throw error;
             }
 
@@ -403,7 +402,6 @@ class PostulationService {
             if (petitionOwner.user_id !== userId) {
                 const error = new Error("No tienes permiso para rechazar esta postulación.");
                 error.statusCode = 403;
-                await t.rollback();
                 throw error;
             }
 
@@ -442,7 +440,7 @@ class PostulationService {
             return postulation;
 
         } catch (e) {
-            await t.rollback();
+            if (!t.finished) await t.rollback();
             console.error("Error en rejectPostulation:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
@@ -464,7 +462,6 @@ class PostulationService {
             if (!postulation) {
                 const error = new Error("Postulación no encontrada.");
                 error.statusCode = 404;
-                await t.rollback();
                 throw error;
             }
 
@@ -473,7 +470,6 @@ class PostulationService {
             if (postulation.id_state !== pendingStateId) {
                 const error = new Error("No se puede retirar una postulación que ya ha sido procesada (Aceptada/Rechazada).");
                 error.statusCode = 400;
-                await t.rollback();
                 throw error;
             }
 
@@ -481,7 +477,6 @@ class PostulationService {
             if (!provider || postulation.id_provider !== provider.id_provider) {
                 const error = new Error("No tienes permiso para retirar esta postulación.");
                 error.statusCode = 403; // Forbidden
-                await t.rollback();
                 throw error;
             }
 
@@ -519,7 +514,7 @@ class PostulationService {
             return postulation;
 
         } catch (e) {
-            await t.rollback();
+            if (!t.finished) await t.rollback();
             console.error("Error en withdrawPostulation:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
@@ -634,7 +629,7 @@ class PostulationService {
 
             return await this.getPostulationById(id);
         } catch (e) {
-            if (t) await t.rollback();
+            if (!t.finished) await t.rollback();
             console.error("Error en finishPostulation:", e);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
