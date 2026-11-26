@@ -79,7 +79,7 @@ exports.createPostulation = async (req, res) => {
 
 exports.updatePostulation = async (req, res) => {
     try {
-        const postulation = await service.updatePostulation(req.params.id, req.body);
+        const postulation = await service.updatePostulation(req.params.id, req.body, req.user.sub);
         if (!postulation) return error(res, 'Postulación no encontrada', 404);
         return success(res, postulation);
     } catch (e) {

@@ -1,5 +1,5 @@
 // const { post } = require('../app'); // REMOVIDO: Causaba dependencia circular y error de exportación
-const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer } = require('../models');
+const { Postulation, Inventory, sequelize, User, Provider, Petition, State, Customer, Article } = require('../models');
 const notificationService = require('./notificationService');
 const { Op } = require('sequelize');
 
@@ -224,52 +224,72 @@ class PostulationService {
         return postulationWithDetails;
     }
 
-    async updatePostulation(id, data) {
-        // ... (código original sin cambios)
-        const { proposal, cost, articles, id_user_update } = data;
+    async updatePostulation(id, data, userId) {
+        const httpErr = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+        const toNumber = (v) => ((typeof v === 'number' || (typeof v === 'string' && v.trim() !== '')) ? Number(v) : NaN);
         const t = await sequelize.transaction();
         try {
-            const postulation = await Postulation.findByPk(id, { transaction: t });
-            if (!postulation) {
-                const error = new Error('Postulacion no encontrada');
-                error.statusCode = 404;
-                throw error;
+            if (!/^\d+$/.test(String(id))) throw httpErr(404, 'Postulación no encontrada.');
+            const postulation = await Postulation.findByPk(id, { transaction: t, lock: t.LOCK.UPDATE });
+            if (!postulation) throw httpErr(404, 'Postulación no encontrada.');
+
+            // Solo el proveedor autor (el superusuario tampoco edita).
+            const provider = await Provider.findOne({ where: { user_id: userId }, transaction: t });
+            if (!provider || provider.id_provider !== postulation.id_provider) {
+                throw httpErr(403, 'No tienes permiso para editar esta postulación.');
             }
 
-            // Validamos que la postulación esté en estado PENDIENTE para poder editarla
             const pendingStateId = await getStateId('PEN');
             if (postulation.id_state !== pendingStateId) {
-                const error = new Error('No se puede editar una postulación que ya ha sido aceptada, rechazada o finalizada.');
-                error.statusCode = 400;
-                throw error;
+                throw httpErr(409, 'No se puede editar una postulación que ya ha sido aceptada, rechazada o finalizada.');
             }
 
-            await postulation.update({
-                proposal,
-                cost,
-                id_user_update,
-                date_update: new Date(),
-            }, { transaction: t });
+            // Solo estos campos se aplican; lo demás del body se ignora.
+            const { proposal, cost, articles } = data || {};
+            const changes = {};
+            if (proposal !== undefined) {
+                if (typeof proposal !== 'string' || proposal.trim() === '') throw httpErr(400, 'La propuesta no puede estar vacía.');
+                changes.proposal = proposal;
+            }
+            if (cost !== undefined) {
+                const n = toNumber(cost);
+                if (!Number.isFinite(n) || n < 0) throw httpErr(400, 'El costo debe ser un número mayor o igual a 0.');
+                changes.cost = n;
+            }
+            let inventoryData = null;
+            if (articles !== undefined) {
+                if (!Array.isArray(articles)) throw httpErr(400, 'articles debe ser una lista.');
+                inventoryData = articles.map((a) => {
+                    const quantity = toNumber(a && a.quantity);
+                    const itemCost = toNumber(a && a.cost);
+                    const idArticle = toNumber(a && a.id_article);
+                    if (!Number.isInteger(idArticle) || !Number.isInteger(quantity) || quantity <= 0
+                        || !Number.isFinite(itemCost) || itemCost < 0) {
+                        throw httpErr(400, 'Artículo inválido: id_article existente, quantity entero > 0 y cost >= 0.');
+                    }
+                    return {
+                        id_article: idArticle, quantity, cost: itemCost,
+                        id_postulation: postulation.id_postulation, id_user_create: userId, date_create: new Date(),
+                    };
+                });
+                const ids = [...new Set(inventoryData.map((a) => a.id_article))];
+                if (ids.length > 0) {
+                    const found = await Article.count({ where: { id_article: ids }, transaction: t });
+                    if (found !== ids.length) throw httpErr(400, 'Algún artículo no existe.');
+                }
+            }
 
-            await Inventory.destroy({ where: { id_postulation: id }, transaction: t });
-
-            if (articles && articles.length > 0) {
-                const inventoryData = articles.map(article => ({
-                    id_article: article.id_article,
-                    quantity: article.quantity,
-                    cost: article.cost,
-                    id_postulation: postulation.id_postulation,
-                    id_user_create: id_user_update,
-                    date_create: new Date(),
-                }));
-                await Inventory.bulkCreate(inventoryData, { transaction: t });
+            await postulation.update({ ...changes, id_user_update: userId, date_update: new Date() }, { transaction: t });
+            if (inventoryData) {
+                await Inventory.destroy({ where: { id_postulation: postulation.id_postulation }, transaction: t });
+                if (inventoryData.length > 0) await Inventory.bulkCreate(inventoryData, { transaction: t });
             }
 
             await t.commit();
             return await this.getPostulationById(postulation.id_postulation);
         } catch (e) {
-            await t.rollback();
-            console.error("Error: ", e.message);
+            if (!t.finished) await t.rollback();
+            console.error("Error en updatePostulation:", e.message);
             if (!e.statusCode) e.statusCode = 500;
             throw e;
         }
