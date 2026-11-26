@@ -1,7 +1,7 @@
 ---
 id: 0004
 titulo: Historial público del proveedor con menos datos
-estado: aprobada        # draft | propuesta | aprobada | implementada | archivada
+estado: implementada   # draft | propuesta | aprobada | implementada | archivada
 autor_humano: Diego Agustín Rios
 fecha: 25/11/2026
 adrs_relacionados: []
@@ -57,14 +57,14 @@ Que el historial público de un proveedor muestre solo sus trabajos ganados, sin
 
 | ID | Criterio | Test |
 |:---|:---|:---|
-| AC-0004-01 | `GET /api/provider/:id/history` del proveedor B devuelve solo sus postulaciones en `ACE` y `FIN`; las que están en `PEN`, `REC`, `CAN` o `BJA` no aparecen. | |
-| AC-0004-02 | Cada elemento de la respuesta tiene exactamente las claves `id_postulation`, `state`, `date` y `petition`, y `petition` tiene exactamente `id_petition` y `description`. En el JSON no aparecen `cost`, `proposal`, `email`, `dni`, `phone` ni `customers`. | |
-| AC-0004-03 | `GET /api/provider/:id/history` con un id inexistente o no numérico → 404. | |
-| AC-0004-04 | `GET /api/postulation?id_provider=<B>&id_state=<PEN>` con token de B → 200 con su postulación pendiente. Con token de D, de A o de C → 403. | |
-| AC-0004-05 | `GET /api/postulation?id_provider=<B>&id_state=1`, sin `id_petition` y con token de D → 403: el antiguo atajo "público" ya no existe. | |
-| AC-0004-06 | El seed define el estado `FIN` con `id_state` 6. Se verifica leyendo la lista de estados que exporta el seed, sin ejecutarlo. | |
-| AC-0004-07 | (front) `/provider/[id]/postulations` para quien no es el dueño llama a `getProviderHistory(id)` y muestra la descripción, el estado y la fecha; el texto renderizado no contiene "Propuesta" ni "Costo". | |
-| AC-0004-08 | (front) Para el dueño, el filtro ofrece Pendiente, Aceptado, Rechazado y Finalizado con los valores 1, 2, 3 y 6. | |
+| AC-0004-01 | `GET /api/provider/:id/history` del proveedor B devuelve solo sus postulaciones en `ACE` y `FIN`; las que están en `PEN`, `REC`, `CAN` o `BJA` no aparecen. | `back/test/t12-0004-historial.test.js` |
+| AC-0004-02 | Cada elemento de la respuesta tiene exactamente las claves `id_postulation`, `state`, `date` y `petition`, y `petition` tiene exactamente `id_petition` y `description`. En el JSON no aparecen `cost`, `proposal`, `email`, `dni`, `phone` ni `customers`. | `back/test/t12-0004-historial.test.js` |
+| AC-0004-03 | `GET /api/provider/:id/history` con un id inexistente o no numérico → 404. | `back/test/t12-0004-historial.test.js` |
+| AC-0004-04 | `GET /api/postulation?id_provider=<B>&id_state=<PEN>` con token de B → 200 con su postulación pendiente. Con token de D, de A o de C → 403. | `back/test/t12-0004-listado.test.js` |
+| AC-0004-05 | `GET /api/postulation?id_provider=<B>&id_state=1`, sin `id_petition` y con token de D → 403: el antiguo atajo "público" ya no existe. | `back/test/t12-0004-listado.test.js` |
+| AC-0004-06 | El seed define el estado `FIN` con `id_state` 6. Se verifica leyendo la lista de estados que exporta el seed, sin ejecutarlo. | `back/test/t12-0004-seed.test.js` |
+| AC-0004-07 | (front) `/provider/[id]/postulations` para quien no es el dueño llama a `getProviderHistory(id)` y muestra la descripción, el estado y la fecha; el texto renderizado no contiene "Propuesta" ni "Costo". | `front/src/app/provider/[id]/postulations/__tests__/page.test.tsx` |
+| AC-0004-08 | (front) Para el dueño, el filtro ofrece Pendiente, Aceptado, Rechazado y Finalizado con los valores 1, 2, 3 y 6. | `front/src/app/provider/[id]/postulations/__tests__/page.test.tsx` |
 
 ## Fuera de alcance
 
