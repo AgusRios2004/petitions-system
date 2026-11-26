@@ -14,9 +14,6 @@ exports.getAllPostulations = async (req, res) => {
         const { id_state, id_customer, id_petition, id_provider } = req.query;
         const { is_superuser } = req.user;
 
-        // A request for a provider's public history is identified by id_provider and id_state === '1' (Accepted)
-        const isPublicHistoryRequest = id_provider && id_state === '1' && !id_petition;
-
         const filter = {};
         if (id_state) filter.id_state = id_state;
         if (id_customer) filter.id_customer = id_customer;
@@ -24,24 +21,27 @@ exports.getAllPostulations = async (req, res) => {
         if (id_provider) filter.id_provider = id_provider;
 
         // Los permisos salen de la relación con la petición, no de un rol (spec 0002).
-        if (!is_superuser && !isPublicHistoryRequest) {
+        if (!is_superuser) {
             if (!id_petition) {
-                // if no petition id is provided, we can't check ownership, so return nothing
-                return success(res, []);
-            }
-
-            const petition = await Petition.findByPk(id_petition, { attributes: ['id_petition', 'id_customer'] });
-            if (!petition) {
-                return error(res, 'Petición no encontrada', 404);
-            }
-
-            const isOwner = !!req.customer && petition.id_customer === req.customer.id_customer;
-            if (!isOwner) {
-                // Un proveedor que no es dueño ve solo su propia postulación.
-                if (!req.provider) {
-                    return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
-                }
+                // Sin petición, solo el proveedor dueño lista sus propias postulaciones.
+                // El historial público va por GET /api/provider/:id/history (spec 0004).
+                const own = !!req.provider && String(id_provider) === String(req.provider.id_provider);
+                if (!own) return error(res, 'No autorizado para ver estas postulaciones', 403);
                 filter.id_provider = req.provider.id_provider;
+            } else {
+                const petition = await Petition.findByPk(id_petition, { attributes: ['id_petition', 'id_customer'] });
+                if (!petition) {
+                    return error(res, 'Petición no encontrada', 404);
+                }
+
+                const isOwner = !!req.customer && petition.id_customer === req.customer.id_customer;
+                if (!isOwner) {
+                    // Un proveedor que no es dueño ve solo su propia postulación.
+                    if (!req.provider) {
+                        return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
+                    }
+                    filter.id_provider = req.provider.id_provider;
+                }
             }
         }
 
