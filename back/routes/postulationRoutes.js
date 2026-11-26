@@ -1,12 +1,12 @@
 const router = require('express').Router();
 const ctrl = require('../controllers/postulationController');
-const { authRequired, onlyStaff } = require('../middlewares/auth');
+const { authRequired, onlySuperuser, loadProfiles } = require('../middlewares/auth');
 
-router.get('/', authRequired, ctrl.getAllPostulations);
+router.get('/', authRequired, loadProfiles, ctrl.getAllPostulations);
 router.get('/:id', authRequired, ctrl.getPostulationById);
 router.post('/', authRequired, ctrl.createPostulation);
 router.put('/:id', authRequired, ctrl.updatePostulation);
-router.patch('/:id/state', authRequired, onlyStaff, ctrl.changePostulationState);
+router.patch('/:id/state', authRequired, onlySuperuser, ctrl.changePostulationState);
 router.patch('/:id/accept', authRequired, ctrl.acceptPostulation);
 router.patch('/:id/reject', authRequired, ctrl.rejectPostulation);
 router.patch('/:id/cancel', authRequired, ctrl.withdrawPostulation);

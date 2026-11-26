@@ -9,16 +9,11 @@ exports.authRequired = (req, res, next) => {
     
     try {
         const payload = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = payload; //{ sub, email, is_staff, is_superuser }    
+        req.user = payload; //{ sub, email, is_superuser }    
         next();
     } catch (e) {
         return error(res, e.message, 403);
     }
-}
-
-exports.onlyStaff = (req, res, next) => {
-    if(!req.user?.is_staff && !req.user?.is_superuser) return error(res, 'Requere staff', 403);
-    next();
 }
 
 exports.onlySuperuser = (req, res, next) => {

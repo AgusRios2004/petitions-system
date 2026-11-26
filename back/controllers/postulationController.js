@@ -12,7 +12,7 @@ const fail = (res, e) => {
 exports.getAllPostulations = async (req, res) => {
     try {
         const { id_state, id_customer, id_petition, id_provider } = req.query;
-        const { is_staff, is_superuser, sub: userId } = req.user;
+        const { is_superuser } = req.user;
 
         // A request for a provider's public history is identified by id_provider and id_state === '1' (Accepted)
         const isPublicHistoryRequest = id_provider && id_state === '1' && !id_petition;
@@ -23,27 +23,25 @@ exports.getAllPostulations = async (req, res) => {
         if (id_petition) filter.id_petition = id_petition;
         if (id_provider) filter.id_provider = id_provider;
 
-        // If user is not staff/superuser AND it's NOT a public history request, apply original security check.
-        if (!is_staff && !is_superuser && !isPublicHistoryRequest) {
+        // Los permisos salen de la relación con la petición, no de un rol (spec 0002).
+        if (!is_superuser && !isPublicHistoryRequest) {
             if (!id_petition) {
                 // if no petition id is provided, we can't check ownership, so return nothing
                 return success(res, []);
             }
 
-            const petition = await Petition.findByPk(id_petition, {
-                include: [{
-                    model: Customer,
-                    as: 'customers',
-                }]
-            });
-
+            const petition = await Petition.findByPk(id_petition, { attributes: ['id_petition', 'id_customer'] });
             if (!petition) {
                 return error(res, 'Petición no encontrada', 404);
             }
 
-            // Check if the petition belongs to the user
-            if (petition.customers.user_id !== userId) {
-                return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
+            const isOwner = !!req.customer && petition.id_customer === req.customer.id_customer;
+            if (!isOwner) {
+                // Un proveedor que no es dueño ve solo su propia postulación.
+                if (!req.provider) {
+                    return error(res, 'No autorizado para ver las postulaciones de esta petición', 403);
+                }
+                filter.id_provider = req.provider.id_provider;
             }
         }
 
@@ -51,7 +49,7 @@ exports.getAllPostulations = async (req, res) => {
         return success(res, postulations);
     } catch (e) {
         console.error('Error: ', e);
-        return error(res, e.message, 500);
+        return error(res, 'Error interno', 500);
     }
 }
 
