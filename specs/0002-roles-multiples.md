@@ -73,20 +73,20 @@ Precondiciones:
 
 | ID | Criterio | Test |
 |:---|:---|:---|
-| AC-0002-01 | Registrar un cliente y un proveedor por `POST /api/auth/register` deja `is_staff = false` en los dos usuarios. | |
-| AC-0002-02 | El login y `GET /api/profile/me` devuelven `roles` igual a `{customer:true, provider:false}` para un cliente, `{false, true}` para un proveedor y `{true, true}` para un usuario con los dos perfiles. | |
-| AC-0002-03 | Un cliente sin perfil de proveedor hace `POST /api/profile/me/provider` con un body válido → 201. Un `GET /api/profile/me` con el **mismo token** devuelve `roles.provider = true`. | |
-| AC-0002-04 | Con el mismo token de AC-0002-03, sin volver a loguearse, `POST /api/postulation` a una petición de otro cliente responde 2xx, y la postulación queda con el `id_provider` del perfil recién creado. | |
-| AC-0002-05 | Un usuario con los dos perfiles hace `POST /api/postulation` a una petición propia → 403, y la cantidad de postulaciones de esa petición no cambia. | |
-| AC-0002-06 | `POST /api/profile/me/provider` de un usuario que ya es proveedor → 409, y sigue habiendo una sola fila `Provider` para ese `user_id`. Lo mismo para `/customer`. | |
-| AC-0002-07 | Crear por modelo un segundo `Customer`, o un segundo `Provider`, con un `user_id` que ya tiene uno falla con `SequelizeUniqueConstraintError`. | |
-| AC-0002-08 | `POST /api/profile/me/customer` sin `dni` o sin `phone` → 400 y no crea nada. Con `reuseAddress: true`, desde un proveedor, → 201, y el `address_id` del cliente nuevo es igual al del proveedor. | |
-| AC-0002-09 | `GET /api/postulation?id_petition=X` con token de un proveedor que no es dueño devuelve solo postulaciones con su propio `id_provider`. Con token del cliente dueño devuelve las dos del fixture. | |
-| AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | |
+| AC-0002-01 | Registrar un cliente y un proveedor por `POST /api/auth/register` deja `is_staff = false` en los dos usuarios. | `back/test/t11-0002-identidad.test.js` |
+| AC-0002-02 | El login y `GET /api/profile/me` devuelven `roles` igual a `{customer:true, provider:false}` para un cliente, `{false, true}` para un proveedor y `{true, true}` para un usuario con los dos perfiles. | `back/test/t11-0002-identidad.test.js` |
+| AC-0002-03 | Un cliente sin perfil de proveedor hace `POST /api/profile/me/provider` con un body válido → 201. Un `GET /api/profile/me` con el **mismo token** devuelve `roles.provider = true`. | `back/test/t11-0002-activar-perfil.test.js`, `back/test/t11-0002-postularse.test.js` |
+| AC-0002-04 | Con el mismo token de AC-0002-03, sin volver a loguearse, `POST /api/postulation` a una petición de otro cliente responde 2xx, y la postulación queda con el `id_provider` del perfil recién creado. | `back/test/t11-0002-postularse.test.js` |
+| AC-0002-05 | Un usuario con los dos perfiles hace `POST /api/postulation` a una petición propia → 403, y la cantidad de postulaciones de esa petición no cambia. | `back/test/t11-0002-postularse.test.js` |
+| AC-0002-06 | `POST /api/profile/me/provider` de un usuario que ya es proveedor → 409, y sigue habiendo una sola fila `Provider` para ese `user_id`. Lo mismo para `/customer`. | `back/test/t11-0002-activar-perfil.test.js` |
+| AC-0002-07 | Crear por modelo un segundo `Customer`, o un segundo `Provider`, con un `user_id` que ya tiene uno falla con `SequelizeUniqueConstraintError`. | `back/test/t11-0002-indice-unico.test.js` |
+| AC-0002-08 | `POST /api/profile/me/customer` sin `dni` o sin `phone` → 400 y no crea nada. Con `reuseAddress: true`, desde un proveedor, → 201, y el `address_id` del cliente nuevo es igual al del proveedor. | `back/test/t11-0002-activar-perfil.test.js` |
+| AC-0002-09 | `GET /api/postulation?id_petition=X` con token de un proveedor que no es dueño devuelve solo postulaciones con su propio `id_provider`. Con token del cliente dueño devuelve las dos del fixture. | `back/test/t11-0002-postulaciones-relacion.test.js` |
+| AC-0002-10 | `PATCH /api/postulation/:id/state` con token de un proveedor → 403. | `back/test/t11-0002-postulaciones-relacion.test.js` |
 | AC-0002-11 | Un test que lee `back/controllers`, `back/services` y `back/middlewares` no encuentra la cadena `is_staff`. | |
 | AC-0002-12 | El JWT del login, decodificado, tiene claves ⊆ `{sub, email, is_superuser, iat, exp}`. Ni `user` del login ni `/profile/me` contienen `is_staff` ni `role`. | |
-| AC-0002-18 | `PATCH /api/postulation/:id/state` con token del superusuario y un `id_state` existente → 200 y la postulación queda en ese estado; con un `id_state` inexistente → 400 y no cambia. | |
-| AC-0002-19 | `PATCH /:id/reject` del cliente dueño sobre una postulación en `ACE` o en `FIN` → 409, y `winner`, `id_state` y la petición no cambian. `PATCH /:id/cancel` de un proveedor no autor sobre una postulación que no está en `PEN` → 403; del autor sobre una que no está en `PEN` → 409. | |
+| AC-0002-18 | `PATCH /api/postulation/:id/state` con token del superusuario y un `id_state` existente → 200 y la postulación queda en ese estado; con un `id_state` inexistente → 400 y no cambia. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
+| AC-0002-19 | `PATCH /:id/reject` del cliente dueño sobre una postulación en `ACE` o en `FIN` → 409, y `winner`, `id_state` y la petición no cambian. `PATCH /:id/cancel` de un proveedor no autor sobre una postulación que no está en `PEN` → 403; del autor sobre una que no está en `PEN` → 409. | `back/test/t11-0002-estado-rechazo-retiro.test.js` |
 | AC-0002-13 | (front) La función que deriva capacidades devuelve `{isCustomer:true, isProvider:false}` para un usuario con solo `customer`, `{true, true}` con los dos perfiles y `{false, false}` sin ninguno. | |
 | AC-0002-14 | (front) `/profile` con un usuario con los dos perfiles muestra un selector con dos opciones. `?mode=provider` renderiza `ProviderProfile` y `?mode=customer` renderiza `CustomerProfile`. | |
 | AC-0002-15 | (front) `/profile` con un usuario con solo `customer` no muestra selector y renderiza `CustomerProfile`, aunque la URL traiga `?mode=provider`. | |
